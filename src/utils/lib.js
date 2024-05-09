@@ -2,10 +2,6 @@ import { DiffDOM } from "diff-dom";
 
 /** @jsx dom */
 
-// let ctr = 0;
-let last = null;
-let arr = [];
-
 export const dom = (eleType, props, ...children) => {
   // console.log({eleType, props, children})
   // console.log(typeof eleType)
@@ -51,8 +47,6 @@ export const dom = (eleType, props, ...children) => {
   };
 
   (children || []).forEach((c) => addChild(c));
-
-  last = el;
 
   return el;
 };

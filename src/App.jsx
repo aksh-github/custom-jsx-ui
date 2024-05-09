@@ -127,7 +127,7 @@ export function SimpleRoute() {
   return (
     <div>
       route2
-      <Link href="/">Go next</Link>
+      <Link href="/">Go Back</Link>
     </div>
   );
 }

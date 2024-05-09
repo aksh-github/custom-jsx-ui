@@ -1,7 +1,7 @@
 import { dom } from "../utils/lib";
 
 const Link = (props) => {
-  console.log(props);
+  // console.log(props);
   return (
     <a
       href={props.href}
