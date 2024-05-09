@@ -1,0 +1,27 @@
+{
+  "name": "jsx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.22.15",
+    "@babel/core": "^7.22.15",
+    "@babel/plugin-transform-modules-commonjs": "^7.22.15",
+    "@babel/preset-env": "^7.22.15",
+    "babel-plugin-jsx-simple": "^1.6.0",
+    "babel-plugin-syntax-jsx": "^6.18.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
+    "vite": "^5.2.11"
+  },
+  "dependencies": {
+    "diff-dom": "^5.1.3"
+  }
+}
