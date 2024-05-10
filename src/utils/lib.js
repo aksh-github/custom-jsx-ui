@@ -2,6 +2,11 @@ import { DiffDOM } from "diff-dom";
 
 /** @jsx dom */
 
+const tracker = [];
+
+const olds = new Set(),
+  news = new Set();
+
 export const dom = (eleType, props, ...children) => {
   // console.log({eleType, props, children})
   // console.log(typeof eleType)
@@ -12,6 +17,8 @@ export const dom = (eleType, props, ...children) => {
     //   ...props,
     //   __spl: "spl",
     // };
+    tracker.push(eleType.name);
+    news.add(eleType.name);
     return eleType({ ...props, __spl: "spl", children: children }, children);
   }
 
@@ -64,6 +71,11 @@ export const render = (_node, _Main) => {
   if (rootNode.firstChild) rootNode.replaceChild(oldc, rootNode.firstChild);
   else rootNode.appendChild(oldc);
 
+  // tracking
+  trackOperation(true);
+
+  // end tracking
+
   return oldc;
 };
 
@@ -71,13 +83,63 @@ export const forceUpdate = () => {
   const dd = new DiffDOM();
   const newc = dom(Main);
   const diff = dd.diff(oldc, newc);
+
   console.log(diff);
 
   setTimeout(() => {
     const debugFlag = dd.apply(rootNode.firstChild, diff);
     if (!debugFlag) console.log("Something was wrong");
 
+    // tracking
+    trackOperation();
+    // end tracking
+
     // imp step: set the latest state
     oldc = newc;
   }, 0);
+};
+
+const trackOperation = (routeChange) => {
+  // compare sets
+  if (olds.size === news.size) {
+    let oArr = Array.from(olds),
+      nArr = Array.from(news);
+    oArr.forEach((oit, idx) => {
+      // console.log(it);
+      const nit = nArr[idx];
+      // const oit = olds.values().next().value;
+
+      // console.log(oit, nit);
+
+      if (oit !== nit) {
+        console.log("diff found", oit, nit);
+        console.log("call unmount for", oit);
+        console.log("call Mount for", nit);
+      }
+    });
+  } else {
+    console.log("diff found", olds, news);
+    // let arr = []
+    Array.from(olds)
+      .reverse()
+      .forEach((oit) => {
+        // if (!news.has(oit) && routeChange)
+        console.log("call unmount for", oit);
+      });
+
+    news.forEach((nit) => {
+      // if (!olds.has(nit) && routeChange)
+      console.log("call Mount for", nit);
+    });
+  }
+
+  // clear copy etc
+  olds.clear();
+
+  news.forEach((nit) => {
+    // console.log(it);
+    olds.add(nit);
+  });
+
+  news.clear();
 };

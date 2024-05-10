@@ -35,6 +35,7 @@ export function batch(cb) {
   batchOp = true;
   cb();
   forceUpdate();
+  batchOp = false;
 }
 
 export function createSignal(value) {
