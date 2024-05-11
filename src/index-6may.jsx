@@ -14,7 +14,8 @@ const root = document.getElementById("root");
 registerRenderCallback(forceUpdate);
 
 // for my state
-state().registerRenderCallback(forceUpdate);
+const tempSt = state();
+tempSt.registerRenderCallback(forceUpdate);
 
 // for multiple routes
 
