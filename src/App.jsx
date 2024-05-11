@@ -2,7 +2,9 @@ import { createSignal, batch } from "./utils/signal-complex";
 import { dom, forceUpdate } from "./utils/lib";
 import Link from "./compos/Link";
 import state from "./utils/simple-state";
+// import { useState } from "./utils/hooks-experi";
 
+// Ctr
 const st = state({ c: 100, version: "Loading..." });
 
 setTimeout(() => {
@@ -34,6 +36,8 @@ const Ctr = ({ v, __spl }) => {
   );
 };
 
+// end Ctr
+
 const input = state({
   input: {
     v: "some",
@@ -49,7 +53,7 @@ const Input = () => {
       })}
       <input
         className="input"
-        onInput={(e) => {
+        onChange={(e) => {
           // console.log(e, e.target.value);
           input.set({
             input: {
@@ -103,7 +107,12 @@ export function App(props) {
 const pst = state({ r: 0 });
 
 const Even = () => "Divisible by 2";
-const Odd = () => "Odd";
+const Odd = () => (
+  <div>
+    <h3>Some more complex heirarchy</h3>
+    Odd
+  </div>
+);
 
 export function SimpleRoute() {
   return (
