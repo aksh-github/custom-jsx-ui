@@ -1,5 +1,5 @@
 import { App, SimpleRoute } from "./App";
-import { forceUpdate, render } from "./utils/lib";
+import { forceUpdate, render } from "./utils/lib.v2";
 import router from "./utils/router";
 import { registerRenderCallback } from "./utils/signal-complex";
 import state from "./utils/simple-state";

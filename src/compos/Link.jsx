@@ -2,7 +2,7 @@ import { dom } from "../utils/lib";
 
 const Link = (props) => {
   // console.log(props);
-  return (
+  return (props) => (
     <a
       href={props.href}
       data-link
