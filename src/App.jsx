@@ -83,6 +83,10 @@ export function App(props) {
     console.log(c());
   });
 
+  unMount(() => {
+    console.log("unmount app");
+  });
+
   return () => (
     <div>
       hello world {c()} {s()}
@@ -112,20 +116,30 @@ export function App(props) {
 
 // const pst = state({ r: 0 });
 
-const Even = () => () => "Divisible by 2";
+const Even = () => {
+  unMount(() => {
+    console.log("unmount for Even");
+  });
+
+  return () => "Divisible by 2";
+};
 // const Odd = () => () => "NOT Divisible";
-const Odd = () => () =>
-  (
-    <div>
-      <h3>Some more complex heirarchy</h3>
-      Odd
-    </div>
-  );
+const Odd = () => {
+  unMount(() => {
+    console.log("unmount for Odd");
+  });
+
+  return () => "Not Divisible";
+};
 
 export const SimpleRoute = () => {
   // const [r, setr] = createSignal(0);
   const pst = state({ r: 0 });
   // const tv = pst.get("r");
+
+  unMount(() => {
+    console.log("unmount for SimpleRoute");
+  });
 
   return () => {
     console.log(pst.get("r"));
