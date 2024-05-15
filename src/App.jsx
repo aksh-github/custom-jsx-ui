@@ -1,5 +1,5 @@
 import { createSignal, batch, createEffect } from "./utils/signal-complex";
-import { dom, unMount } from "./utils/lib.v2";
+import { dom, mount, unMount } from "./utils/lib.v2";
 import Link from "./compos/Link";
 import state from "./utils/simple-state";
 // import { useState } from "./utils/hooks-experi";
@@ -8,7 +8,15 @@ import state from "./utils/simple-state";
 
 const Ctr = ({ v, __spl }) => {
   const st = state({ c: 100, version: "Loading..." });
-  setTimeout(() => {
+
+  let timer = null;
+
+  unMount(() => {
+    console.log("unmount Ctr");
+    clearTimeout(timer);
+  });
+
+  timer = setTimeout(() => {
     fetch("/package.json")
       .then((res) => res.json())
       .then((res) => {
@@ -49,6 +57,10 @@ const Input = () => {
     },
   });
 
+  unMount(() => {
+    console.log("unmount Input");
+  });
+
   return () => {
     return (
       <div>
@@ -57,7 +69,7 @@ const Input = () => {
         })}
         <input
           className="input"
-          onChange={(e) => {
+          onInput={(e) => {
             // console.log(e, e.target.value);
             input.set({
               input: {
@@ -117,6 +129,10 @@ export function App(props) {
 // const pst = state({ r: 0 });
 
 const Even = () => {
+  mount(() => {
+    console.log("mount for Even");
+  });
+
   unMount(() => {
     console.log("unmount for Even");
   });
@@ -125,6 +141,10 @@ const Even = () => {
 };
 // const Odd = () => () => "NOT Divisible";
 const Odd = () => {
+  mount(() => {
+    console.log("mount for Odd");
+  });
+
   unMount(() => {
     console.log("unmount for Odd");
   });
@@ -136,6 +156,11 @@ export const SimpleRoute = () => {
   // const [r, setr] = createSignal(0);
   const pst = state({ r: 0 });
   // const tv = pst.get("r");
+  let ref = null;
+
+  mount(() => {
+    console.log("Ref available in mount for SimpleRoute", ref);
+  });
 
   unMount(() => {
     console.log("unmount for SimpleRoute");
@@ -144,7 +169,7 @@ export const SimpleRoute = () => {
   return () => {
     console.log(pst.get("r"));
     return (
-      <div>
+      <div ref={(_ref) => (ref = _ref)}>
         route2
         <Link href="/">Go Back</Link>
         <div>
