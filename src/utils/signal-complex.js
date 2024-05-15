@@ -1,6 +1,6 @@
 // https://gist.github.com/1Marc/09e739caa6a82cc176ab4c2abd691814
 // or
-// https://frontendmasters.com/courses/reactivity-solidjs/
+// https://frontendmasters.com/blog/vanilla-javascript-reactivity/
 
 let context = [];
 let forceUpdate = () => {};
