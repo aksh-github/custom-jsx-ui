@@ -5,7 +5,7 @@ const Link = (props) => {
   return (props) => (
     <a
       href={props.href}
-      data-link
+      data-navigo
       onClick={(e) => {
         e.preventDefault();
         return true;
