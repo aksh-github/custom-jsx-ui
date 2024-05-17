@@ -49,9 +49,11 @@ function lifeCycle() {
     reset,
     addMountFn: (cb) => {
       mountArr[counter] = cb;
+      // mountArr.push(cb);
     },
     addUnmountFn: (cb) => {
       unMountArr[counter] = cb;
+      // unMountArr.push(cb);
     },
   };
 }
@@ -78,7 +80,13 @@ export const dom = (eleType, props, ...children) => {
     if (callStack[counter]?.fname !== eleType.name) {
       console.log(eleType.name, " not found");
 
-      callStack.splice(counter, 1);
+      const callStackLen = callStack.length;
+      callStack.splice(counter, callStackLen - counter);
+
+      const ar = unMountArr.splice(counter, callStackLen - counter);
+      ar?.reverse().forEach((fn) => {
+        fn?.();
+      });
 
       _fn = eleType(props, ...children);
       callStack.push({ fname: eleType.name, fn: _fn });

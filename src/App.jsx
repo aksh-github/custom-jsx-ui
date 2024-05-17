@@ -139,7 +139,19 @@ const Even = () => {
 
   return () => "Divisible by 2";
 };
-// const Odd = () => () => "NOT Divisible";
+
+const SomeOdd = () => {
+  onMount(() => {
+    console.log("onMount for SomeOdd");
+  });
+
+  onCleanup(() => {
+    console.log("unmount for SomeOdd");
+  });
+
+  return () => "[SomeOdd]";
+};
+
 const Odd = () => {
   onMount(() => {
     console.log("onMount for Odd");
@@ -149,7 +161,12 @@ const Odd = () => {
     console.log("unmount for Odd");
   });
 
-  return () => "Not Divisible";
+  return () => (
+    <div>
+      <SomeOdd />
+      NOT divisible
+    </div>
+  );
 };
 
 export const SimpleRoute = () => {
