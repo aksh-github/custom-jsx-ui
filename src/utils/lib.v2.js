@@ -2,49 +2,70 @@ import { DiffDOM } from "diff-dom";
 
 /** @jsx dom */
 
-// for mount, clean
+// for rendering
+let callStack = [];
+let oldCounter = 0;
+let counter = 0;
+
 let mountArr = [];
 let unMountArr = [];
 
-// for rendering
-let callStack = [];
-let counter = 0;
+function lifeCycle() {
+  // for mount, clean
+  // let mountArr = [];
+  // let unMountArr = [];
 
-function reset(hard) {
-  counter = 0;
+  function reset(hard) {
+    counter = 0;
 
-  if (hard) {
-    callStack = [];
-    // // clear mount
-    // mountArr = [];
+    if (hard) {
+      callStack = [];
+      // // clear mount
+      // mountArr = [];
 
-    // call n clear unmount
-    while (unMountArr.length) {
-      unMountArr.splice(unMountArr.length - 1, 1)[0]?.();
+      // call n clear unmount
+      while (unMountArr.length) {
+        unMountArr.splice(unMountArr.length - 1, 1)[0]?.();
+      }
     }
   }
+
+  function callMountAll() {
+    // do we need maintain this?
+    // mountArr.forEach((cb) => {
+    //   cb?.();
+    // });
+    // or remove n call
+    mountArr.forEach((cb, idx) => {
+      cb?.();
+    });
+
+    mountArr = [];
+  }
+  // end for rendering
+
+  return {
+    callMountAll,
+    reset,
+    addMountFn: (cb) => {
+      mountArr[counter] = cb;
+    },
+    addUnmountFn: (cb) => {
+      unMountArr[counter] = cb;
+    },
+  };
 }
 
-function callMountAll() {
-  // do we need maintain this?
-  // mountArr.forEach((cb) => {
-  //   cb?.();
-  // });
-  // or remove n call
-  mountArr.forEach((cb, idx) => {
-    cb?.();
-  });
-
-  mountArr = [];
-}
-// end for rendering
+const lc = lifeCycle();
 
 export function onMount(cb) {
-  mountArr[counter] = cb;
+  // mountArr[counter] = cb;
+  lc.addMountFn(cb);
 }
 
 export function onCleanup(cb) {
-  unMountArr[counter] = cb;
+  // unMountArr[counter] = cb;
+  lc.addUnmountFn(cb);
 }
 
 export const dom = (eleType, props, ...children) => {
@@ -111,53 +132,63 @@ export const dom = (eleType, props, ...children) => {
   return el;
 };
 
-let Main = null,
-  rootNode = null;
-let oldc;
+function _renderUtils() {
+  let Main = null,
+    rootNode = null;
+  let oldc;
 
-export const render = (_node, _Main) => {
-  // reset all callstack
-  // calls unmount for all as well
-  reset(true);
+  const render = (_node, _Main) => {
+    // reset all callstack
+    // calls unmount for all as well
+    lc.reset(true);
 
-  rootNode = _node;
-  Main = _Main;
-  // imp step: set the latest state
-  // oldc = Main();
-  oldc = dom(Main);
-  if (rootNode.firstChild) rootNode.replaceChild(oldc, rootNode.firstChild);
-  else rootNode.appendChild(oldc);
+    rootNode = _node;
+    Main = _Main;
+    // imp step: set the latest state
+    // oldc = Main();
+    oldc = dom(Main);
+    if (rootNode.firstChild) rootNode.replaceChild(oldc, rootNode.firstChild);
+    else rootNode.appendChild(oldc);
 
-  // call mount for all
-  callMountAll();
+    // call mount for all
+    lc.callMountAll();
 
-  return oldc;
-};
+    return oldc;
+  };
 
-export const forceUpdate = () => {
-  reset();
-  const dd = new DiffDOM();
-  const newc = dom(Main);
-  const diff = dd.diff(oldc, newc);
+  const forceUpdate = () => {
+    // oldCounter = counter;
+    lc.reset();
+    const dd = new DiffDOM();
+    const newc = dom(Main);
+    const diff = dd.diff(oldc, newc);
 
-  console.log(diff);
+    console.log(diff);
 
-  if (diff?.length > 0) {
-    const timer = requestAnimationFrame(() => {
-      cancelAnimationFrame(timer);
-      const debugFlag = dd.apply(rootNode.firstChild, diff);
+    if (diff?.length > 0) {
+      const timer = requestAnimationFrame(() => {
+        cancelAnimationFrame(timer);
+        // console.log("===", oldCounter, counter);
+        const debugFlag = dd.apply(rootNode.firstChild, diff);
 
-      // call mount for whatever new
-      callMountAll();
+        // call mount for whatever new
+        lc.callMountAll();
 
-      if (!debugFlag) console.log("Something was wrong");
+        if (!debugFlag) console.log("Something was wrong");
 
-      // imp step: set the latest state
-      oldc = newc;
-    });
-  }
-};
+        // imp step: set the latest state
+        oldc = newc;
+      });
+    }
+  };
 
-export const h = (jsx) => {
-  return () => jsx;
-};
+  return {
+    render,
+    forceUpdate,
+    h: (jsx) => {
+      return () => jsx;
+    },
+  };
+}
+
+export const renderUtils = _renderUtils();

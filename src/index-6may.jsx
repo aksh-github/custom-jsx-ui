@@ -1,5 +1,5 @@
 import { App, SimpleRoute } from "./App";
-import { forceUpdate, render, dom } from "./utils/lib.v2";
+import { renderUtils, dom } from "./utils/lib.v2";
 import router from "./utils/router";
 import { registerRenderCallback } from "./utils/signal-complex";
 import state from "./utils/simple-state";
@@ -9,14 +9,14 @@ import router2 from "./utils/router-v2";
 
 // for UI
 const root = document.getElementById("root");
-// render(root, App);
+// renderUtils.render(root, App);
 
 // for signal
-registerRenderCallback(forceUpdate);
+registerRenderCallback(renderUtils.forceUpdate);
 
 // for my state
 const tempSt = state();
-tempSt.registerRenderCallback(forceUpdate);
+tempSt.registerRenderCallback(renderUtils.forceUpdate);
 
 // for multiple routes
 
@@ -53,24 +53,17 @@ router2(
   },
   (Compo, match) => {
     console.log(match);
-    render(root, Compo);
+    renderUtils.render(root, Compo);
   }
 );
 
-// all documentation:
+// navigo router
 // https://github.com/krasimir/navigo/blob/master/DOCUMENTATION.md
 // sample code
 
-//   const router = new Navigo("/", { linksSelector: "a" });
-//   const render = (content) =>
-//     (document.querySelector("#content").innerHTML = content);
+// npm local package
+// https://www.youtube.com/watch?v=VuysNccCnEQ
 
-// router.on("/chat", (match) => {
-//       console.log(match);
-//       render("About");
-//     }).on('/', (match) => {
-//     console.log(match)
-//   render("Home");
-// }).notFound(() => {
-//       render("Not found");
-//     }).resolve();
+// npm publish
+// https://www.youtube.com/watch?v=S_wvHDOrac0
+// https://www.youtube.com/watch?v=xnfdm-s8adI
