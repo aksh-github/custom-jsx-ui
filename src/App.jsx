@@ -1,5 +1,5 @@
 import { createSignal, batch, createEffect } from "./utils/signal-complex";
-import { dom, onMount, onCleanup, h } from "./utils/lib.v2";
+import { dom, onMount, onCleanup } from "./utils/lib.v2";
 import Link from "./compos/Link";
 import state from "./utils/simple-state";
 // import { useState } from "./utils/hooks-experi";
