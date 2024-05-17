@@ -2,7 +2,7 @@ import { DiffDOM } from "diff-dom";
 
 /** @jsx dom */
 
-// for mount
+// for mount, clean
 let mountArr = [];
 let unMountArr = [];
 
@@ -39,11 +39,11 @@ function callMountAll() {
 }
 // end for rendering
 
-export function mount(cb) {
+export function onMount(cb) {
   mountArr[counter] = cb;
 }
 
-export function unMount(cb) {
+export function onCleanup(cb) {
   unMountArr[counter] = cb;
 }
 
@@ -142,16 +142,22 @@ export const forceUpdate = () => {
 
   console.log(diff);
 
-  const timer = setTimeout(() => {
-    clearTimeout(timer);
-    const debugFlag = dd.apply(rootNode.firstChild, diff);
+  if (diff?.length > 0) {
+    const timer = requestAnimationFrame(() => {
+      cancelAnimationFrame(timer);
+      const debugFlag = dd.apply(rootNode.firstChild, diff);
 
-    // call mount for whatever new
-    callMountAll();
+      // call mount for whatever new
+      callMountAll();
 
-    if (!debugFlag) console.log("Something was wrong");
+      if (!debugFlag) console.log("Something was wrong");
 
-    // imp step: set the latest state
-    oldc = newc;
-  }, 0);
+      // imp step: set the latest state
+      oldc = newc;
+    });
+  }
+};
+
+export const h = (jsx) => {
+  return () => jsx;
 };

@@ -5,6 +5,7 @@
 let context = [];
 let forceUpdate = () => {};
 let batchOp = false;
+let needForceUpdate = false;
 
 export const registerRenderCallback = (cb) => {
   forceUpdate = cb;
@@ -42,6 +43,8 @@ export function createSignal(value) {
   const subscriptions = new Set();
 
   const read = () => {
+    // console.log("read");
+    needForceUpdate = true;
     const observer = context[context.length - 1];
     if (observer) subscribe(observer, subscriptions);
     return value;
@@ -52,7 +55,10 @@ export function createSignal(value) {
       observer.execute();
     }
     // untrack();
-    if (!batchOp) forceUpdate();
+    if (!batchOp && needForceUpdate) {
+      forceUpdate();
+      needForceUpdate = false;
+    }
   };
 
   return [read, write];

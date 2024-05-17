@@ -1,5 +1,5 @@
 import { createSignal, batch, createEffect } from "./utils/signal-complex";
-import { dom, mount, unMount } from "./utils/lib.v2";
+import { dom, onMount, onCleanup, h } from "./utils/lib.v2";
 import Link from "./compos/Link";
 import state from "./utils/simple-state";
 // import { useState } from "./utils/hooks-experi";
@@ -11,7 +11,7 @@ const Ctr = ({ v, __spl }) => {
 
   let timer = null;
 
-  unMount(() => {
+  onCleanup(() => {
     console.log("unmount Ctr");
     clearTimeout(timer);
   });
@@ -57,7 +57,7 @@ const Input = () => {
     },
   });
 
-  unMount(() => {
+  onCleanup(() => {
     console.log("unmount Input");
   });
 
@@ -95,7 +95,7 @@ export function App(props) {
     console.log(c());
   });
 
-  unMount(() => {
+  onCleanup(() => {
     console.log("unmount app");
   });
 
@@ -129,11 +129,11 @@ export function App(props) {
 // const pst = state({ r: 0 });
 
 const Even = () => {
-  mount(() => {
-    console.log("mount for Even");
+  onMount(() => {
+    console.log("onMount for Even");
   });
 
-  unMount(() => {
+  onCleanup(() => {
     console.log("unmount for Even");
   });
 
@@ -141,11 +141,11 @@ const Even = () => {
 };
 // const Odd = () => () => "NOT Divisible";
 const Odd = () => {
-  mount(() => {
-    console.log("mount for Odd");
+  onMount(() => {
+    console.log("onMount for Odd");
   });
 
-  unMount(() => {
+  onCleanup(() => {
     console.log("unmount for Odd");
   });
 
@@ -153,16 +153,16 @@ const Odd = () => {
 };
 
 export const SimpleRoute = () => {
-  // const [r, setr] = createSignal(0);
+  const [r, setr] = createSignal(0);
   const pst = state({ r: 0 });
   // const tv = pst.get("r");
   let ref = null;
 
-  mount(() => {
-    console.log("Ref available in mount for SimpleRoute", ref);
+  onMount(() => {
+    console.log("Ref available in onMount for SimpleRoute", ref);
   });
 
-  unMount(() => {
+  onCleanup(() => {
     console.log("unmount for SimpleRoute");
   });
 
@@ -177,6 +177,7 @@ export const SimpleRoute = () => {
           <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
             Change
           </button>
+          <button onClick={() => setr(10000)}>Change</button>
         </div>
       </div>
     );
