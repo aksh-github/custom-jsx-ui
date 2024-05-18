@@ -8,7 +8,7 @@ const state = (iv) => {
 
   return {
     get: (key) => {
-      return st[key];
+      return key ? st[key] : st;
     },
     set: (nv) => {
       st = {
