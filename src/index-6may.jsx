@@ -1,5 +1,6 @@
 import { App, SimpleRoute } from "./App";
 import { renderUtils, dom } from "./utils/lib.v2";
+// import { renderUtils, dom } from "lib-jsx";
 import router from "./utils/router";
 import { registerRenderCallback } from "./utils/signal-complex";
 import state from "./utils/simple-state";
@@ -9,7 +10,7 @@ import router2 from "./utils/router-v2";
 
 // for UI
 const root = document.getElementById("root");
-// renderUtils.render(root, App);
+// renderUtils.render(root, renderUtils.h(<App some="akshay" />));
 
 // for signal
 registerRenderCallback(renderUtils.forceUpdate);
@@ -17,23 +18,6 @@ registerRenderCallback(renderUtils.forceUpdate);
 // for my state
 const tempSt = state();
 tempSt.registerRenderCallback(renderUtils.forceUpdate);
-
-// for multiple routes
-
-// const routes = {
-//   errorComponent: Error,
-//   routes: [
-//     { path: "/", component: App },
-//     { path: "/route2", component: SimpleRoute },
-//   ],
-// };
-
-// router(routes, (Compo) => {
-//   // console.log(Compo);
-//   render(root, Compo);
-// });
-
-// for multiple routes end
 
 // checkout new simple: https://github.com/krasimir/navigo
 console.log("ROUTING ***; https://github.com/krasimir/navigo");
@@ -53,7 +37,7 @@ router2(
   },
   (Compo, match) => {
     console.log(match);
-    renderUtils.render(root, Compo);
+    renderUtils.render(root, renderUtils.h(<Compo />));
   }
 );
 
@@ -67,3 +51,5 @@ router2(
 // npm publish
 // https://www.youtube.com/watch?v=S_wvHDOrac0
 // https://www.youtube.com/watch?v=xnfdm-s8adI
+
+// good: https://www.youtube.com/watch?v=FITxnIDsMnw

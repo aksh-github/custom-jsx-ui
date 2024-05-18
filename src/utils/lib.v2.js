@@ -194,7 +194,7 @@ function _renderUtils() {
     render,
     forceUpdate,
     h: (jsx) => {
-      return () => jsx;
+      return () => (props) => jsx;
     },
   };
 }
