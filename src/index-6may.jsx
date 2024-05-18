@@ -10,7 +10,7 @@ import router2 from "./utils/router-v2";
 
 // for UI
 const root = document.getElementById("root");
-// renderUtils.render(root, renderUtils.h(<App some="akshay" />));
+// renderUtils.render(root, () => () => <App some="akshay" />);
 
 // for signal
 registerRenderCallback(renderUtils.forceUpdate);
@@ -37,7 +37,7 @@ router2(
   },
   (Compo, match) => {
     console.log(match);
-    renderUtils.render(root, renderUtils.h(<Compo />));
+    renderUtils.render(root, () => () => <Compo />);
   }
 );
 
