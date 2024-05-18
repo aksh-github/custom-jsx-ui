@@ -44,7 +44,7 @@ export function createSignal(value) {
 
   const read = () => {
     // console.log("read");
-    needForceUpdate = true;
+    // needForceUpdate = true;
     const observer = context[context.length - 1];
     if (observer) subscribe(observer, subscriptions);
     return value;
@@ -55,7 +55,7 @@ export function createSignal(value) {
       observer.execute();
     }
     // untrack();
-    if (!batchOp && needForceUpdate) {
+    if (!batchOp) {
       forceUpdate();
       needForceUpdate = false;
     }
