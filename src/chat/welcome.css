@@ -1,0 +1,40 @@
+.welcome_old {
+  position: fixed;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome {
+  margin: 10em auto;
+  text-align: center;
+  display: grid;
+  max-width: 430px;
+}
+
+.welcome > input {
+  font-size: 20px;
+  margin-bottom: 1em;
+}
+
+button {
+  font-size: 20px;
+}
+
+.captcha-container {
+  background: #fff;
+  /* font-size: 20px; */
+  margin: 2em 0;
+}
+
+.captcha-container input {
+  font-size: 20px;
+  margin-bottom: 1em;
+}
+
+.captcha-container p {
+  color: #f00;
+}
