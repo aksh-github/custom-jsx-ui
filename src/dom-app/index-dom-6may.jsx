@@ -1,4 +1,4 @@
-import { App, SimpleRoute } from "../App";
+import { App, SimpleRoute } from "./App";
 import { renderUtils, dom } from "../utils/dom/lib.v2";
 // import { renderUtils, dom } from "lib-jsx";
 import router from "../utils/router";
