@@ -1,4 +1,4 @@
-import { dom } from "../utils/lib";
+import { dom } from "../utils/dom/lib";
 
 const Link = (props) => {
   // console.log(props);

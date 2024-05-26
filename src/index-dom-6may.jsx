@@ -1,17 +1,19 @@
 import { App, SimpleRoute } from "./App";
-import { renderUtils, dom } from "./utils/lib.v2";
+import { renderUtils, dom } from "./utils/dom/lib.v2";
 // import { renderUtils, dom } from "lib-jsx";
 import router from "./utils/router";
 import { registerRenderCallback } from "./utils/signal-complex";
 import state from "./utils/simple-state";
 import router2 from "./utils/router-v2";
 import Login from "./chat/Login";
+import { Chat } from "./chat/Chat";
 
 // this is perfect implementation as of 7-may-2024
 
 // for UI
 const root = document.getElementById("root");
-// renderUtils.render(root, () => () => <App some="akshay" />);
+// for non router
+// renderUtils.render(root, () => () => <App />);
 
 // for signal
 registerRenderCallback(renderUtils.forceUpdate);
@@ -19,11 +21,6 @@ registerRenderCallback(renderUtils.forceUpdate);
 // for my state
 const tempSt = state();
 tempSt.registerRenderCallback(renderUtils.forceUpdate);
-
-// checkout new simple: https://github.com/krasimir/navigo
-console.log(
-  "Interesting ***; https://github.com/Matt-Esch/virtual-dom https://github.com/snabbdom/snabbdom"
-);
 
 router2(
   {
@@ -36,7 +33,7 @@ router2(
       },
       // {
       //   path: "/",
-      //   component: Login,
+      //   component: Chat,
       // },
       { path: "/", component: App },
       { path: "*", component: () => () => <div>Error</div> },
@@ -48,9 +45,9 @@ router2(
   }
 );
 
-// navigo router
-// https://github.com/krasimir/navigo/blob/master/DOCUMENTATION.md
-// sample code
+console.log(
+  "Interesting ***; https://github.com/Matt-Esch/virtual-dom https://github.com/snabbdom/snabbdom https://github.com/themarcba/vue-vdom https://www.youtube.com/watch?v=85gJMUEcnkc"
+);
 
 // npm local package
 // https://www.youtube.com/watch?v=VuysNccCnEQ

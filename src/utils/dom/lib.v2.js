@@ -1,5 +1,6 @@
 import { DiffDOM } from "diff-dom";
 
+// need to define this in vite, babel config
 /** @jsx dom */
 
 // for rendering
