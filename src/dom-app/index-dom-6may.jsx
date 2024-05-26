@@ -1,12 +1,12 @@
-import { App, SimpleRoute } from "./App";
-import { renderUtils, dom } from "./utils/dom/lib.v2";
+import { App, SimpleRoute } from "../App";
+import { renderUtils, dom } from "../utils/dom/lib.v2";
 // import { renderUtils, dom } from "lib-jsx";
-import router from "./utils/router";
-import { registerRenderCallback } from "./utils/signal-complex";
-import state from "./utils/simple-state";
-import router2 from "./utils/router-v2";
-import Login from "./chat/Login";
-import { Chat } from "./chat/Chat";
+import router from "../utils/router";
+import { registerRenderCallback } from "../utils/signal-complex";
+import state from "../utils/simple-state";
+import router2 from "../utils/router-v2";
+import Login from "../chat/Login";
+import { Chat } from "../chat/Chat";
 
 // this is perfect implementation as of 7-may-2024
 
