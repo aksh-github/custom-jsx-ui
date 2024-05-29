@@ -243,16 +243,13 @@ function CompoIterator() {
 
 let rootNode = null;
 let curr = null;
-let MainCompo = null;
-
 let old = null;
 
-export function mount($root, f) {
+export function mount($root, initCompo) {
   rootNode = $root;
-  MainCompo = f;
-  curr = MainCompo;
+  curr = initCompo;
   // console.log(curr);
-  old = curr();
+  old = curr(); // create latest vdom
   // CompoIterator().iterate(old);
   console.log(old);
   // updateElement(rootNode, old);
@@ -263,7 +260,7 @@ export function forceUpdate() {
   // oldStack = [...callStack];
   counter = 0;
   // callStack = [];
-  let current = curr();
+  let current = curr(); // create latest vdom
   console.log(old, current);
   // const olda = CompoIterator().iterate(old);
   // const curra = CompoIterator().iterate(current);
