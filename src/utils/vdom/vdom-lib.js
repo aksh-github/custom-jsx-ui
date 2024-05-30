@@ -238,6 +238,10 @@ function CompoIterator() {
 
       // console.log(temp);
       return [...temp];
+    } else if (o?.children) {
+      o.children.forEach((_o) => {
+        iterate(_o);
+      });
     }
   }
 
