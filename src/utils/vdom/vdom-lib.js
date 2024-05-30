@@ -23,7 +23,9 @@ export function h(type, props, ...children) {
       // });
 
       _fn = type(props, ...children);
-      callStack.push({ fname: type.name, fn: _fn });
+      // callStack.push({ fname: type.name, fn: _fn });
+      // console.log("call unmount for ", callStack[counter]?.fname);
+      callStack[counter] = { fname: type.name, fn: _fn };
 
       // console.log(unMountArr[counter]);
     } else {
@@ -184,16 +186,18 @@ function addEventListeners($target, props) {
 }
 
 function createElement(node) {
-  if (node?.$c) {
-    console.log("call mount for >>>>", node.$c);
-  }
+  // if (node?.$c) {
+  //   console.log("call mount for >>>>", node.$c);
+  // }
 
   if (!node?.type) {
-    if (node?.$c)
-      return document.createTextNode(
+    if (node?.$c) {
+      const tnode = document.createTextNode(
         node?.value == null || node?.value == undefined ? "" : node?.value
       );
-    else
+      console.log("call mount for >>>>", node.$c);
+      return tnode;
+    } else
       return document.createTextNode(
         node == null || node == undefined ? "" : node
       );
@@ -202,6 +206,7 @@ function createElement(node) {
   const $el = document.createElement(node.type);
   setProps($el, node.props);
   addEventListeners($el, node.props);
+  if (node?.$c) console.log("call mount for >>>>", node.$c);
   node.children.map(createElement).forEach($el.appendChild.bind($el));
 
   return $el;
