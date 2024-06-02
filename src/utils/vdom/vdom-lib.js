@@ -279,13 +279,28 @@ let old = null;
 
 export function mount($root, initCompo) {
   rootNode = $root;
+  // 0. for route change clean existing things
+  if (rootNode?.firstChild) {
+    console.log(">>> this is route change");
+    while (callStack?.length) {
+      const fn = callStack.splice(callStack.length - 1, 1)?.[0];
+      // console.log(fn);
+      fn?.unMount?.();
+
+      counter--;
+    }
+  }
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
   // console.log(old);
   // updateElement(rootNode, old);
   // 1. set dom
-  rootNode.appendChild(createElement(old));
+  // rootNode.appendChild(createElement(old));
+  if (rootNode.firstChild)
+    rootNode.replaceChild(createElement(old), rootNode.firstChild);
+  else rootNode.appendChild(createElement(old));
+
   // 2. trigger lifecycle
   callMountAll();
 }
@@ -309,7 +324,7 @@ export function forceUpdate() {
 
 function callMountAll() {
   for (let i = 0; i < counter; ++i) {
-    console.log(callStack[i]);
+    // console.log(callStack[i]);
     callStack[i]?.mount?.();
     // need to check carefully
     callStack[i].mount = null;
