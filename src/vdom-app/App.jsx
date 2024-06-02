@@ -17,15 +17,17 @@ const Ctr = ({ v, __spl }) => {
     clearTimeout(timer);
   });
 
-  timer = setTimeout(() => {
-    fetch("/package.json")
-      .then((res) => res.json())
-      .then((res) => {
-        st.set({
-          version: res.version,
+  onMount(() => {
+    timer = setTimeout(() => {
+      fetch("/package.json")
+        .then((res) => res.json())
+        .then((res) => {
+          st.set({
+            version: res.version,
+          });
         });
-      });
-  }, 4000);
+    }, 4000);
+  });
 
   return (props) => {
     // console.log(props);
@@ -105,17 +107,22 @@ export function App(props) {
     console.log(c());
   });
 
-  onCleanup(() => {
-    console.log("unmount app");
+  onMount(() => {
+    console.log("mount app", ref);
   });
 
   const arr = [];
-  for (let i = 0; i < 11; ++i) arr.push(i);
+  for (let i = 0; i < 10; ++i) arr.push(i);
 
-  const Number =
-    () =>
-    ({ n }) =>
-      <li>{n}</li>;
+  const Number = () => {
+    onMount(() => {
+      console.log("mounting number");
+    });
+    onCleanup(() => {
+      console.log("unmounting number");
+    });
+    return ({ n }) => <li>{n}</li>;
+  };
 
   const Master = () => () =>
     (
@@ -153,7 +160,8 @@ export function App(props) {
             <Number n={n} />
           ))}
         </ul>
-      ) : null}
+      ) : // <Number n={10} />
+      null}
     </div>
   );
 }
