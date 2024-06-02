@@ -1,9 +1,20 @@
-export function onMount() {}
-
-export function onCleanup() {}
+// this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
 let callStack = [];
 let counter = 0;
+
+let currMount = null,
+  currUnmount = null;
+
+export function onMount(cb) {
+  // console.log(callStack[counter]);
+  currMount = cb;
+}
+
+export function onCleanup(cb) {
+  // console.log(callStack[counter]);
+  currUnmount = cb;
+}
 
 export function h(type, props, ...children) {
   let _fn = null;
@@ -14,18 +25,24 @@ export function h(type, props, ...children) {
     if (callStack[counter]?.fname !== type.name) {
       console.log(type.name, " not found");
 
-      // const callStackLen = callStack.length;
-      // callStack.splice(counter, callStackLen - counter);
+      // unmount-logic
+      // console.log(callStack[counter]?.unMount);
+      callStack[counter]?.unMount?.();
 
-      // const ar = unMountArr.splice(counter, callStackLen - counter);
-      // ar?.reverse().forEach((fn) => {
-      //   fn?.();
-      // });
+      if (callStack[counter]) callStack[counter].unMount = null;
+
+      // end unmount-logic
 
       _fn = type(props, ...children);
       // callStack.push({ fname: type.name, fn: _fn });
       // console.log("call unmount for ", callStack[counter]?.fname);
-      callStack[counter] = { fname: type.name, fn: _fn };
+      callStack[counter] = {
+        fname: type.name,
+        fn: _fn,
+        mount: currMount,
+        unMount: currUnmount,
+      };
+      currMount = currUnmount = null; // v imp step
 
       // console.log(unMountArr[counter]);
     } else {
@@ -195,7 +212,9 @@ function createElement(node) {
       const tnode = document.createTextNode(
         node?.value == null || node?.value == undefined ? "" : node?.value
       );
-      console.log("call mount for >>>>", node.$c);
+      // console.log("call mount for >>>>", node.$c);
+      // callStack[counter]?.mount?.();
+      // counter++;
       return tnode;
     } else
       return document.createTextNode(
@@ -206,7 +225,11 @@ function createElement(node) {
   const $el = document.createElement(node.type);
   setProps($el, node.props);
   addEventListeners($el, node.props);
-  if (node?.$c) console.log("call mount for >>>>", node.$c);
+  if (node?.$c) {
+    // console.log("call mount for >>>>", node.$c);
+    // callStack[counter]?.mount?.();
+    // counter++;
+  }
   node.children.map(createElement).forEach($el.appendChild.bind($el));
 
   return $el;
@@ -259,23 +282,67 @@ export function mount($root, initCompo) {
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
-  // CompoIterator().iterate(old);
-  console.log(old);
+  // console.log(old);
   // updateElement(rootNode, old);
+  // 1. set dom
   rootNode.appendChild(createElement(old));
+  // 2. trigger lifecycle
+  callMountAll();
 }
 
 export function forceUpdate() {
-  // oldStack = [...callStack];
-  counter = 0;
+  counter = 0; // v imp
   // callStack = [];
   let current = curr(); // create latest vdom
-  console.log(old, current);
-  // const olda = CompoIterator().iterate(old);
-  // const curra = CompoIterator().iterate(current);
-  // console.log(olda, curra);
+  // console.log(old, current);
+  const oldStack = CompoIterator().iterate(old);
+  const currStack = CompoIterator().iterate(current);
+
+  // 1. update dom
   updateElement(rootNode, current, old);
+  // 2. trigger lifecycle
+  callLifeCycleHooks(callStack, oldStack);
+
+  // backup for future comparison
   old = current;
+}
+
+function callMountAll() {
+  for (let i = 0; i < counter; ++i) {
+    console.log(callStack[i]);
+    callStack[i]?.mount?.();
+    // need to check carefully
+    callStack[i].mount = null;
+  }
+}
+
+function callLifeCycleHooks(callStack, stack) {
+  // unmount-logic (this is getting done h func itself)
+  // for (let i = 0; i < stack.length; ++i) {
+  //   if (stack[i] !== callStack[i]?.fname) {
+  //     console.log("unmount reqd for >> ", stack[i]);
+  //     // callStack[i]?.unMount?.();
+  //     // callStack[i].unMount = null;
+  //   }
+  // }
+
+  // correct
+  for (let i = counter; i < callStack.length; ++i) {
+    // console.log("unmount reqd for >> ", callStack[i]?.fname);
+    callStack[i]?.unMount?.();
+    callStack[i].unMount = null;
+  }
+
+  // v imp step
+  if (counter < callStack.length)
+    callStack.splice(counter, callStack.length - counter);
+
+  // mount-logic
+
+  for (let i = 0; i < counter; ++i) {
+    callStack[i]?.mount?.();
+    callStack[i].mount = null;
+  }
 }
 
 function isValid(v) {
