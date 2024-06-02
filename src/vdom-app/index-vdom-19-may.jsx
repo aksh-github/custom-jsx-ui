@@ -1,7 +1,8 @@
-import { App } from "./App";
+import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import state from "../utils/simple-state";
 import { updateElement, h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
+import router2 from "../utils/router-v2";
 
 // v basic test 23may
 // let count = 0;
@@ -82,8 +83,9 @@ import { updateElement, h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
 
 // fresh extensive test
 
-const $root = document.getElementById("root-vdom");
-mount($root, () => <App some={2} />);
+const root = document.getElementById("root-vdom");
+// for non router
+// mount(root, () => <App some={2} />);
 
 // for signal
 registerRenderCallback(forceUpdate);
@@ -91,3 +93,27 @@ registerRenderCallback(forceUpdate);
 // for my state
 const tempSt = state();
 tempSt.registerRenderCallback(forceUpdate);
+
+router2(
+  {
+    // errorComponent: Error,
+    // basePath: "sommore",
+    routes: [
+      {
+        path: "/route2",
+        component: SimpleRoute,
+      },
+      // {
+      //   path: "/",
+      //   component: Chat,
+      // },
+      { path: "/", component: App },
+      { path: "*", component: () => () => <div>Error</div> },
+    ],
+  },
+  (Compo, match) => {
+    console.log(match);
+    //   renderUtils.render(root, () => <Compo />);
+    mount(root, () => <Compo />);
+  }
+);
