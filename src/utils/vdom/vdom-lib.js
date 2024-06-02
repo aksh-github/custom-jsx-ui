@@ -315,7 +315,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     // if (newNode != oldNode)
     //   console.log(newNode, oldNode);
     $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
-  } else if (newNode.type) {
+  } else if (newNode?.type) {
     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
     const newLength = newNode.children.length;
     const oldLength = oldNode.children.length;
