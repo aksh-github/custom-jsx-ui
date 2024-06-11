@@ -4,6 +4,7 @@ import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 // import Link from "./compos/Link";
 import state from "../utils/simple-state";
 import Link from "../compos/Link";
+import NavigoRouter from "../utils/navigo-router";
 // import { useState } from "./utils/hooks-experi";
 
 // Ctr
@@ -234,7 +235,14 @@ export const SimpleRoute = () => {
     return (
       <div ref={(_ref) => (ref = _ref)}>
         route2
-        <Link href="/">Go Back</Link>
+        {/* <Link href="/">Go Back</Link> */}
+        <button
+          onClick={() => {
+            NavigoRouter.get()?.navigate("/");
+          }}
+        >
+          Back
+        </button>
         <div>
           <h3>{pst.get("r") % 2 === 0 ? <Even /> : <Odd />}</h3>
           <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
