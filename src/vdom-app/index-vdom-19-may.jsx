@@ -2,7 +2,7 @@ import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import state from "../utils/simple-state";
 import { updateElement, h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
-import router2 from "../utils/router-v2";
+import NavigoRouter from "../utils/navigo-router";
 
 // v basic test 23may
 // let count = 0;
@@ -94,7 +94,7 @@ registerRenderCallback(forceUpdate);
 const tempSt = state();
 tempSt.registerRenderCallback(forceUpdate);
 
-router2(
+NavigoRouter(
   {
     // errorComponent: Error,
     // basePath: "sommore",

@@ -1,6 +1,6 @@
 import Navigo from "navigo"; // When using ES modules.
 
-const router2 = (routeObj, cb) => {
+const NavigoRouter = (routeObj, cb) => {
   const _router = new Navigo(routeObj.basePath || "/");
 
   routeObj?.routes.forEach((ro) => {
@@ -22,4 +22,4 @@ const router2 = (routeObj, cb) => {
   return _router;
 };
 
-export default router2;
+export default NavigoRouter;
