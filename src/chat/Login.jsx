@@ -1,25 +1,29 @@
-// import { createSignal, createEffect } from "solid-js";
-import { dom, onMount } from "../utils/lib.v2";
+import { h, onMount } from "../utils/vdom/vdom-lib";
 import { createSignal, createEffect } from "../utils/signal-complex";
 // import { generateCaptcha } from "../utils/utils";
 
-import "./index.css";
-import "./welcome.css";
+import navigoRouter from "../utils/navigo-router";
+import { appState } from "./state-helper";
 
 const Login = (props) => {
   console.log(props);
   let userNameTxtRef;
-  const [user, setUser] = createSignal("");
-  const [room, setRoom] = createSignal("");
-  const [valid, setValid] = createSignal(false);
+  const [user, setUser] = createSignal(appState.get("user"));
+  const [room, setRoom] = createSignal(appState.get("room"));
+  // const [valid, setValid] = createSignal(false);
 
   const clicked = (e) => {
-    // if (!isDisabled()) {
-    //   setStore({
-    //     showCaptcha: false,
-    //   });
-    //   navigate("/chat");
-    // }
+    if (isValid()) {
+      // setStore({
+      //   showCaptcha: false,
+      // });
+      appState.set({
+        user: user(),
+        room: room(),
+        valid: isValid(),
+      });
+      navigoRouter.get().navigate("/chat");
+    }
   };
 
   onMount(() => {
@@ -27,21 +31,13 @@ const Login = (props) => {
     userNameTxtRef?.focus();
   });
 
-  const isDisabled = () => {
-    return !(
+  const isValid = () => {
+    return (
       user()?.length > 3 &&
       user()?.length < 11 &&
       room()?.length > 3 &&
       room()?.length < 11
     );
-    // return !(
-    //   store.user?.length > 3 &&
-    //   store.user?.length < 11 &&
-    //   store.room?.length > 3 &&
-    //   store.room?.length < 11 &&
-    //   store.captchaMatching
-    // );
-    // return user() && room();
   };
 
   return () => (
@@ -79,7 +75,7 @@ const Login = (props) => {
 
       {/* {store.showCaptcha ? <Captcha /> : null} */}
 
-      <button disabled={isDisabled()} onClick={clicked}>
+      <button disabled={!isValid()} onClick={clicked}>
         Lets Chat
       </button>
     </div>
