@@ -26,16 +26,16 @@ const Header = (props) => () =>
 
 const FooterWrapper = (props) => {
   const ActionBar = () => () => <div className="actions">Action Bar</div>;
-  const _Footer = () => () => <footer>Some footer</footer>;
+  const Footer = () => () => <footer>Some footer</footer>;
 
   //   return () =>
-  //     [ActionBar, _Footer].map((ele) => {
+  //     [ActionBar, Footer].map((ele) => {
   //       return <ele />;
   //     });
   return () => (
     <div>
       <ActionBar />
-      <_Footer />
+      <Footer />
     </div>
   );
 };
@@ -46,7 +46,7 @@ export const ChatWindow = (props) => {
   let chatRowDiv;
   return () => (
     <div class="chat-container">
-      <Header goBack={() => {}} online={true} />
+      <Header online={true} />
       <div
         class="chat-row"
         ref={chatRowDiv}
