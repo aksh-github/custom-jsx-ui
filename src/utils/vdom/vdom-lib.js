@@ -60,7 +60,14 @@ export function h(type, props, ...children) {
     //complex node
     if (rv?.type) return { ...rv, $c: type.name, children: rv.children };
     // str, null etc
-    else
+    else if (Array.isArray(rv)) {
+      //special case Compo with Array return and no type  (parent)
+      return {
+        $c: type.name,
+        type: "df", //assign doc fragment type
+        children: rv,
+      };
+    } else
       return {
         $c: type.name,
         value: rv,
@@ -222,6 +229,16 @@ function createElement(node) {
       );
   }
 
+  //special case Compo with Array return and no type (parent)
+  // doc fragement case
+  if (node?.type === "df") {
+    const $el2 = document.createDocumentFragment();
+
+    node.children.map(createElement).forEach($el2.appendChild.bind($el2));
+
+    return $el2;
+  }
+
   const $el = document.createElement(node.type);
   setProps($el, node.props);
   addEventListeners($el, node.props);
@@ -293,7 +310,7 @@ export function mount($root, initCompo) {
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
-  // console.log(old);
+  console.log(old);
   // updateElement(rootNode, old);
   // 1. set dom
   // rootNode.appendChild(createElement(old));
@@ -309,7 +326,7 @@ export function forceUpdate() {
   counter = 0; // v imp
   // callStack = [];
   let current = curr(); // create latest vdom
-  // console.log(old, current);
+  console.log(old, current);
   const oldStack = CompoIterator().iterate(old);
   const currStack = CompoIterator().iterate(current);
 
@@ -395,8 +412,14 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     $parent.removeChild($parent.childNodes[index]);
   } else if (changed(newNode, oldNode)) {
     // if (newNode != oldNode)
-    //   console.log(newNode, oldNode);
-    $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
+    console.log(typeof $parent.childNodes[index]);
+
+    if ($parent.childNodes[index])
+      $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
+    else {
+      //special case Compo with Array return and no type (parent) for updating
+      $parent?.parentNode?.appendChild(createElement(newNode));
+    }
   } else if (newNode?.type) {
     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
     const newLength = newNode.children.length;

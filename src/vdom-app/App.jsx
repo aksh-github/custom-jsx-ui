@@ -222,6 +222,8 @@ export const SimpleRoute = () => {
   // const tv = pst.get("r");
   let ref = null;
 
+  const arrState = state({ arr: [10, 20] });
+
   onMount(() => {
     console.log("Ref available in onMount for SimpleRoute", ref);
   });
@@ -229,6 +231,14 @@ export const SimpleRoute = () => {
   onCleanup(() => {
     console.log("unmount for SimpleRoute");
   });
+
+  const For = () => {
+    // const arr = [10, 20, 30];
+    return () =>
+      arrState.get("arr").map((it) => {
+        return <p>{it}</p>;
+      });
+  };
 
   return () => {
     console.log(pst.get("r"));
@@ -250,6 +260,17 @@ export const SimpleRoute = () => {
           </button>
           <button onClick={() => setr(10000)}>Change</button>
         </div>
+        <hr />
+        <button
+          onClick={() =>
+            arrState.set({
+              arr: [...arrState.get("arr"), 40],
+            })
+          }
+        >
+          Update below Array
+        </button>
+        <For />
       </div>
     );
   };
