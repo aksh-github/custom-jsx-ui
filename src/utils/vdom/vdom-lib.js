@@ -33,7 +33,12 @@ export function h(type, props, ...children) {
 
       // end unmount-logic
 
-      _fn = type(props, ...children);
+      if (type.name === "h") {
+        // doc fragement case
+        _fn = h("df", props, ...children);
+      } else {
+        _fn = type(props, ...children);
+      }
       // callStack.push({ fname: type.name, fn: _fn });
       // console.log("call unmount for ", callStack[counter]?.fname);
       callStack[counter] = {
@@ -46,12 +51,19 @@ export function h(type, props, ...children) {
 
       // console.log(unMountArr[counter]);
     } else {
+      if (callStack[counter].fname === "h")
+        console.log(
+          "Dont use for dynamic parts, Changes happening to {Component}, {Array} won't reflect in UI"
+        );
+      // console.log(callStack[counter].fname);
+
       _fn = callStack[counter].fn;
 
       // console.log(unMountArr[counter]);
     }
     counter++;
-    const rv = _fn({ ...props, children: children });
+    const rv =
+      typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
 
     // console.log(rv);
 
@@ -232,13 +244,16 @@ function createElement(node) {
 
   //special case Compo with Array return and no type (parent)
   // doc fragement case
-  // if (node?.type === "df") {
-  //   const $el2 = document.createDocumentFragment();
+  if (node?.type === "df") {
+    console.warn(
+      "fragment support is experimental and nested fragments NOT supported!!!"
+    );
+    const $el2 = document.createDocumentFragment();
 
-  //   node.children.map(createElement).forEach($el2.appendChild.bind($el2));
+    node.children.map(createElement).forEach($el2.appendChild.bind($el2));
 
-  //   return $el2;
-  // }
+    return $el2;
+  }
 
   const $el = document.createElement(node.type);
   setProps($el, node.props);
@@ -412,16 +427,16 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   } else if (!isValid(newNode)) {
     $parent.removeChild($parent.childNodes[index]);
   } else if (changed(newNode, oldNode)) {
-    // if (newNode != oldNode)
-    // console.log(typeof $parent.childNodes[index]);
-    $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
-
-    // if ($parent.childNodes[index])
-    //   $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
-    // else {
-    //   //special case Compo with Array return and no type (parent) for updating
-    //   $parent?.parentNode?.appendChild(createElement(newNode));
-    // }
+    if ($parent?.childNodes[index])
+      $parent?.replaceChild(createElement(newNode), $parent.childNodes[index]);
+    else {
+      //special case Compo with Array manipulation or no type (parent) for updating
+      if ($parent) {
+        $parent.appendChild(createElement(newNode));
+      } else {
+        $parent?.parentNode?.appendChild(createElement(newNode));
+      }
+    }
   } else if (newNode?.type) {
     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
     const newLength = newNode.children.length;
@@ -435,4 +450,9 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       );
     }
   }
+}
+
+function devlog(msg) {
+  // if (window?.__dev === true)
+  console.log(msg);
 }
