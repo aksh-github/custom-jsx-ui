@@ -94,7 +94,7 @@ registerRenderCallback(forceUpdate);
 const tempSt = state();
 tempSt.registerRenderCallback(forceUpdate);
 
-NavigoRouter.set(
+NavigoRouter(
   {
     // errorComponent: Error,
     // basePath: "sommore",
