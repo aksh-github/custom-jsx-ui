@@ -1,3 +1,4 @@
+import { createSignal } from "../utils/signal-complex";
 import state from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
@@ -8,28 +9,44 @@ export const DoesNotWork = (props) => {
 
 export const PropsDriven = (props) => {
   //   console.log(props);
-  return () => <p>{props.p}</p>;
+  return () => <div style={{ backgroundColor: "beige" }}>{props.n}</div>;
 };
 
 export const ArrayWithoutMap = () => {
-  console.log(
-    "This does NOT work, because {Array} or {Compo} is not supported"
-  );
-  const arr = [<p>10</p>, <p>20</p>];
+  console.log("If you try to change the array it won't work");
+  // let arr = [<p>10</p>, <p>20</p>];
+  const [arr, set] = createSignal([<p>10</p>, <p>20</p>]);
 
-  // NO
+  // this wont work
+  setTimeout(() => {
+    console.log("exec");
+    // arr = [...arr, <p>40</p>];
+    set([...arr(), <p>40</p>]);
+    console.log(arr());
+  }, 4000);
+
   return () => {
-    return { arr };
+    return arr();
   };
 
   //   return () => [<p>10</p>, <p>20</p>];   // NO
 };
 
 export const ArrayWithMap = () => {
-  console.log("This does NOT work");
-  const arr = [<p>10</p>, <p>20</p>];
+  console.log("If you try to change the array it won't work");
+  // let arr = [<p>10</p>, <p>20</p>];
+  const [arr, set] = createSignal([<p>10</p>, <p>20</p>]);
+
+  // this wont work
+  setTimeout(() => {
+    console.log("exec");
+    // arr = [...arr, <p>40</p>];
+    set([...arr(), <p>40</p>]);
+    console.log(arr());
+  }, 4000);
+
   return () =>
-    arr.map((el) => {
+    arr().map((el) => {
       return el;
     });
 };

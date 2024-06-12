@@ -290,28 +290,19 @@ export const SimpleRoute = () => {
         route2
         <Link href="/">Go Back</Link>
         <hr />
-        {/* <div>
+        <div>
           <h3>{pst.get("r") % 2 === 0 ? <Even /> : <Odd />}</h3>
           <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
             Change
           </button>
           <button onClick={() => setr(10000)}>Change</button>
         </div>
-        <hr />
-        <button
-          onClick={() =>
-            arrState.set({
-              arr: [...arrState.get("arr"), 40],
-            })
-          }
-        >
-          Update below Array
-        </button> */}
         <ArrayWithMap />
-        <ArrayWithoutMap />
-        <ArrayThatWorks />
+        {/* <ArrayWithoutMap /> */}
+        {/* <ArrayThatWorks />
         <NoParentComp />
-        <ArrayWithFragments />
+        <ArrayWithFragments /> */}
+        <PropsDriven n="Property to Component" />
       </div>
     );
   };

@@ -72,15 +72,20 @@ export function h(type, props, ...children) {
     //complex node
     if (rv?.type) return { ...rv, $c: type.name, children: rv.children };
     // str, null etc
-    // else if (Array.isArray(rv)) {
-    //   //special case Compo with Array return and no type  (parent)
-    //   return {
-    //     $c: type.name,
-    //     type: "df", //assign doc fragment type
-    //     children: rv,
-    //   };
-    // }
-    else
+    else if (Array.isArray(rv)) {
+      console.warn(
+        "Your component named `",
+        type.name,
+        "` is returning Array, manipulation to this Array is currently NOT supported and can lead to Unexpected behavior"
+      );
+
+      //special case return value Array and may be no type  (parent)
+      return {
+        $c: type.name,
+        type: "df", //assign doc fragment type
+        children: rv,
+      };
+    } else
       return {
         $c: type.name,
         value: rv,
