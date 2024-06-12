@@ -4,4 +4,6 @@ export const appState = state({
   user: "user",
   room: "room",
   valid: false,
+  showCaptcha: true,
+  captchaMatching: false,
 });

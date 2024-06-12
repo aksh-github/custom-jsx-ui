@@ -4,6 +4,7 @@ import { createSignal, createEffect } from "../utils/signal-complex";
 
 import navigoRouter from "../utils/navigo-router";
 import { appState } from "./state-helper";
+import Captcha from "./Captcha";
 
 const Login = (props) => {
   console.log(props);
@@ -21,6 +22,7 @@ const Login = (props) => {
         user: user(),
         room: room(),
         valid: isValid(),
+        showCaptcha: false,
       });
       navigoRouter.get().navigate("/chat");
     }
@@ -36,7 +38,8 @@ const Login = (props) => {
       user()?.length > 3 &&
       user()?.length < 11 &&
       room()?.length > 3 &&
-      room()?.length < 11
+      room()?.length < 11 &&
+      appState.get("captchaMatching")
     );
   };
 
@@ -73,7 +76,7 @@ const Login = (props) => {
         }}
       />
 
-      {/* {store.showCaptcha ? <Captcha /> : null} */}
+      {appState.get("showCaptcha") ? <Captcha /> : null}
 
       <button disabled={!isValid()} onClick={clicked}>
         Lets Chat
