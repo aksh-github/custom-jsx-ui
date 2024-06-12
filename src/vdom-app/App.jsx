@@ -4,7 +4,13 @@ import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 // import Link from "./compos/Link";
 import state from "../utils/simple-state";
 import Link from "../compos/Link";
-import NavigoRouter from "../utils/navigo-router";
+import {
+  ArrayWithMap,
+  ArrayWithoutMap,
+  ArrayThatWorks,
+  ArrayWithFragments,
+  PropsDriven,
+} from "../compos/ComponentPatterns";
 // import { useState } from "./utils/hooks-experi";
 
 // Ctr
@@ -222,6 +228,8 @@ export const SimpleRoute = () => {
   // const tv = pst.get("r");
   let ref = null;
 
+  const arrState = state({ arr: ["10", "20"] });
+
   onMount(() => {
     console.log("Ref available in onMount for SimpleRoute", ref);
   });
@@ -230,19 +238,58 @@ export const SimpleRoute = () => {
     console.log("unmount for SimpleRoute");
   });
 
+  const NoParentComp = () => {
+    // let noParent = [<p>10</p>, <p>20</p>];
+    const [noParent, setNoParent] = createSignal([<p>10</p>, <p>20</p>]);
+    // const Arr = state({ a: [<p>10</p>, <p>20</p>] });
+    console.log("This is not supported, since h() return value is cached");
+
+    return () => (
+      <>
+        <button
+          onClick={() => {
+            setNoParent([...noParent(), <p>40</p>]);
+            console.log(noParent());
+            // Arr.set({ a: [...Arr.get("a"), <p>40</p>] });
+            // console.log(Arr.get("a"));
+          }}
+        >
+          Update below Array (NOT supported)
+        </button>
+        {noParent()}
+      </>
+    );
+  };
+
+  const Test = () => {
+    const Arr = state({ a: [<p>10</p>, <p>20</p>] });
+
+    console.log("came here");
+
+    return () => (
+      <div>
+        <button
+          onClick={() => {
+            // setNoParent([...noParent(), <p>40</p>]);
+            // console.log(noParent());
+            Arr.set({ a: [...Arr.get("a"), <p>40</p>] });
+            console.log(Arr.get("a"));
+          }}
+        >
+          Update below Array
+        </button>
+        {Arr.get("a")}
+      </div>
+    );
+  };
+
   return () => {
     console.log(pst.get("r"));
     return (
       <div ref={(_ref) => (ref = _ref)}>
         route2
-        {/* <Link href="/">Go Back</Link> */}
-        <button
-          onClick={() => {
-            NavigoRouter.get()?.navigate("/");
-          }}
-        >
-          Back
-        </button>
+        <Link href="/">Go Back</Link>
+        <hr />
         <div>
           <h3>{pst.get("r") % 2 === 0 ? <Even /> : <Odd />}</h3>
           <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
@@ -250,6 +297,12 @@ export const SimpleRoute = () => {
           </button>
           <button onClick={() => setr(10000)}>Change</button>
         </div>
+        <ArrayWithMap />
+        {/* <ArrayWithoutMap /> */}
+        {/* <ArrayThatWorks />
+        <NoParentComp />
+        <ArrayWithFragments /> */}
+        <PropsDriven n="Property to Component" />
       </div>
     );
   };

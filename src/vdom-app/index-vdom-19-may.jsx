@@ -100,14 +100,14 @@ NavigoRouter.set(
     // basePath: "sommore",
     routes: [
       {
-        path: "/route2",
+        path: "/",
         component: SimpleRoute,
       },
       // {
       //   path: "/",
       //   component: Chat,
       // },
-      { path: "/", component: App },
+      { path: "/route2", component: App },
       { path: "*", component: () => () => <div>Error</div> },
     ],
   },

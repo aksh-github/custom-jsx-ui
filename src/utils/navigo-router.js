@@ -1,4 +1,4 @@
-import Navigo from "navigo";
+import Navigo from "navigo"; // When using ES modules.
 
 const NavigoRouter = () => {
   let _router = null;
