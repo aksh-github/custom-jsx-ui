@@ -1,25 +1,30 @@
 import Navigo from "navigo"; // When using ES modules.
 
-const NavigoRouter = (routeObj, cb) => {
-  const _router = new Navigo(routeObj.basePath || "/");
+const NavigoRouter = () => {
+  let _router = null;
 
-  routeObj?.routes.forEach((ro) => {
-    // console.log(ro);
-    _router.on(ro.path, (match) => {
-      cb(ro.component, match);
-    });
-  });
+  return {
+    set: (routeObj, cb) => {
+      _router = new Navigo(routeObj.basePath || "/");
 
-  _router.hooks({
-    before(done, match) {
-      // do something
-      done();
+      routeObj?.routes.forEach((ro) => {
+        // console.log(ro);
+        _router.on(ro.path, (match) => {
+          cb(ro.component, match);
+        });
+      });
+
+      _router.hooks({
+        before(done, match) {
+          // do something
+          done();
+        },
+      });
+
+      _router.resolve();
     },
-  });
-
-  _router.resolve();
-
-  return _router;
+    get: () => _router,
+  };
 };
 
-export default NavigoRouter;
+export default NavigoRouter();
