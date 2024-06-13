@@ -17,19 +17,19 @@ export const ArrayWithoutMap = () => {
   // let arr = [<p>10</p>, <p>20</p>];
   const [arr, set] = createSignal([<p>10</p>, <p>20</p>]);
 
-  // this wont work
-  setTimeout(() => {
-    console.log("exec");
-    // arr = [...arr, <p>40</p>];
-    set([...arr(), <p>40</p>]);
-    console.log(arr());
-  }, 4000);
+  // this definitely wont work
+  // setTimeout(() => {
+  //   console.log("exec");
+  //   // arr = [...arr, <p>40</p>];
+  //   set([...arr(), <p>40</p>]);
+  //   console.log(arr());
+  // }, 4000);
 
-  return () => {
-    return arr();
-  };
+  // return () => {
+  //   return arr();
+  // };
 
-  //   return () => [<p>10</p>, <p>20</p>];   // NO
+  return () => [<p>10</p>, <p>20</p>]; // NO
 };
 
 export const ArrayWithMap = () => {
@@ -37,13 +37,13 @@ export const ArrayWithMap = () => {
   // let arr = [<p>10</p>, <p>20</p>];
   const [arr, set] = createSignal([<p>10</p>, <p>20</p>]);
 
-  // this wont work
-  setTimeout(() => {
-    console.log("exec");
-    // arr = [...arr, <p>40</p>];
-    set([...arr(), <p>40</p>]);
-    console.log(arr());
-  }, 4000);
+  // this definitelys wont work
+  // setTimeout(() => {
+  //   console.log("exec");
+  //   // arr = [...arr, <p>40</p>];
+  //   set([...arr(), <p>40</p>]);
+  //   console.log(arr());
+  // }, 4000);
 
   return () =>
     arr().map((el) => {
