@@ -7,12 +7,11 @@ import {
   getFileSize,
   getImageDimensions,
 } from "./utils";
-
-import "./index.css";
-import "./welcome.css";
 import navigoRouter from "../utils/navigo-router";
 import { appState } from "./state-helper";
 import ChatMessages from "./ChatMessages";
+
+import { createPopup } from "@picmo/popup-picker";
 
 let publicKey = "";
 
@@ -118,8 +117,8 @@ const ActionBar = (props) => {
         >
           <button
             className="smileyButton"
-            ref={props?.btn}
-            onClick={props?.clicked}
+            ref={(ref) => props?.setBtnRef(ref)}
+            onClick={props?.smileyClicked}
             id="emoji-button"
           >
             😀
@@ -199,7 +198,7 @@ export const ChatWindow = (props) => {
     navigoRouter.get().navigate("/");
   }
 
-  let chatRowDiv, chatSmiley;
+  let chatRowDiv, chatSmiley, picker, btn;
 
   const [enable, setEnable] = createSignal(false);
   // const [me, setMe] = createSignal("");
@@ -207,9 +206,39 @@ export const ChatWindow = (props) => {
   const [msg, setMsg] = createSignal("");
   const [online, isOnline] = createSignal(false);
 
-  // createEffect(() => {
-  //   console.log(msg());
-  // });
+  onMount(() => {
+    if (!picker) createAPopup();
+  });
+
+  const createAPopup = () => {
+    // emoji stuff
+
+    picker = createPopup(
+      {
+        // picker options go here
+        // rootElement: chatSmiley,
+        categories: ["recents", "smileys-emotion", "people-body"],
+        emojiSize: "1.5rem",
+        showPreview: false,
+        showSearch: false,
+      },
+      {
+        referenceElement: chatSmiley,
+        triggerElement: btn,
+        position: "top",
+        hideOnEmojiSelect: false,
+      }
+    );
+
+    picker.addEventListener("emoji:select", (data) => {
+      // console.log(data);
+      setMsg(msg() + data.emoji);
+    });
+  };
+
+  const smileyClicked = () => {
+    picker?.toggle();
+  };
 
   const onFileChange = async (event) => {
     const _file = event?.target?.files[0];
@@ -293,9 +322,11 @@ export const ChatWindow = (props) => {
       {/* {!online() ? <div style={{ "text-align": "center" }}>Connecting...</div> : null} */}
       <ActionBar
         online={true}
+        setBtnRef={(ref) => (btn = ref)}
         setCSRef={(ref) => (chatSmiley = ref)}
         onFileChange={(e) => onFileChange(e)}
         setMsg={setMsg}
+        smileyClicked={smileyClicked}
       />
       <Footer
         msg={msg}
