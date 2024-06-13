@@ -1,4 +1,4 @@
-// import CryptoJS from "crypto-js";
+import CryptoJS from "crypto-js";
 
 // const kp = "84cfeb6";
 const kp = "30269de";

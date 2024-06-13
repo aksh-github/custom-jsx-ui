@@ -8,12 +8,13 @@ import {
   getImageDimensions,
 } from "./utils";
 import navigoRouter from "../utils/navigo-router";
-import { appState } from "./state-helper";
+import { appState, online, socketState } from "./state-helper";
 import ChatMessages from "./ChatMessages";
 
 import { createPopup } from "@picmo/popup-picker";
+import { SocketHelper, sendMessage } from "./socket/socket-helper";
 
-let publicKey = "";
+let chatSmiley = null;
 
 const Header = (props) => () =>
   (
@@ -24,7 +25,7 @@ const Header = (props) => () =>
       <div>
         <span
           className="online"
-          style={{ "background-color": props?.online ? "green" : "red" }}
+          style={{ "background-color": online() ? "green" : "red" }}
         ></span>{" "}
         {appState.get("room")}
       </div>
@@ -34,12 +35,14 @@ const Header = (props) => () =>
 
 const Footer = (props) => {
   let textareaRef = null;
+
   const decide = () => {
-    return !props?.msg();
+    // console.log(online());
+    return !(props?.msg() && online());
     // return false;
   };
 
-  return () => {
+  return (props) => {
     return (
       <footer>
         <form>
@@ -48,12 +51,13 @@ const Footer = (props) => {
               textareaRef = ref;
             }}
             rows={3}
-            value={props?.msg()}
+            // value={props?.msg()}
             placeholder="Type your message...(Shft + Enter for next line)"
             onInput={(e) => {
+              console.log(e.target.value);
               let v = e.target.value;
               v = v?.trim();
-              props?.setMsg(e.target.value);
+              props?.setMsg(v);
             }}
           >
             {props?.msg()}
@@ -64,10 +68,11 @@ const Footer = (props) => {
             onClick={(e) => {
               e?.preventDefault();
               props?.sendMessage();
-              if (textareaRef) {
-                textareaRef.value = "";
-                textareaRef.focus();
-              }
+              props?.setMsg("");
+              // if (textareaRef) {
+              //   // textareaRef.value = "";
+              //   textareaRef.focus();
+              // }
             }}
           >
             <div className="wrapper">➤</div>
@@ -79,8 +84,12 @@ const Footer = (props) => {
 };
 
 const ActionBar = (props) => {
+  onMount(() => {
+    props?.createAPopup();
+  });
+
   return () =>
-    props?.online ? (
+    online() ? (
       <div className="actions">
         <div className="file-input">
           <input
@@ -130,67 +139,6 @@ const ActionBar = (props) => {
     );
 };
 
-const sendMessage = (msg, _file, to) => {
-  // focusText();   //this was not working!!
-  // (messageText as HTMLElement)?.focus();
-
-  // console.log(msg());
-
-  if (_file) {
-    // console.log("handle img", _file);
-
-    const encrypted =
-      (JSON.stringify({
-        // from: me(),
-
-        message: _file,
-        from: appState.get("user"),
-        to: to(),
-        toRoom: appState.get("room"),
-        user: appState.get("user"),
-
-        type: "img",
-      }),
-      publicKey);
-
-    // console.log(encrypted);
-
-    // for perf checking
-    const dt = new Date();
-    console.log(dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds());
-    // for perf checking
-
-    // socket?.emit("new_image", encrypted);
-
-    appState.set({
-      messages: [
-        ...appState.get().messages,
-        { from: "me", message: _file, type: "img" },
-      ],
-    });
-    return;
-  }
-
-  const encrypted =
-    (JSON.stringify({
-      // from: me(),
-      from: appState.get("user"),
-      to: to(),
-      toRoom: appState.get("room"),
-      user: appState.get("user"),
-      message: msg(),
-    }),
-    publicKey);
-  // console.log(encrypted);
-
-  // socket?.emit("new_message", encrypted);
-  // setMessages([...messages(), { from: "me", message: msg() }]);
-  appState.set({
-    messages: [...appState.get().messages, { from: "me", message: msg() }],
-  });
-  // scrollToBottom();
-};
-
 export const ChatWindow = (props) => {
   // imp things first
   if (!appState.get("room")) {
@@ -198,21 +146,20 @@ export const ChatWindow = (props) => {
     navigoRouter.get().navigate("/");
   }
 
-  let chatRowDiv, chatSmiley, picker, btn;
+  let chatRowDiv, picker, btn;
 
-  const [enable, setEnable] = createSignal(false);
   // const [me, setMe] = createSignal("");
-  const [to, setTo] = createSignal("");
   const [msg, setMsg] = createSignal("");
-  const [online, isOnline] = createSignal(false);
+  const [to, setTo] = createSignal("");
 
   onMount(() => {
+    SocketHelper();
     if (!picker) createAPopup();
   });
 
   const createAPopup = () => {
     // emoji stuff
-
+    // console.log(chatSmiley);
     picker = createPopup(
       {
         // picker options go here
@@ -233,6 +180,7 @@ export const ChatWindow = (props) => {
     picker.addEventListener("emoji:select", (data) => {
       // console.log(data);
       setMsg(msg() + data.emoji);
+      console.log(msg());
     });
   };
 
@@ -298,6 +246,10 @@ export const ChatWindow = (props) => {
 
         if (bytes) sendMessage(null, bytes, to);
         // socket.emit("image", bytes);
+        const fileInput = document.querySelector("#file-input");
+        if (fileInput) fileInput.value = null;
+        console.log(fileInput);
+
         setMsg("");
       };
       reader.readAsDataURL(optimalBlob);
@@ -323,7 +275,10 @@ export const ChatWindow = (props) => {
       <ActionBar
         online={true}
         setBtnRef={(ref) => (btn = ref)}
-        setCSRef={(ref) => (chatSmiley = ref)}
+        setCSRef={(ref) => {
+          chatSmiley = ref;
+        }}
+        createAPopup={createAPopup}
         onFileChange={(e) => onFileChange(e)}
         setMsg={setMsg}
         smileyClicked={smileyClicked}
@@ -331,9 +286,9 @@ export const ChatWindow = (props) => {
       <Footer
         msg={msg}
         setMsg={setMsg}
-        enable={true}
-        sendMessage={(e) => {
-          sendMessage(msg, null, to);
+        sendMessage={() => {
+          sendMessage(msg(), null, to);
+
           setMsg("");
         }}
       />

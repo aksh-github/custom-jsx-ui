@@ -1,9 +1,5 @@
+import { createSignal } from "../utils/signal-complex";
 import state from "../utils/simple-state";
-
-const messages = [
-  { from: "me", message: "first message" },
-  { from: "me", message: "soisdf" },
-];
 
 export const appState = state({
   user: "user",
@@ -12,6 +8,7 @@ export const appState = state({
   showCaptcha: true,
   captchaMatching: false,
   messages: [],
+  to: "",
 });
 
 setTimeout(() => {
@@ -35,3 +32,13 @@ setTimeout(() => {
     ],
   });
 }, 5000);
+
+export const socketState = state({
+  socket: null,
+  publicKey: "",
+});
+
+// global signal
+
+export const [enable, setEnable] = createSignal(false);
+export const [online, isOnline] = createSignal(false);
