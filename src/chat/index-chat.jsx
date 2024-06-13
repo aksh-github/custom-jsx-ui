@@ -1,6 +1,6 @@
 import { registerRenderCallback } from "../utils/signal-complex";
 import state from "../utils/simple-state";
-import { updateElement, h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
+import { h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
 import NavigoRouter from "../utils/navigo-router";
 import Login from "./Login";
 import { appState } from "./state-helper";
@@ -25,7 +25,7 @@ appState.registerRenderCallback(forceUpdate);
 NavigoRouter.set(
   {
     // errorComponent: Error,
-    // basePath: "sommore",
+    basePath: window.location.pathname,
     routes: [
       {
         path: "/",
@@ -38,7 +38,7 @@ NavigoRouter.set(
 
       {
         path: "*",
-        component: () => () => <div>{JSON.stringify(appState.get())}</div>,
+        component: () => () => <div>Error occurred</div>,
       },
     ],
   },

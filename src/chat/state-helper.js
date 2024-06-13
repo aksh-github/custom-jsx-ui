@@ -2,8 +2,8 @@ import { createSignal } from "../utils/signal-complex";
 import state from "../utils/simple-state";
 
 export const appState = state({
-  user: "user",
-  room: "room",
+  user: "",
+  room: "",
   valid: false,
   showCaptcha: true,
   captchaMatching: false,
