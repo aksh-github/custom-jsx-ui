@@ -67,10 +67,10 @@ const Footer = (props) => {
               e?.preventDefault();
               props?.sendMessage();
               props?.setMsg("");
-              // if (textareaRef) {
-              //   // textareaRef.value = "";
-              //   textareaRef.focus();
-              // }
+              if (textareaRef) {
+                // textareaRef.value = "";
+                textareaRef.focus();
+              }
             }}
           >
             <div className="wrapper">➤</div>
@@ -149,6 +149,10 @@ export const ChatWindow = (props) => {
   // const [me, setMe] = createSignal("");
   const [msg, setMsg] = createSignal("");
   const [to, setTo] = createSignal("");
+
+  const scrollToBottom = () => {
+    chatRowDiv?.scrollTo(0, chatRowDiv?.scrollHeight);
+  };
 
   onMount(() => {
     SocketHelper();
