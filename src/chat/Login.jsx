@@ -45,7 +45,7 @@ const Login = (props) => {
 
   return () => (
     <div className="welcome">
-      <h2>Solid Chat</h2>
+      <h2>VDom Chat</h2>
       <input
         placeholder="User name"
         minLength={4}
