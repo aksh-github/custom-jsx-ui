@@ -6,6 +6,7 @@ import "./index.css";
 import "./welcome.css";
 import navigoRouter from "../utils/navigo-router";
 import { appState } from "./state-helper";
+import ChatMessages from "./ChatMessages";
 
 const Header = (props) => () =>
   (
@@ -25,29 +26,42 @@ const Header = (props) => () =>
   );
 
 const Footer = (props) => {
+  let textareaRef = null;
+  const decide = () => {
+    return !props?.msg();
+    // return false;
+  };
+
   return () => {
-    // console.log(props, props?.msg());
     return (
       <footer>
         <form>
           <textarea
             ref={(ref) => {
-              props?.setMTRef(ref);
+              textareaRef = ref;
             }}
             rows={3}
+            value={props?.msg()}
             placeholder="Type your message...(Shft + Enter for next line)"
             onInput={(e) => {
-              let v = e.currentTarget.value;
+              let v = e.target.value;
               v = v?.trim();
-              if (v) props?.setMessage(e.currentTarget.value);
+              props?.setMsg(e.target.value);
             }}
           >
             {props?.msg()}
           </textarea>
           <button
             type="submit"
-            disabled={!props?.msg() || !props?.enable}
-            onclick={props?.sendMessage}
+            disabled={decide()}
+            onClick={(e) => {
+              e?.preventDefault();
+              props?.sendMessage();
+              if (textareaRef) {
+                textareaRef.value = "";
+                textareaRef.focus();
+              }
+            }}
           >
             <div className="wrapper">➤</div>
           </button>
@@ -112,20 +126,24 @@ const ActionBar = (props) => {
     );
 };
 
-const ChatMessages = (props) => () => <div>ChatMessages section....</div>;
-
 export const ChatWindow = (props) => {
-  let chatRowDiv, messageText, chatSmiley;
+  // imp things first
+  if (!appState.get("room")) {
+    console.log("basic values missing");
+    navigoRouter.get().navigate("/");
+  }
+
+  let chatRowDiv, chatSmiley;
 
   const [enable, setEnable] = createSignal(false);
   // const [me, setMe] = createSignal("");
   const [to, setTo] = createSignal("");
-  const [msg, setMessage] = createSignal("ksoc");
+  const [msg, setMsg] = createSignal("");
   const [online, isOnline] = createSignal(false);
 
-  onMount(() => {
-    messageText?.focus();
-  });
+  // createEffect(() => {
+  //   console.log(msg());
+  // });
 
   return () => (
     <div className="chat-container">
@@ -136,7 +154,7 @@ export const ChatWindow = (props) => {
         style={{ height: window.innerHeight }}
       >
         <ChatMessages
-          messages={[] || store?.messages}
+          messages={appState.get("messages")}
           newUser={appState.get("user")}
         />
       </div>
@@ -144,8 +162,17 @@ export const ChatWindow = (props) => {
       <ActionBar online={true} setCSRef={(ref) => (chatSmiley = ref)} />
       <Footer
         msg={msg}
-        setMessage={setMessage}
-        setMTRef={(ref) => (messageText = ref)}
+        setMsg={setMsg}
+        enable={true}
+        sendMessage={() => {
+          appState.set({
+            messages: [
+              ...appState.get().messages,
+              { from: "me", message: msg() },
+            ],
+          });
+          setMsg("");
+        }}
       />
     </div>
   );

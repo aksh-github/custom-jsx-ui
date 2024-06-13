@@ -12,6 +12,10 @@ const root = document.getElementById("root-vdom");
 // for non router
 // mount(root, () => <App some={2} />);
 
+console.log(
+  "interesting read: https://github.com/persevie/statemanjs?ref=hackernoon.com"
+);
+
 // for signal
 registerRenderCallback(forceUpdate);
 
