@@ -23,4 +23,15 @@ setTimeout(() => {
       { from: "me", message: "good" },
     ],
   });
+
+  appState.set({
+    messages: [
+      ...appState.get().messages,
+      {
+        from: "system",
+        message: "dumy" + " left the chat",
+        type: "notification",
+      },
+    ],
+  });
 }, 5000);

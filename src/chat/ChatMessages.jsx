@@ -57,6 +57,18 @@ const Other = () => {
   };
 };
 
+const Notification = (props) => {
+  const dt = getLatestDate();
+
+  return (
+    <div class="notify w3-animate-bottom">
+      <div class="dateRecieved" style={{ "text-align": "center" }}>
+        {dt} {props.message}
+      </div>
+    </div>
+  );
+};
+
 const ChatMessages = () => {
   return (props) => {
     // console.log(props);
