@@ -261,28 +261,6 @@ export const SimpleRoute = () => {
     );
   };
 
-  const Test = () => {
-    const Arr = state({ a: [<p>10</p>, <p>20</p>] });
-
-    console.log("came here");
-
-    return () => (
-      <div>
-        <button
-          onClick={() => {
-            // setNoParent([...noParent(), <p>40</p>]);
-            // console.log(noParent());
-            Arr.set({ a: [...Arr.get("a"), <p>40</p>] });
-            console.log(Arr.get("a"));
-          }}
-        >
-          Update below Array
-        </button>
-        {Arr.get("a")}
-      </div>
-    );
-  };
-
   return () => {
     console.log(pst.get("r"));
     return (
@@ -297,15 +275,42 @@ export const SimpleRoute = () => {
           </button>
           <button onClick={() => setr(10000)}>Change</button>
         </div>
-        <ArrayWithMap />
+        {/* <ArrayWithMap /> */}
         {/* <ArrayWithoutMap /> */}
-        {/* <ArrayThatWorks />
-        <NoParentComp />
-        <ArrayWithFragments /> */}
+        {/* <ArrayThatWorks /> */}
+        {/* <ArrayWithFragments /> */}
         <PropsDriven n="Property to Component" />
+        <TextArea />
       </div>
     );
   };
 };
 
 // SimpleRoute
+
+export const TextArea = () => {
+  const [txt, settxt] = createSignal("");
+  const [t, set] = createSignal("");
+
+  console.log("came here");
+
+  const clear = () => {
+    set("");
+    settxt("");
+  };
+
+  return () => (
+    <div style={{ backgroundColor: "beige" }}>
+      <button onClick={clear}>Clear</button>
+      {/* <br />
+      <span>{txt()}</span>
+      <textarea
+        value={txt()}
+        onInput={(e) => settxt(e.target.value)}
+      ></textarea>
+      <br /> */}
+      <span>{t()}</span>
+      <input value={t()} onInput={(e) => set(e.target.value)} />
+    </div>
+  );
+};
