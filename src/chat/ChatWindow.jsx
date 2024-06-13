@@ -1,4 +1,4 @@
-import { h, onMount } from "../utils/vdom/vdom-lib";
+import { h, onCleanup, onMount } from "../utils/vdom/vdom-lib";
 import { createSignal, createEffect } from "../utils/signal-complex";
 import {
   compressImage,
@@ -12,7 +12,7 @@ import { appState, online, socketState } from "./state-helper";
 import ChatMessages from "./ChatMessages";
 
 import { createPopup } from "@picmo/popup-picker";
-import { SocketHelper, sendMessage } from "./socket/socket-helper";
+import { SocketHelper, cleanUp, sendMessage } from "./socket/socket-helper";
 
 let chatSmiley = null;
 
@@ -153,6 +153,11 @@ export const ChatWindow = (props) => {
   onMount(() => {
     SocketHelper();
     if (!picker) createAPopup();
+  });
+
+  onCleanup(() => {
+    console.log("Exiting CW...");
+    cleanUp();
   });
 
   const createAPopup = () => {

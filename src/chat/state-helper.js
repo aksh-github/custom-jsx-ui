@@ -11,28 +11,6 @@ export const appState = state({
   to: "",
 });
 
-setTimeout(() => {
-  appState.set({
-    messages: [
-      ...appState.get().messages,
-      { from: "dumy", message: "how are ou" },
-      { from: "dumy", message: "what doing?" },
-      { from: "me", message: "good" },
-    ],
-  });
-
-  appState.set({
-    messages: [
-      ...appState.get().messages,
-      {
-        from: "system",
-        message: "dumy" + " left the chat",
-        type: "notification",
-      },
-    ],
-  });
-}, 5000);
-
 export const socketState = state({
   socket: null,
   publicKey: "",

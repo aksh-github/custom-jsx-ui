@@ -94,7 +94,7 @@ export function SocketHelper() {
 
     // setUser(data.newUser)
 
-    if (store.user !== data.newUser)
+    if (appState.get().to !== data.newUser)
       appState.set({
         messages: [
           ...appState.get().messages,
@@ -110,7 +110,7 @@ export function SocketHelper() {
   });
 
   socket.on("user_exit", (data) => {
-    // console.log(data)
+    console.log(data);
 
     appState.set({
       messages: [
@@ -124,6 +124,18 @@ export function SocketHelper() {
     });
   });
 }
+
+export const cleanUp = () => {
+  socket?.off("connect");
+  socket?.off("new_message");
+  socket?.off("new_image");
+  socket?.off("_");
+  socket?.off("disconnect");
+  socket?.off("new_user");
+  socket?.off("user_exit");
+  // socket?.close();
+  // setEnable(false);
+};
 
 export const sendMessage = (msg, _file, to) => {
   // focusText();   //this was not working!!

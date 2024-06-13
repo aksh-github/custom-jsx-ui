@@ -1,5 +1,6 @@
 import { h, onMount } from "../utils/vdom/vdom-lib";
 import { createSignal, createEffect } from "../utils/signal-complex";
+import { saveBase64AsFile } from "./utils";
 
 const getLatestDate = () => {
   const dt = new Date();
@@ -14,15 +15,15 @@ const My = () => {
   const dt = getLatestDate();
   return (props) => {
     return (
-      <div class="me w3-animate-bottom">
+      <div className="me w3-animate-bottom">
         {props.type === "img" ? (
-          <img src={props.message} class="image-msg" />
+          <img src={props.message} className="image-msg" />
         ) : (
           <span>{props.message}</span>
         )}
         {/* <span>{props.message}</span> */}
 
-        <div class="dateRecieved">{dt}</div>
+        <div className="dateRecieved">{dt}</div>
       </div>
     );
   };
@@ -30,26 +31,43 @@ const My = () => {
 
 const Other = () => {
   const dt = getLatestDate();
+
+  const downloadClicked = (event) => {
+    const el = event.currentTarget;
+    const divcontainer = el?.closest(".other");
+
+    // console.log(divcontainer?.getElementsByClassName("image-msg")[0].src);
+
+    const img = divcontainer?.getElementsByClassName("image-msg");
+
+    const src = img[0] && img[0].src;
+
+    if (src) saveBase64AsFile(src, `imgage-${Date.now()}.png`);
+    else console.log("Image unavailable");
+  };
+
   return (props) => {
     return (
-      <div class="other w3-animate-top">
+      <div className="other w3-animate-top">
         {/* <div style={{ "font-size": "smaller" }}>{props.from === "me" ? "" : props.from}</div> */}
         {props.from && (
           <div style={{ "font-size": "smaller" }}>
-            <img src="/avatar6.png" class="avatar" /> {props.from}
+            <img src="/avatar6.png" className="avatar" /> {props.from}
           </div>
         )}
         {props.type === "img" ? (
-          <img src={props.message} class="image-msg" />
+          <img src={props.message} className="image-msg" />
         ) : (
           <span>{props.message}</span>
         )}
-        <div class="dateRecieved">{dt}</div>
+        <div className="dateRecieved">{dt}</div>
         {props.type === "img" ? (
-          <div class="">
-            <a href="#" class="some" title="Download" onClick={downloadClicked}>
+          <div className="" onClick={downloadClicked}>
+            Download
+            {/* <a href="#" className="some" title="Download" onClick={downloadClicked}>
               <img height="28px" src="download.svg" alt="Download image" />
-            </a>
+            </a> */}
+            {"\u21E9"}
           </div>
         ) : null}
       </div>
@@ -61,8 +79,8 @@ const Notification = (props) => {
   const dt = getLatestDate();
 
   return (
-    <div class="notify w3-animate-bottom">
-      <div class="dateRecieved" style={{ "text-align": "center" }}>
+    <div className="notify w3-animate-bottom">
+      <div className="dateRecieved" style={{ "text-align": "center" }}>
         {dt} {props.message}
       </div>
     </div>
@@ -73,7 +91,7 @@ const ChatMessages = () => {
   return (props) => {
     // console.log(props);
     return (
-      <div class="messages" style={{ padding: "0 1em" }}>
+      <div className="messages" style={{ padding: "0 1em" }}>
         {props?.messages?.map((item, i) => {
           //   console.log(item);
           let skipFlag = false;
