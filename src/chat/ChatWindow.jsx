@@ -51,17 +51,15 @@ const Footer = (props) => {
               textareaRef = ref;
             }}
             rows={3}
-            // value={props?.msg()}
+            value={props?.msg()}
             placeholder="Type your message...(Shft + Enter for next line)"
             onInput={(e) => {
-              console.log(e.target.value);
+              // console.log(e.target.value);
               let v = e.target.value;
               v = v?.trim();
               props?.setMsg(v);
             }}
-          >
-            {props?.msg()}
-          </textarea>
+          ></textarea>
           <button
             type="submit"
             disabled={decide()}
