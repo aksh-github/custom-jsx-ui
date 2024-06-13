@@ -265,21 +265,21 @@ export const SimpleRoute = () => {
     console.log(pst.get("r"));
     return (
       <div ref={(_ref) => (ref = _ref)}>
-        route2
+        {/* route2
         <Link href="/">Go Back</Link>
-        <hr />
+        <hr /> */}
         <div>
           <h3>{pst.get("r") % 2 === 0 ? <Even /> : <Odd />}</h3>
           <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
             Change
           </button>
-          <button onClick={() => setr(10000)}>Change</button>
+          {/* <button onClick={() => setr(10000)}>Change</button> */}
         </div>
         {/* <ArrayWithMap /> */}
         {/* <ArrayWithoutMap /> */}
         {/* <ArrayThatWorks /> */}
         {/* <ArrayWithFragments /> */}
-        <PropsDriven n="Property to Component" />
+        {/* <PropsDriven n="Property to Component" /> */}
         <TextArea />
       </div>
     );
