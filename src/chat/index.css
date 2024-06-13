@@ -35,6 +35,11 @@ svg {
   max-width: 100%;
 }
 
+img {
+  width: 100%;
+  padding: 1em 0;
+}
+
 #captcha {
   display: revert;
 }
@@ -162,6 +167,7 @@ code {
   height: 30px;
   border-radius: 50%;
   display: inline;
+  padding: 0%;
 }
 
 .dateRecieved {

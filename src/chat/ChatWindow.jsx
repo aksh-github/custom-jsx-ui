@@ -1,12 +1,20 @@
 import { h, onMount } from "../utils/vdom/vdom-lib";
 import { createSignal, createEffect } from "../utils/signal-complex";
-// import { generateCaptcha } from "../utils/utils";
+import {
+  compressImage,
+  decryptText,
+  encryptText,
+  getFileSize,
+  getImageDimensions,
+} from "./utils";
 
 import "./index.css";
 import "./welcome.css";
 import navigoRouter from "../utils/navigo-router";
 import { appState } from "./state-helper";
 import ChatMessages from "./ChatMessages";
+
+let publicKey = "";
 
 const Header = (props) => () =>
   (
@@ -75,9 +83,6 @@ const ActionBar = (props) => {
   return () =>
     props?.online ? (
       <div className="actions">
-        {/* <div className="file-input__label">
-        <input type="file" name="file" accept="image/*" onchange={onFileChange} />
-      </div> */}
         <div className="file-input">
           <input
             type="file"
@@ -85,7 +90,7 @@ const ActionBar = (props) => {
             id="file-input"
             className="file-input__input"
             accept="image/*"
-            onchange={props?.onFileChange}
+            onChange={props?.onFileChange}
           />
           <label className="file-input__label" for="file-input">
             <svg
@@ -126,6 +131,67 @@ const ActionBar = (props) => {
     );
 };
 
+const sendMessage = (msg, _file, to) => {
+  // focusText();   //this was not working!!
+  // (messageText as HTMLElement)?.focus();
+
+  // console.log(msg());
+
+  if (_file) {
+    // console.log("handle img", _file);
+
+    const encrypted =
+      (JSON.stringify({
+        // from: me(),
+
+        message: _file,
+        from: appState.get("user"),
+        to: to(),
+        toRoom: appState.get("room"),
+        user: appState.get("user"),
+
+        type: "img",
+      }),
+      publicKey);
+
+    // console.log(encrypted);
+
+    // for perf checking
+    const dt = new Date();
+    console.log(dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds());
+    // for perf checking
+
+    // socket?.emit("new_image", encrypted);
+
+    appState.set({
+      messages: [
+        ...appState.get().messages,
+        { from: "me", message: _file, type: "img" },
+      ],
+    });
+    return;
+  }
+
+  const encrypted =
+    (JSON.stringify({
+      // from: me(),
+      from: appState.get("user"),
+      to: to(),
+      toRoom: appState.get("room"),
+      user: appState.get("user"),
+      message: msg(),
+    }),
+    publicKey);
+  // console.log(encrypted);
+
+  // socket?.emit("new_message", encrypted);
+  // setMessages([...messages(), { from: "me", message: msg() }]);
+  appState.set({
+    messages: [...appState.get().messages, { from: "me", message: msg() }],
+  });
+  // scrollToBottom();
+};
+
 export const ChatWindow = (props) => {
   // imp things first
   if (!appState.get("room")) {
@@ -145,6 +211,72 @@ export const ChatWindow = (props) => {
   //   console.log(msg());
   // });
 
+  const onFileChange = async (event) => {
+    const _file = event?.target?.files[0];
+
+    console.log(
+      _file.size > 10240000 ? ">10MB" : "ok",
+      getFileSize(_file.size)
+    );
+
+    if (_file.size > 10240000) {
+      console.log("File too large");
+      return;
+    }
+
+    const img = new Image();
+    img.src = URL.createObjectURL(_file);
+
+    //get the dimensions of the input image
+    const { height, width } = await getImageDimensions(img);
+
+    const MAX_WIDTH = 1024; //if we resize by width, this is the max width of compressed image
+    const MAX_HEIGHT = 1024; //if we resize by height, this is the max height of the compressed image
+
+    const widthRatioBlob = await compressImage(
+      img,
+      MAX_WIDTH / width,
+      width,
+      height
+    );
+    const heightRatioBlob = await compressImage(
+      img,
+      MAX_HEIGHT / height,
+      width,
+      height
+    );
+
+    let compressedBlob = null;
+
+    //pick the smaller blob between both
+    if (widthRatioBlob && heightRatioBlob)
+      compressedBlob =
+        widthRatioBlob.size > heightRatioBlob.size
+          ? heightRatioBlob
+          : widthRatioBlob;
+
+    if (compressedBlob) {
+      // console.log("do further processing", compressedBlob);
+
+      const optimalBlob =
+        compressedBlob.size < _file.size ? compressedBlob : _file;
+      // console.log(`Inital Size: ${_file.size}. Compressed Size: ${optimalBlob.size}`);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const bytes = event?.target?.result;
+        // console.log(bytes);
+
+        if (bytes) sendMessage(null, bytes, to);
+        // socket.emit("image", bytes);
+        setMsg("");
+      };
+      reader.readAsDataURL(optimalBlob);
+    } else {
+      console.log("something wrong!!");
+    }
+  };
+
   return () => (
     <div className="chat-container">
       <Header online={true} />
@@ -159,18 +291,18 @@ export const ChatWindow = (props) => {
         />
       </div>
       {/* {!online() ? <div style={{ "text-align": "center" }}>Connecting...</div> : null} */}
-      <ActionBar online={true} setCSRef={(ref) => (chatSmiley = ref)} />
+      <ActionBar
+        online={true}
+        setCSRef={(ref) => (chatSmiley = ref)}
+        onFileChange={(e) => onFileChange(e)}
+        setMsg={setMsg}
+      />
       <Footer
         msg={msg}
         setMsg={setMsg}
         enable={true}
-        sendMessage={() => {
-          appState.set({
-            messages: [
-              ...appState.get().messages,
-              { from: "me", message: msg() },
-            ],
-          });
+        sendMessage={(e) => {
+          sendMessage(msg, null, to);
           setMsg("");
         }}
       />

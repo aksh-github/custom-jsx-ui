@@ -16,11 +16,7 @@ const My = () => {
     return (
       <div class="me w3-animate-bottom">
         {props.type === "img" ? (
-          <img
-            style={{ width: "100%" }}
-            src={props.message}
-            class="image-msg"
-          />
+          <img src={props.message} class="image-msg" />
         ) : (
           <span>{props.message}</span>
         )}
@@ -44,11 +40,7 @@ const Other = () => {
           </div>
         )}
         {props.type === "img" ? (
-          <img
-            style={{ width: "100%" }}
-            src={props.message}
-            class="image-msg"
-          />
+          <img src={props.message} class="image-msg" />
         ) : (
           <span>{props.message}</span>
         )}
