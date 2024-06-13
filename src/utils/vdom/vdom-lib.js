@@ -102,45 +102,6 @@ export function h(type, props, ...children) {
   };
 }
 
-// export function h(type, props, ...children) {
-//   let _fn = null;
-
-//   children = children.flat();
-
-//   if (typeof type === "function") {
-//     _c = type.name;
-
-//     if (callStack[counter]?.fname !== type.name) {
-//       console.log(type.name, " not found");
-
-//       // const callStackLen = callStack.length;
-//       // callStack.splice(counter, callStackLen - counter);
-
-//       // const ar = unMountArr.splice(counter, callStackLen - counter);
-//       // ar?.reverse().forEach((fn) => {
-//       //   fn?.();
-//       // });
-
-//       _fn = type(props, ...children);
-//       callStack.push({ fname: type.name, fn: _fn });
-
-//       // console.log(unMountArr[counter]);
-//     } else {
-//       _fn = callStack[counter].fn;
-//       // console.log(unMountArr[counter]);
-//     }
-//     counter++;
-//     return _fn({ ...props, children: children }, children);
-//   }
-
-//   return {
-//     _c,
-//     type,
-//     props: props || {},
-//     children,
-//   };
-// }
-
 function setBooleanProp($target, name, value) {
   if (value) {
     $target.setAttribute(name, value);
@@ -182,6 +143,9 @@ function setProp($target, name, value) {
   } else if (typeof value === "boolean") {
     setBooleanProp($target, name, value);
   } else {
+    if (name === "value")
+      // special case
+      $target[name] = value;
     $target.setAttribute(name, value);
   }
 }
@@ -205,7 +169,7 @@ function setProps($target, props) {
 }
 
 function updateProp($target, name, newVal, oldVal) {
-  if (!newVal) {
+  if (!newVal && (newVal === undefined || newVal === null)) {
     removeProp($target, name, oldVal);
   } else if (!oldVal || newVal !== oldVal) {
     setProp($target, name, newVal);
@@ -279,7 +243,8 @@ function changed(node1, node2) {
     typeof node1 !== typeof node2 ||
     // (typeof node1 === "string" && node1 !== node2) ||
     (!node1?.type && node1 !== node2) ||
-    node1?.type !== node2?.type
+    node1?.type !== node2?.type ||
+    node1?.value !== node2?.value
     // || (node1?.props && node1.props.forceUpdate)
   );
 }
