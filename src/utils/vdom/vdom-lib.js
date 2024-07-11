@@ -312,7 +312,7 @@ export function forceUpdate() {
   counter = 0; // v imp
   // callStack = [];
   let current = curr(); // create latest vdom
-  console.log(old, current);
+  // console.log(old, current);
   const oldStack = CompoIterator().iterate(old);
   const currStack = CompoIterator().iterate(current);
 
@@ -320,6 +320,7 @@ export function forceUpdate() {
   updateElement(rootNode, current, old);
   // 2. trigger lifecycle
   callLifeCycleHooks(callStack, oldStack);
+  console.log(callStack, oldStack);
 
   // backup for future comparison
   old = current;
