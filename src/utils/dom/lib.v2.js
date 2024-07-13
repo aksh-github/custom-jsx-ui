@@ -132,7 +132,7 @@ export const dom = (eleType, props, ...children) => {
     } else if (typeof child === "object" && child != null) {
       el.appendChild(child);
     } else {
-      el.appendChild(document.createTextNode(child));
+      el.appendChild(document.createTextNode(child == null || child == undefined ? "" : child));
     }
   };
 
