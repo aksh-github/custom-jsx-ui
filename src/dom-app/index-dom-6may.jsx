@@ -4,9 +4,7 @@ import { renderUtils, dom } from "../utils/dom/lib.v2";
 import router from "../utils/router";
 import { registerRenderCallback } from "../utils/signal-complex";
 import state from "../utils/simple-state";
-import router2 from "../utils/router-v2";
-import Login from "../chat/Login";
-import { Chat } from "../chat/Chat";
+import NavigoRouter from "../utils/navigo-router";
 
 // this is perfect implementation as of 7-may-2024
 
@@ -22,7 +20,7 @@ registerRenderCallback(renderUtils.forceUpdate);
 const tempSt = state();
 tempSt.registerRenderCallback(renderUtils.forceUpdate);
 
-router2(
+NavigoRouter.set(
   {
     // errorComponent: Error,
     // basePath: "sommore",
