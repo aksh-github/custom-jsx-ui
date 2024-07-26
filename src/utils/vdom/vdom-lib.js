@@ -3,6 +3,25 @@
 let callStack = [];
 let counter = 0;
 
+let oldCallStack = [];
+const ArrIterator = (_from) => {
+  let from = _from || 0;
+
+  return {
+    get: () => {
+      // console.log(from);
+      const rv = { curr: oldCallStack[from], idx: from };
+      from++;
+      return rv;
+    },
+    reset: (_from) => {
+      from = _from || 0;
+    },
+  };
+};
+
+let iter;
+
 let currMount = null,
   currUnmount = null;
 
@@ -22,45 +41,63 @@ export function h(type, props, ...children) {
   if (Array.isArray(children)) children = children.flat();
 
   if (typeof type === "function") {
-    if (callStack[counter]?.fname !== type.name) {
-      console.log(type.name, " not found");
+    if (oldCallStack.length) {
+      const exisng = iter.get();
+      // console.log(type.name, exisng?.curr?.fname);
+      console.log(
+        type.name,
+        exisng?.curr?.fname,
+        type.name == exisng?.curr?.fname ?? "matched"
+      );
 
-      // unmount-logic
-      // console.log(callStack[counter]?.unMount);
-      callStack[counter]?.unMount?.();
-
-      if (callStack[counter]) callStack[counter].unMount = null;
-
-      // end unmount-logic
-
-      if (type.name === "h") {
-        // doc fragement case
-        _fn = h("df", props, ...children);
+      if (type.name == exisng?.curr?.fname) {
+        // console.log("matched for ", exisng);
+        // iter.reset(exisng.idx);
+        _fn = exisng.curr.fn;
       } else {
-        _fn = type(props, ...children);
+        let j = exisng.idx + 1;
+        let found = false;
+        iter.reset(j);
+        for (; j < oldCallStack.length; ++j) {
+          const exisng2 = iter.get();
+          console.log(
+            type.name,
+            exisng2?.curr?.fname,
+            type.name == exisng2?.curr?.fname ?? "matched"
+          );
+          if (type.name == exisng2?.curr?.fname) {
+            iter.reset(exisng2.idx); //next search should start from here
+            found = true;
+
+            _fn = exisng2.curr.fn;
+            break;
+          }
+        }
+        if (!found) {
+          // reset to whatever last found idx
+          iter.reset(exisng.idx);
+          _fn = type(props, ...children);
+        }
+
+        // cache this func
+
+        callStack[counter] = {
+          fname: type.name,
+          fn: _fn,
+          mount: currMount,
+          unMount: currUnmount,
+        };
       }
-      // callStack.push({ fname: type.name, fn: _fn });
-      // console.log("call unmount for ", callStack[counter]?.fname);
+    } else {
+      _fn = type(props, ...children);
       callStack[counter] = {
         fname: type.name,
         fn: _fn,
         mount: currMount,
         unMount: currUnmount,
       };
-      currMount = currUnmount = null; // v imp step
-
-      // console.log(unMountArr[counter]);
-    } else {
-      if (callStack[counter].fname === "h")
-        console.log(
-          "Dont use for dynamic parts, Changes happening to {Component}, {Array} won't reflect in UI"
-        );
-      // console.log(callStack[counter].fname);
-
-      _fn = callStack[counter].fn;
-
-      // console.log(unMountArr[counter]);
     }
+
     counter++;
     const rv =
       typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
@@ -304,23 +341,35 @@ export function mount($root, initCompo) {
     rootNode.replaceChild(createElement(old), rootNode.firstChild);
   else rootNode.appendChild(createElement(old));
 
+  oldCallStack = [...callStack];
+  // callStack = [];
+
   // 2. trigger lifecycle
-  callMountAll();
+  // callMountAll();
 }
 
 export function forceUpdate() {
   counter = 0; // v imp
+
   // callStack = [];
+  iter = ArrIterator();
+
   let current = curr(); // create latest vdom
   // console.log(old, current);
   const oldStack = CompoIterator().iterate(old);
   const currStack = CompoIterator().iterate(current);
 
+  // console.log(counter, callStack.length);
+  if (counter < callStack.length)
+    callStack.splice(counter, callStack.length - counter);
+  oldCallStack = [...callStack];
+  // callStack = [];
+
   // 1. update dom
   updateElement(rootNode, current, old);
   // 2. trigger lifecycle
-  callLifeCycleHooks(callStack, oldStack);
-  console.log(callStack, oldStack);
+  // callLifeCycleHooks(callStack, oldStack);
+  // console.log(callStack, oldStack);
 
   // backup for future comparison
   old = current;
