@@ -61,7 +61,7 @@ export function h(type, props, ...children) {
       //   type.name == exisng?.curr?.fname ?? "matched"
       // );
 
-      if (type.name == exisng?.curr?.fname) {
+      if (type.name == exisng?.curr?.fname && curParent == exisng?.curr?.p) {
         // console.log("matched for ", exisng);
         // iter.reset(exisng.idx);
         _fn = exisng.curr.fn;
