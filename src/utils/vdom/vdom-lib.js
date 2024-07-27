@@ -3,6 +3,14 @@
 let callStack = [];
 let counter = 0;
 
+let stack = [];
+
+let rootNode = null;
+let curr = null;
+let old = null;
+
+// let set = new Set();
+// let __k = undefined;
 let oldCallStack = [];
 const ArrIterator = (_from) => {
   let from = _from || 0;
@@ -41,14 +49,17 @@ export function h(type, props, ...children) {
   if (Array.isArray(children)) children = children.flat();
 
   if (typeof type === "function") {
+    let curParent = stack[stack.length - 1]?.n;
+    // console.log("curr parent is", curParent, type.name);
+    stack.push({ n: type?.name, ch: [] });
     if (oldCallStack.length) {
       const exisng = iter.get();
       // console.log(type.name, exisng?.curr?.fname);
-      console.log(
-        type.name,
-        exisng?.curr?.fname,
-        type.name == exisng?.curr?.fname ?? "matched"
-      );
+      // console.log(
+      //   type.name,
+      //   exisng?.curr?.fname,
+      //   type.name == exisng?.curr?.fname ?? "matched"
+      // );
 
       if (type.name == exisng?.curr?.fname) {
         // console.log("matched for ", exisng);
@@ -60,12 +71,16 @@ export function h(type, props, ...children) {
         iter.reset(j);
         for (; j < oldCallStack.length; ++j) {
           const exisng2 = iter.get();
-          console.log(
-            type.name,
-            exisng2?.curr?.fname,
-            type.name == exisng2?.curr?.fname ?? "matched"
-          );
-          if (type.name == exisng2?.curr?.fname) {
+          // if (exisng2?.curr == null) break;
+          // console.log(
+          //   type.name,
+          //   exisng2?.curr?.fname,
+          //   type.name == exisng2?.curr?.fname ?? "matched"
+          // );
+          if (
+            type.name == exisng2?.curr?.fname &&
+            curParent == exisng2?.curr?.p
+          ) {
             iter.reset(exisng2.idx); //next search should start from here
             found = true;
 
@@ -81,28 +96,64 @@ export function h(type, props, ...children) {
 
         // cache this func
 
-        callStack[counter] = {
-          fname: type.name,
-          fn: _fn,
-          mount: currMount,
-          unMount: currUnmount,
-        };
+        // callStack[counter] = {
+        //   fname: type.name,
+        //   fn: _fn,
+        //   mount: currMount,
+        //   unMount: currUnmount,
+        //   // p: curParent,
+        // };
       }
     } else {
+      // const key = set.has(type.name) ? "k" + counter : undefined;
+      // props = { ...props, __k: key };
+
       _fn = type(props, ...children);
-      callStack[counter] = {
-        fname: type.name,
-        fn: _fn,
-        mount: currMount,
-        unMount: currUnmount,
-      };
+      // callStack[counter] = {
+      //   fname: type.name,
+      //   key: key,
+      //   fn: _fn,
+      //   mount: currMount,
+      //   unMount: currUnmount,
+      // };
+
+      // stack.push(type.name);
+      // set.add(type.name);
     }
 
+    callStack[counter] = {
+      fname: type.name,
+      fn: _fn,
+      mount: currMount,
+      unMount: currUnmount,
+      p: curParent,
+    };
+
     counter++;
+
+    // callStack[callStack.length - 1].p = stack[stack.length - 2]?.n;
+
+    // b4
+    // console.log(stack, callStack[callStack.length - 1]);
+
     const rv =
       typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
 
-    // console.log(rv);
+    // callStack[counter++] = null;
+
+    // console.log(JSON.stringify(stack));
+    const popped = stack.pop();
+    // console.log(popped, "has parent ", stack[stack.length - 1]);
+    // callStack[counter - 1].p = stack[stack.length - 1]?.n || popped?.n;
+
+    // console.log(callStack[callStack.length - 2], popped);
+
+    if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
+    else {
+      // console.log(JSON.stringify(stack));
+      // console.log(parChild);
+      stack = [];
+    }
 
     // return { ...rv, $c: type.name, children: rv.children }; //perfect
 
@@ -313,9 +364,10 @@ function CompoIterator() {
   };
 }
 
-let rootNode = null;
-let curr = null;
-let old = null;
+// moved top
+// let rootNode = null;
+// let curr = null;
+// let old = null;
 
 export function mount($root, initCompo) {
   rootNode = $root;
@@ -333,7 +385,7 @@ export function mount($root, initCompo) {
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
-  console.log(old);
+  // console.log(callStack);
   // updateElement(rootNode, old);
   // 1. set dom
   // rootNode.appendChild(createElement(old));
@@ -342,7 +394,9 @@ export function mount($root, initCompo) {
   else rootNode.appendChild(createElement(old));
 
   oldCallStack = [...callStack];
-  // callStack = [];
+  callStack = [];
+  // oldCallStack = [];
+  // oldCallStack.push(callStack[0]);
 
   // 2. trigger lifecycle
   // callMountAll();
@@ -356,14 +410,14 @@ export function forceUpdate() {
 
   let current = curr(); // create latest vdom
   // console.log(old, current);
-  const oldStack = CompoIterator().iterate(old);
-  const currStack = CompoIterator().iterate(current);
+  // const oldStack = CompoIterator().iterate(old);
+  // const currStack = CompoIterator().iterate(current);
 
-  // console.log(counter, callStack.length);
-  if (counter < callStack.length)
-    callStack.splice(counter, callStack.length - counter);
+  console.log(oldCallStack, callStack);
+  // if (counter < callStack.length)
+  //   callStack.splice(counter, callStack.length - counter);
   oldCallStack = [...callStack];
-  // callStack = [];
+  callStack = [];
 
   // 1. update dom
   updateElement(rootNode, current, old);
