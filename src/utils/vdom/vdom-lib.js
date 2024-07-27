@@ -51,7 +51,7 @@ export function h(type, props, ...children) {
   if (typeof type === "function") {
     let curParent = stack[stack.length - 1]?.n;
     // console.log("curr parent is", curParent, type.name);
-    stack.push({ n: type?.name, ch: [] });
+    stack.push({ n: type?.name });
     if (oldCallStack.length) {
       const exisng = iter.get();
       // console.log(type.name, exisng?.curr?.fname);
@@ -129,6 +129,8 @@ export function h(type, props, ...children) {
       p: curParent,
     };
 
+    currMount = currUnmount = null;
+
     counter++;
 
     // callStack[callStack.length - 1].p = stack[stack.length - 2]?.n;
@@ -139,21 +141,15 @@ export function h(type, props, ...children) {
     const rv =
       typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
 
-    // callStack[counter++] = null;
+    stack.pop();
 
-    // console.log(JSON.stringify(stack));
-    const popped = stack.pop();
-    // console.log(popped, "has parent ", stack[stack.length - 1]);
-    // callStack[counter - 1].p = stack[stack.length - 1]?.n || popped?.n;
-
-    // console.log(callStack[callStack.length - 2], popped);
-
-    if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
-    else {
-      // console.log(JSON.stringify(stack));
-      // console.log(parChild);
-      stack = [];
-    }
+    // const popped = stack.pop();
+    // if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
+    // else {
+    //   // console.log(JSON.stringify(stack));
+    //   // console.log(parChild);
+    //   stack = [];
+    // }
 
     // return { ...rv, $c: type.name, children: rv.children }; //perfect
 
