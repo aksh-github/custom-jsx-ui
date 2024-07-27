@@ -389,6 +389,7 @@ export function mount($root, initCompo) {
     rootNode.replaceChild(createElement(old), rootNode.firstChild);
   else rootNode.appendChild(createElement(old));
 
+  iter = ArrIterator();
   oldCallStack = [...callStack];
   callStack = [];
   // oldCallStack = [];
