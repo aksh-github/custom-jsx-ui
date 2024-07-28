@@ -1,5 +1,7 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
+import { diff, patch } from "./vdom-yt";
+
 let callStack = [];
 let counter = 0;
 
@@ -429,11 +431,22 @@ export function forceUpdate() {
 
   console.log(oldCallStack, callStack);
 
-  // 1. update dom
-  updateElement(rootNode, current, old);
-  // 2. trigger lifecycle
-  // callLifeCycleHooks(callStack, oldStack);
+  // new diff from yt
+
+  // const patches = diff(current, old);
+  // console.log(patches);
+  // patch(rootNode, patches);
+
+  // end new diff from yt
+
+  // 1. call unmount before dom update
   callUnmountAll();
+
+  // 2. update dom
+  updateElement(rootNode, current, old);
+  // 3. trigger lifecycle
+  // callLifeCycleHooks(callStack, oldStack);
+
   callMountAll();
   // console.log(callStack, oldStack);
 
@@ -481,6 +494,9 @@ function callMountAll() {
 function isValid(v) {
   return v !== undefined || v !== "";
 }
+
+// variation impl
+// https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
 
 export function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
