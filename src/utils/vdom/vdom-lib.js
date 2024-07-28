@@ -46,6 +46,41 @@ export function onCleanup(cb) {
   currUnmount = cb;
 }
 
+function callUnmountAll() {
+  let len = oldCallStack.length;
+  let clen = callStack.length;
+
+  for (let i = 0; i < len; ++i) {
+    let found = false;
+    for (let j = 0; j < clen; ++j) {
+      if (
+        oldCallStack[i].fname === callStack[j].fname &&
+        oldCallStack[i].p === callStack[j].p
+      ) {
+        found = true;
+        break;
+      } else {
+      }
+    }
+
+    if (!found) {
+      // console.log("call unmount for ", oldCallStack[i].fname);
+      oldCallStack[i]?.unMount?.();
+      oldCallStack[i].unMount = null;
+    }
+  }
+}
+
+function callMountAll() {
+  let len = callStack.length;
+  for (let i = 0; i < len; ++i) {
+    // console.log(callStack[i]);
+    callStack[i]?.mount?.();
+    // need to check carefully
+    callStack[i].mount = null;
+  }
+}
+
 // vdom
 
 export function h(type, props, ...children) {
@@ -396,7 +431,7 @@ export function mount($root, initCompo) {
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
-  // console.log(callStack);
+  console.log(callStack);
   // updateElement(rootNode, old);
   // 1. set dom
   // rootNode.appendChild(createElement(old));
@@ -454,41 +489,6 @@ export function forceUpdate() {
   oldCallStack = [...callStack];
   callStack = [];
   old = current;
-}
-
-function callUnmountAll() {
-  let len = oldCallStack.length;
-  let clen = callStack.length;
-
-  for (let i = 0; i < len; ++i) {
-    let found = false;
-    for (let j = 0; j < clen; ++j) {
-      if (
-        oldCallStack[i].fname === callStack[j].fname &&
-        oldCallStack[i].p === callStack[j].p
-      ) {
-        found = true;
-        break;
-      } else {
-      }
-    }
-
-    if (!found) {
-      // console.log("call unmount for ", oldCallStack[i].fname);
-      oldCallStack[i]?.unMount?.();
-      oldCallStack[i].unMount = null;
-    }
-  }
-}
-
-function callMountAll() {
-  let len = callStack.length;
-  for (let i = 0; i < len; ++i) {
-    // console.log(callStack[i]);
-    callStack[i]?.mount?.();
-    // need to check carefully
-    callStack[i].mount = null;
-  }
 }
 
 function isValid(v) {
