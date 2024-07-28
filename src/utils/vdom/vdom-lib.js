@@ -85,11 +85,12 @@ function callMountAll() {
 
 export function h(type, props, ...children) {
   let _fn = null;
+  let curParent;
 
   if (Array.isArray(children)) children = children.flat();
 
   if (typeof type === "function") {
-    let curParent = stack[stack.length - 1]?.n;
+    curParent = stack[stack.length - 1]?.n;
     // console.log("curr parent is", curParent, type.name);
     stack.push({ n: type?.name });
     if (oldCallStack.length) {
@@ -198,7 +199,8 @@ export function h(type, props, ...children) {
     // return { ...rv, $c: type.name, children: rv.children }; //perfect
 
     //complex node
-    if (rv?.type) return { ...rv, $c: type.name, children: rv.children };
+    if (rv?.type)
+      return { ...rv, $c: type.name, children: rv.children, $p: curParent };
     // str, null etc
     else if (Array.isArray(rv)) {
       console.warn(
@@ -212,11 +214,13 @@ export function h(type, props, ...children) {
         $c: type.name,
         type: "df", //assign doc fragment type
         children: rv,
+        $p: curParent,
       };
     } else
       return {
         $c: type.name,
         value: rv,
+        $p: curParent,
       };
   }
 
