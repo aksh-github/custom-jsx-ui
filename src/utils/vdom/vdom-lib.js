@@ -11,7 +11,7 @@ let old = null;
 
 // let set = new Set();
 // let __k = undefined;
-let oldCallStack = [];
+let oldCallStack = []; // copy of callStack to see cached results
 const ArrIterator = (_from) => {
   let from = _from || 0;
 
@@ -27,14 +27,15 @@ const ArrIterator = (_from) => {
     },
   };
 };
-
 let iter;
+
+// mount n unmount
 
 let currMount = null,
   currUnmount = null;
 
 export function onMount(cb) {
-  // console.log(callStack[counter]);
+  // console.log(counter, cb);
   currMount = cb;
 }
 
@@ -42,6 +43,8 @@ export function onCleanup(cb) {
   // console.log(callStack[counter]);
   currUnmount = cb;
 }
+
+// vdom
 
 export function h(type, props, ...children) {
   let _fn = null;
@@ -65,6 +68,8 @@ export function h(type, props, ...children) {
         // console.log("matched for ", exisng);
         // iter.reset(exisng.idx);
         _fn = exisng.curr.fn;
+        currMount = exisng.curr.mount;
+        currUnmount = exisng.curr.unMount;
       } else {
         let j = exisng.idx + 1;
         let found = false;
@@ -85,6 +90,8 @@ export function h(type, props, ...children) {
             found = true;
 
             _fn = exisng2.curr.fn;
+            currMount = exisng2.curr.mount;
+            currUnmount = exisng2.curr.unMount;
             break;
           }
         }
@@ -186,6 +193,8 @@ export function h(type, props, ...children) {
   };
 }
 
+// dom helpers
+
 function setBooleanProp($target, name, value) {
   if (value) {
     $target.setAttribute(name, value);
@@ -274,6 +283,8 @@ function addEventListeners($target, props) {
     }
   });
 }
+
+// vdom to dom
 
 function createElement(node) {
   // if (node?.$c) {
@@ -365,6 +376,8 @@ function CompoIterator() {
 // let curr = null;
 // let old = null;
 
+// only 1st type (complete rewrite etc)
+
 export function mount($root, initCompo) {
   rootNode = $root;
   // 0. for route change clean existing things
@@ -389,6 +402,9 @@ export function mount($root, initCompo) {
     rootNode.replaceChild(createElement(old), rootNode.firstChild);
   else rootNode.appendChild(createElement(old));
 
+  // console.log(callStack);
+  callMountAll();
+
   iter = ArrIterator();
   oldCallStack = [...callStack];
   callStack = [];
@@ -399,6 +415,7 @@ export function mount($root, initCompo) {
   // callMountAll();
 }
 
+// all delta updates
 export function forceUpdate() {
   counter = 0; // v imp
 
@@ -411,23 +428,49 @@ export function forceUpdate() {
   // const currStack = CompoIterator().iterate(current);
 
   console.log(oldCallStack, callStack);
-  // if (counter < callStack.length)
-  //   callStack.splice(counter, callStack.length - counter);
-  oldCallStack = [...callStack];
-  callStack = [];
 
   // 1. update dom
   updateElement(rootNode, current, old);
   // 2. trigger lifecycle
   // callLifeCycleHooks(callStack, oldStack);
+  callUnmountAll();
+  callMountAll();
   // console.log(callStack, oldStack);
 
   // backup for future comparison
+  oldCallStack = [...callStack];
+  callStack = [];
   old = current;
 }
 
+function callUnmountAll() {
+  let len = oldCallStack.length;
+  let clen = callStack.length;
+
+  for (let i = 0; i < len; ++i) {
+    let found = false;
+    for (let j = 0; j < clen; ++j) {
+      if (
+        oldCallStack[i].fname === callStack[j].fname &&
+        oldCallStack[i].p === callStack[j].p
+      ) {
+        found = true;
+        break;
+      } else {
+      }
+    }
+
+    if (!found) {
+      // console.log("call unmount for ", oldCallStack[i].fname);
+      oldCallStack[i]?.unMount?.();
+      oldCallStack[i].unMount = null;
+    }
+  }
+}
+
 function callMountAll() {
-  for (let i = 0; i < counter; ++i) {
+  let len = callStack.length;
+  for (let i = 0; i < len; ++i) {
     // console.log(callStack[i]);
     callStack[i]?.mount?.();
     // need to check carefully
@@ -435,61 +478,9 @@ function callMountAll() {
   }
 }
 
-function callLifeCycleHooks(callStack, stack) {
-  // unmount-logic (this is getting done h func itself)
-  // for (let i = 0; i < stack.length; ++i) {
-  //   if (stack[i] !== callStack[i]?.fname) {
-  //     console.log("unmount reqd for >> ", stack[i]);
-  //     // callStack[i]?.unMount?.();
-  //     // callStack[i].unMount = null;
-  //   }
-  // }
-
-  // correct
-  for (let i = counter; i < callStack.length; ++i) {
-    // console.log("unmount reqd for >> ", callStack[i]?.fname);
-    callStack[i]?.unMount?.();
-    callStack[i].unMount = null;
-  }
-
-  // v imp step
-  if (counter < callStack.length)
-    callStack.splice(counter, callStack.length - counter);
-
-  // mount-logic
-
-  for (let i = 0; i < counter; ++i) {
-    callStack[i]?.mount?.();
-    callStack[i].mount = null;
-  }
-}
-
 function isValid(v) {
   return v !== undefined || v !== "";
 }
-
-// export function updateElement($parent, newNode, oldNode, index = 0) {
-//   if (!oldNode) {
-//     // if (oldNode?.type) {
-//     $parent.appendChild(createElement(newNode));
-//   } else if (!newNode) {
-//     $parent.removeChild($parent.childNodes[index]);
-//   } else if (changed(newNode, oldNode)) {
-//     $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
-//   } else if (newNode.type) {
-//     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
-//     const newLength = newNode.children.length;
-//     const oldLength = oldNode.children.length;
-//     for (let i = 0; i < newLength || i < oldLength; i++) {
-//       updateElement(
-//         $parent.childNodes[index],
-//         newNode.children[i],
-//         oldNode.children[i],
-//         i
-//       );
-//     }
-//   }
-// }
 
 export function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
@@ -521,9 +512,4 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       );
     }
   }
-}
-
-function devlog(msg) {
-  // if (window?.__dev === true)
-  console.log(msg);
 }
