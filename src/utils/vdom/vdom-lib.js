@@ -387,6 +387,7 @@ function changed(node1, node2) {
 
 function CompoIterator() {
   let temp = [];
+  let s = null;
 
   function iterate(o) {
     if (o?.$c) {
@@ -407,8 +408,28 @@ function CompoIterator() {
     }
   }
 
+  function get(o, name, par) {
+    if (o?.$c) {
+      // temp.push(o.$c);
+      if (o.$c === name && o.$p === par) {
+        s = o;
+      }
+      if (o?.children && !s) {
+        o.children.forEach((_o) => {
+          get(_o, name, par);
+        });
+      }
+      return s;
+    } else if (o?.children) {
+      o.children.forEach((_o) => {
+        get(_o, name, par);
+      });
+    }
+  }
+
   return {
     iterate: iterate,
+    get,
   };
 }
 
@@ -467,6 +488,8 @@ export function forceUpdate() {
   // console.log(old, current);
   // const oldStack = CompoIterator().iterate(old);
   // const currStack = CompoIterator().iterate(current);
+
+  console.log(CompoIterator().get(old, "TextArea"));
 
   console.log(oldCallStack, callStack);
 
