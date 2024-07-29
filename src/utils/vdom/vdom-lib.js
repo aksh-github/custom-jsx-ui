@@ -362,6 +362,7 @@ function createElement(node) {
 
   const $el = document.createElement(node.type);
   setProps($el, node.props);
+  if (node?.$c) $el.dataset["cp"] = node.$c + ":" + node?.$p;
   addEventListeners($el, node.props);
   if (node?.$c) {
     // console.log("call mount for >>>>", node.$c);
