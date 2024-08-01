@@ -2,7 +2,6 @@ import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import state from "../utils/simple-state";
 import { updateElement, h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
-import NavigoRouter from "../utils/navigo-router";
 
 // v basic test 23may
 // let count = 0;
@@ -94,26 +93,4 @@ registerRenderCallback(forceUpdate);
 const tempSt = state();
 tempSt.registerRenderCallback(forceUpdate);
 
-NavigoRouter.set(
-  {
-    // errorComponent: Error,
-    // basePath: "sommore",
-    routes: [
-      {
-        path: "/route2",
-        component: SimpleRoute,
-      },
-      // {
-      //   path: "/",
-      //   component: Chat,
-      // },
-      { path: "/", component: App },
-      { path: "*", component: () => () => <div>Error</div> },
-    ],
-  },
-  (Compo, match) => {
-    console.log(match);
-    //   renderUtils.render(root, () => <Compo />);
-    mount(root, () => <Compo />);
-  }
-);
+mount(root, () => <App />);
