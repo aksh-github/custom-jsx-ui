@@ -173,11 +173,14 @@ export function App(props) {
       <p>
         <Link href="/route2">Go next</Link>
       </p>
+      <Ctr v={c()} key={"k1"} />
+      {c() % 2 === 0 ? <Master /> : "NA"}
+      {/* {c() % 2 === 0 ? <Master /> : "NA"} */}
     </div>
   );
 }
 
-// SimpleRoute
+// SimpleRoute (route 2)
 
 // const pst = state({ r: 0 });
 
@@ -221,6 +224,8 @@ const Odd = () => {
     </div>
   );
 };
+
+// SimpleRoute
 
 export const SimpleRoute = () => {
   const [r, setr] = createSignal(0);
@@ -291,6 +296,7 @@ export const SimpleRoute = () => {
 export const TextArea = () => {
   const [txt, settxt] = createSignal("");
   const [t, set] = createSignal("");
+  let txtRef;
 
   console.log("came here");
 
@@ -300,7 +306,7 @@ export const TextArea = () => {
   };
 
   return () => (
-    <div style={{ backgroundColor: "beige" }}>
+    <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
       {/* <br />
       <span>{txt()}</span>
@@ -314,3 +320,22 @@ export const TextArea = () => {
     </div>
   );
 };
+
+export function App(props) {
+  // let  = "Loading..."
+  // const [Compo, setCompo] = createSignal(null);
+
+  const [path, setPath] = createSignal(null);
+
+  // return () => <ComplexRoute />;
+  // return () => <SimpleSwitch cond={10} />;
+  return () => (
+    <div>
+      <SimpleSwitch cond={20}>
+        {[10, 20].map((it) => {
+          return <SimpleSwitch.Case when={it} render={<h1>{it}</h1>} />;
+        })}
+      </SimpleSwitch>
+    </div>
+  );
+}

@@ -199,8 +199,9 @@ export function h(type, props, ...children) {
     // return { ...rv, $c: type.name, children: rv.children }; //perfect
 
     //complex node
-    if (rv?.type)
+    if (rv?.type) {
       return { ...rv, $c: type.name, children: rv.children, $p: curParent };
+    }
     // str, null etc
     else if (Array.isArray(rv)) {
       console.warn(
@@ -216,12 +217,32 @@ export function h(type, props, ...children) {
         children: rv,
         $p: curParent,
       };
-    } else
+    }
+    // return {
+    //   $c: type.name,
+    //   value: rv,
+    //   $p: curParent,
+    // };
+    else {
+      // there are 2 possiblities
+      // 1. complex node but with no type
+      if (rv?.$c) {
+        return {
+          $c: type.name,
+          // value: rv,
+          children: [rv],
+          type: "df", // sure that type is unavailable hence using df
+          $p: curParent,
+        };
+      } else {
+        // or 2. simple node
       return {
         $c: type.name,
         value: rv,
         $p: curParent,
       };
+      }
+    }
   }
 
   // console.log(children);
@@ -457,7 +478,7 @@ export function mount($root, initCompo) {
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
-  console.log(callStack);
+  console.log(callStack, old);
   // updateElement(rootNode, old);
   // 1. set dom
   // rootNode.appendChild(createElement(old));
@@ -507,6 +528,7 @@ export function forceUpdate() {
 
   // 2. update dom
   updateElement(rootNode, current, old);
+
   // 3. trigger lifecycle
   // callLifeCycleHooks(callStack, oldStack);
 
@@ -524,23 +546,42 @@ function isValid(v) {
 }
 
 // variation impl
-// https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
+// 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
+// 2. https://www.youtube.com/watch?v=85gJMUEcnkc
+
+let enabled = false;
+let patches = [];
+
+let comp, parent;
 
 export function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
     // if (oldNode?.type) {
     $parent.appendChild(createElement(newNode));
+    // patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
   } else if (!isValid(newNode)) {
     $parent.removeChild($parent.childNodes[index]);
+    // patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
   } else if (changed(newNode, oldNode)) {
     if ($parent?.childNodes[index])
       $parent?.replaceChild(createElement(newNode), $parent.childNodes[index]);
+    // patches.push({
+    //   p: $parent,
+    //   op: "REPLACE",
+    //   c: [createElement(newNode), $parent.childNodes[index]],
+    // });
     else {
       //special case Compo with Array manipulation or no type (parent) for updating
       if ($parent) {
         $parent.appendChild(createElement(newNode));
+        // patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
       } else {
         $parent?.parentNode?.appendChild(createElement(newNode));
+        // patches.push({
+        //   p: $parent?.parentNode,
+        //   op: "APPEND",
+        //   c: createElement(newNode),
+        // });
       }
     }
   } else if (newNode?.type) {
