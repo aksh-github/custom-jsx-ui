@@ -3,12 +3,16 @@ export const SimpleSwitch = () => {
     // console.log(props);
     const { cond, children } = props;
 
+    let defaultc = null;
+
     const selected = children?.find((c) => {
       const { value } = c;
+      console.log(cond);
+      if (value.when === undefined) defaultc = c;
       return value.when === cond;
     });
 
-    return selected?.value?.render;
+    return (selected || defaultc)?.value?.render;
   };
 };
 

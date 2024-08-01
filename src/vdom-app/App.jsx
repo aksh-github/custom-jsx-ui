@@ -1,7 +1,14 @@
 import { createSignal, batch, createEffect } from "../utils/signal-complex";
-import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
+import {
+  h,
+  onMount,
+  onCleanup,
+  updateSingle,
+  forceUpdate,
+} from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
+import { navigoRouter, NavigoWrapper } from "../utils/navigo-router";
 import state from "../utils/simple-state";
 import Link from "../compos/Link";
 import {
@@ -11,6 +18,7 @@ import {
   ArrayWithFragments,
   PropsDriven,
 } from "../compos/ComponentPatterns";
+import { SimpleSwitch } from "../compos/Switch";
 // import { useState } from "./utils/hooks-experi";
 
 // Ctr
@@ -18,15 +26,13 @@ import {
 const Ctr = ({ v, __spl }) => {
   const st = state({ c: 100, version: "Loading..." });
 
-  let timer = null;
-
   onCleanup(() => {
     console.log("unmount Ctr");
-    clearTimeout(timer);
   });
 
   onMount(() => {
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
+      clearTimeout(timer);
       fetch("/package.json")
         .then((res) => res.json())
         .then((res) => {
@@ -100,12 +106,15 @@ const Input = () => {
           value={input.get("input").v}
         />
         <p>{input.get("input").e}</p>
+        <TextArea />
       </div>
     );
   };
 };
 
-export function App(props) {
+// ComplexRoute (route 1)
+
+function ComplexRoute(props) {
   console.log("rendered App", props);
   const [c, setc] = createSignal(0);
   const [s, sets] = createSignal("akshay");
@@ -120,7 +129,7 @@ export function App(props) {
   });
 
   const arr = [];
-  for (let i = 0; i < 10; ++i) arr.push(i);
+  for (let i = 0; i < 2; ++i) arr.push(i);
 
   const Number = () => {
     onMount(() => {
@@ -137,7 +146,6 @@ export function App(props) {
       <div>
         <Ctr v={c()} />
         <Input />
-        <Ctr v={c()} />
       </div>
     );
 
@@ -161,7 +169,8 @@ export function App(props) {
           Counter
         </button>
       </div>
-      {c() % 2 === 0 ? <Master /> : "NA"}
+      {/* {c() % 2 === 0 ? <Master /> : "NA"}
+      {c() % 2 === 0 ? <Master /> : "NA"} */}
       {c() % 2 !== 0 ? (
         <ul>
           {arr.map((n) => (
@@ -171,7 +180,14 @@ export function App(props) {
       ) : // <Number n={10} />
       null}
       <p>
-        <Link href="/route2">Go next</Link>
+        <Link href="route2">Go next</Link>
+        <button
+          onClick={() => {
+            navigoRouter.get().navigate("route2");
+          }}
+        >
+          Go to simple
+        </button>
       </p>
       <Ctr v={c()} key={"k1"} />
       {c() % 2 === 0 ? <Master /> : "NA"}
@@ -278,7 +294,6 @@ export const SimpleRoute = () => {
           <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
             Change
           </button>
-          {/* <button onClick={() => setr(10000)}>Change</button> */}
         </div>
         {/* <ArrayWithMap /> */}
         {/* <ArrayWithoutMap /> */}
@@ -291,8 +306,6 @@ export const SimpleRoute = () => {
   };
 };
 
-// SimpleRoute
-
 export const TextArea = () => {
   const [txt, settxt] = createSignal("");
   const [t, set] = createSignal("");
@@ -304,6 +317,12 @@ export const TextArea = () => {
     set("");
     settxt("");
   };
+
+  // createEffect(() => {
+  //   t();
+  //   // below code doesn't work properly
+  //   if (txtRef) updateSingle(txtRef);
+  // });
 
   return () => (
     <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
@@ -324,17 +343,44 @@ export const TextArea = () => {
 export function App(props) {
   // let  = "Loading..."
   // const [Compo, setCompo] = createSignal(null);
+  const routeSt = state({ path: null });
 
-  const [path, setPath] = createSignal(null);
+  const setupRoute = () =>
+    navigoRouter.set(
+      {
+        // errorComponent: Error,
+        // basePath: window.location.pathname,
+        routes: [
+          {
+            path: "route2",
+            // component: A,
+          },
+          {
+            path: "/",
+            // component: B,
+          },
+          {
+            path: "*",
+            // component: () => <div>Wrong url</div>,
+          },
+        ],
+      },
+      (Compo, match) => {
+        console.log(Compo, match);
+        routeSt.set({ path: match?.url });
+      }
+    );
 
-  // return () => <ComplexRoute />;
-  // return () => <SimpleSwitch cond={10} />;
+  onMount(() => {
+    console.log("index mounted");
+    setupRoute();
+  });
   return () => (
     <div>
-      <SimpleSwitch cond={20}>
-        {[10, 20].map((it) => {
-          return <SimpleSwitch.Case when={it} render={<h1>{it}</h1>} />;
-        })}
+      <SimpleSwitch cond={routeSt.get("path")}>
+        <SimpleSwitch.Case render={"Wrong path 404"} />
+        <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
+        <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
       </SimpleSwitch>
     </div>
   );

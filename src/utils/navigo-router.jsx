@@ -10,14 +10,12 @@ const NavigoRouter = () => {
       _router = new Navigo(routeObj.basePath || "/");
       _routeObj = routeObj;
 
-      // routeObj?.routes.forEach((ro) => {
-      //   // console.log(ro);
-
-      // });
-
-      _router.on(ro.path, (match) => {
-        console.log(match);
-        // if (match?.url === ro.path) cb(ro.component, match);
+      routeObj?.routes.forEach((ro) => {
+        _router.on(ro.path, (match) => {
+          // console.log(match);
+          // if (match?.url === ro.path)
+          cb(ro.component, match);
+        });
       });
 
       _router.hooks({
