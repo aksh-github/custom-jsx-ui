@@ -372,16 +372,28 @@ export function App(props) {
     );
 
   onMount(() => {
-    console.log("index mounted");
+    console.log("=== Main App mounted");
     setupRoute();
   });
-  return () => (
-    <div>
-      <SimpleSwitch cond={routeSt.get("path")}>
-        <SimpleSwitch.Case render={"Wrong path 404"} />
-        <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
-        <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
-      </SimpleSwitch>
-    </div>
-  );
+  return () =>
+    // <div>
+    // ({
+    //   <SimpleSwitch cond={routeSt.get("path")}>
+    //     <SimpleSwitch.Case render={"Wrong path 404"} />
+    //     <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
+    //     <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
+    //   </SimpleSwitch>
+    // })
+    // </div>
+
+    (() => {
+      switch (routeSt.get("path")) {
+        case "route2":
+          return <SimpleRoute />;
+        case "":
+          return <ComplexRoute />;
+        default:
+          return "Wrong path 404";
+      }
+    })();
 }
