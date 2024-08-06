@@ -572,8 +572,14 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     // });
     else {
       //special case Compo with Array manipulation or no type (parent) for updating
-      if ($parent) {
-        $parent.appendChild(createElement(newNode));
+      if ($parent?.appendChild) {
+        const newEl = createElement(newNode);
+        if (newEl?.nodName)
+          // its dom node
+          $parent.appendChild(newEl);
+        // its text
+        else $parent.textContent = newEl?.textContent;
+
         // patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
       } else {
         $parent?.parentNode?.appendChild(createElement(newNode));
