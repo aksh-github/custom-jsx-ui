@@ -19,6 +19,7 @@ import {
   PropsDriven,
 } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
+import { signal } from "../utils/signal-v2";
 // import { useState } from "./utils/hooks-experi";
 
 // Ctr
@@ -308,7 +309,7 @@ export const SimpleRoute = () => {
 
 export const TextArea = () => {
   const [txt, settxt] = createSignal("");
-  const [t, set] = createSignal("");
+  const [t, set] = signal("");
   let txtRef;
 
   console.log("came here");
@@ -342,7 +343,8 @@ export const TextArea = () => {
 
 export function App(props) {
   // let  = "Loading..."
-  // const [Compo, setCompo] = createSignal(null);
+  let curPath = "null";
+  // const [path, setPath] = signal(curPath);
   const routeSt = state({ path: null });
 
   const setupRoute = () =>
@@ -367,7 +369,13 @@ export function App(props) {
       },
       (Compo, match) => {
         console.log(Compo, match);
-        routeSt.set({ path: match?.url });
+        // routeSt.set({ path: match?.url });
+        if (curPath != match?.url) {
+          curPath = match.url;
+          // setPath(match.url);
+          routeSt.set({ path: match?.url });
+        }
+        // console.log(path());
       }
     );
 

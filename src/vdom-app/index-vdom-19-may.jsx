@@ -10,6 +10,7 @@ import {
 } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 import { navigoRouter } from "../utils/navigo-router";
+import { registerRenderCallbackV2 } from "../utils/signal-v2";
 
 // v basic test 23may
 // let count = 0;
@@ -96,6 +97,9 @@ const root = document.getElementById("root-vdom");
 
 // for signal
 registerRenderCallback(forceUpdate);
+
+// for signal v2
+registerRenderCallbackV2(forceUpdate);
 
 // for my state
 const tempSt = state();
