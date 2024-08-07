@@ -574,7 +574,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       //special case Compo with Array manipulation or no type (parent) for updating
       if ($parent?.appendChild) {
         const newEl = createElement(newNode);
-        if (newEl?.nodName)
+        if (newEl?.nodeName)
           // its dom node
           $parent.appendChild(newEl);
         // its text
@@ -594,6 +594,8 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
     const newLength = newNode.children.length;
     const oldLength = oldNode.children.length;
+
+    if (newLength === oldLength) {
     for (let i = 0; i < newLength || i < oldLength; i++) {
       updateElement(
         $parent.childNodes[index],
@@ -601,6 +603,11 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
         oldNode.children[i],
         i
       );
+      }
+    } else {
+      for (let i = 0; i < newLength || i < oldLength; i++) {
+        updateElement($parent, newNode.children[i], oldNode.children[i], i);
+      }
     }
   }
 }
