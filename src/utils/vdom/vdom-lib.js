@@ -1,6 +1,6 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-import { state } from "../simple-state";
+import { atom } from "../simple-state";
 
 // suspend impl:
 console.log(
@@ -629,7 +629,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
 export function Suspense(props) {
   // console.log(props);
   let returnVal;
-  const resoSt = state({ resolved: false });
+  const resolved = atom(false);
 
   if (props.fetchCompleted) {
     console.log("promise resolved");
@@ -642,14 +642,12 @@ export function Suspense(props) {
         console.log("promise resolved", res);
         // Suspense({ ...props, fetchCompleted: true }, res);
         returnVal = res;
-        resoSt.set({ resolved: true });
+        resolved.set(true);
       });
     }
   }
 
   return (props) => {
-    return resoSt.get("resolved")
-      ? props.children[0](returnVal)
-      : props?.fallback;
+    return resolved.get() ? props.children[0](returnVal) : props?.fallback;
   };
 }

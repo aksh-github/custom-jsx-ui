@@ -51,4 +51,33 @@ export const state = (iv) => {
   };
 };
 
+export const atom = (iv) => {
+  let st = iv;
+
+  return {
+    get: () => {
+      return st;
+    },
+    set: (nv) => {
+      st = nv;
+      if (!batchOp) {
+        // forceUpdate();
+        // requestIdleCallback(forceUpdate);
+        throtUpdate();
+      }
+    },
+    reset: () => {
+      st = null;
+    },
+    registerRenderCallback: (cb) => {
+      forceUpdate = cb;
+      throtUpdate = debounce(forceUpdate, 100);
+    },
+    batch: (cb) => {
+      cb();
+      batchOp = false;
+    },
+  };
+};
+
 // export state;
