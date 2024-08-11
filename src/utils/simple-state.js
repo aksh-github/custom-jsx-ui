@@ -34,7 +34,6 @@ const state = (iv) => {
       if (!batchOp) {
         // forceUpdate();
         // requestIdleCallback(forceUpdate);
-        // forceUpdate();
         throtUpdate();
       }
     },

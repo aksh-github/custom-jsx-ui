@@ -5,6 +5,7 @@ import {
   onCleanup,
   updateSingle,
   forceUpdate,
+  Suspense,
 } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
@@ -242,6 +243,13 @@ const Odd = () => {
   );
 };
 
+const photoURL = "https://picsum.photos/200"; // Gives pic of size 200x200
+const getMyAwesomePic = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(photoURL), 500);
+  });
+};
+
 // SimpleRoute
 
 export const SimpleRoute = () => {
@@ -302,6 +310,18 @@ export const SimpleRoute = () => {
         {/* <ArrayWithFragments /> */}
         {/* <PropsDriven n="Property to Component" /> */}
         <TextArea />
+        <Suspense fallback={"Loading..."} fetch={getMyAwesomePic()}>
+          {(res) => {
+            console.log(res);
+            return <img src={res} alt="pic" />;
+          }}
+        </Suspense>
+        <Suspense fallback={"Loading..."} fetch={getMyAwesomePic()}>
+          {(res) => {
+            console.log(res);
+            return <img src={res} alt="pic" />;
+          }}
+        </Suspense>
       </div>
     );
   };
@@ -343,9 +363,9 @@ export const TextArea = () => {
 
 export function App(props) {
   // let  = "Loading..."
-  let curPath = "null";
-  // const [path, setPath] = signal(curPath);
-  const routeSt = state({ path: null });
+  //foll 2 should match
+  let curPath = "route2";
+  const routeSt = state({ path: "route2" });
 
   const setupRoute = () =>
     navigoRouter.set(

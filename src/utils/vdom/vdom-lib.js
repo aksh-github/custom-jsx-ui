@@ -549,10 +549,7 @@ function isValid(v) {
 // 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
 // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
 
-let enabled = false;
-let patches = [];
-
-let comp, parent;
+const patches = [];
 
 export function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
@@ -577,10 +574,19 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
         if (newEl?.nodeName)
           // its dom node
           $parent.appendChild(newEl);
+        // patches.push({
+        //   p: $parent,
+        //   op: "APPEND",
+        //   c: newEl,
+        // });
         // its text
         else $parent.textContent = newEl?.textContent;
-
-        // patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
+        // else
+        //   patches.push({
+        //     p: $parent,
+        //     op: "CONTENT",
+        //     c: newEl?.textContent,
+        //   });
       } else {
         $parent?.parentNode?.appendChild(createElement(newNode));
         // patches.push({
@@ -595,19 +601,48 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     const newLength = newNode.children.length;
     const oldLength = oldNode.children.length;
 
-    if (newLength === oldLength) {
     for (let i = 0; i < newLength || i < oldLength; i++) {
+      // const parent =
+      //   newNode?.type === "df" ? $parent : $parent.childNodes[index];
+      // if (newNode?.type === "df") console.log(newNode, parent);
       updateElement(
         $parent.childNodes[index],
+        // parent,
+
         newNode.children[i],
         oldNode.children[i],
         i
       );
       }
+  }
+
+  // console.log(patches);
+}
+
+export function Suspense(props) {
+  // console.log(props);
+  let returnVal;
+  const resoSt = state({ resolved: false });
+
+  if (props.fetchCompleted) {
+    console.log("promise resolved");
+    props.children[0](returnVal);
     } else {
-      for (let i = 0; i < newLength || i < oldLength; i++) {
-        updateElement($parent, newNode.children[i], oldNode.children[i], i);
-      }
+    console.log("promise NOT resolved");
+    // returnVal = props?.fallback;
+    if (props?.fetch?.then) {
+      props.fetch.then((res) => {
+        console.log("promise resolved", res);
+        // Suspense({ ...props, fetchCompleted: true }, res);
+        returnVal = res;
+        resoSt.set({ resolved: true });
+      });
     }
   }
+
+  return (props) => {
+    return resoSt.get("resolved")
+      ? props.children[0](returnVal)
+      : props?.fallback;
+  };
 }
