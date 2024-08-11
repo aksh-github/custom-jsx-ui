@@ -10,7 +10,7 @@ import {
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 import { navigoRouter, NavigoWrapper } from "../utils/navigo-router";
-import { state } from "../utils/simple-state";
+import { state, atom } from "../utils/simple-state";
 import Link from "../compos/Link";
 import {
   ArrayWithMap,
@@ -254,7 +254,7 @@ const getMyAwesomePic = () => {
 
 export const SimpleRoute = () => {
   const [r, setr] = createSignal(0);
-  const pst = state({ r: 0 });
+  const pst = atom(0);
   // const tv = pst.get("r");
   let ref = null;
 
@@ -292,17 +292,15 @@ export const SimpleRoute = () => {
   };
 
   return () => {
-    console.log(pst.get("r"));
+    console.log(pst.get());
     return (
       <div ref={(_ref) => (ref = _ref)}>
         {/* route2
         <Link href="/">Go Back</Link>
         <hr /> */}
         <div>
-          <h3>{pst.get("r") % 2 === 0 ? <Even /> : <Odd />}</h3>
-          <button onClick={() => pst.set({ r: pst.get("r") + 1 })}>
-            Change
-          </button>
+          <h3>{pst.get() % 2 === 0 ? <Even /> : <Odd />}</h3>
+          <button onClick={() => pst.set(pst.get() + 1)}>Change</button>
         </div>
         {/* <ArrayWithMap /> */}
         {/* <ArrayWithoutMap /> */}
@@ -310,16 +308,25 @@ export const SimpleRoute = () => {
         {/* <ArrayWithFragments /> */}
         {/* <PropsDriven n="Property to Component" /> */}
         <TextArea />
+
         <Suspense fallback={"Loading..."} fetch={getMyAwesomePic()}>
           {(res) => {
-            console.log(res);
-            return <img src={res} alt="pic" />;
+            // console.log(res);
+            return (
+              <div>
+                <img src={res} alt="pic" />
+              </div>
+            );
           }}
         </Suspense>
         <Suspense fallback={"Loading..."} fetch={getMyAwesomePic()}>
           {(res) => {
-            console.log(res);
-            return <img src={res} alt="pic" />;
+            // console.log(res);
+            return (
+              <div>
+                <img src={res} alt="pic" />
+              </div>
+            );
           }}
         </Suspense>
       </div>
@@ -365,7 +372,7 @@ export function App(props) {
   // let  = "Loading..."
   //foll 2 should match
   let curPath = "route2";
-  const routeSt = state({ path: "route2" });
+  const routeSt = atom("route2");
 
   const setupRoute = () =>
     navigoRouter.set(
@@ -393,7 +400,7 @@ export function App(props) {
         if (curPath != match?.url) {
           curPath = match.url;
           // setPath(match.url);
-          routeSt.set({ path: match?.url });
+          routeSt.set(match?.url);
         }
         // console.log(path());
       }
@@ -415,7 +422,7 @@ export function App(props) {
     // </div>
 
     (() => {
-      switch (routeSt.get("path")) {
+      switch (routeSt.get()) {
         case "route2":
           return <SimpleRoute />;
         case "":
