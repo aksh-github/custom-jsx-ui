@@ -17,7 +17,7 @@ import {
   ArrayWithoutMap,
   ArrayThatWorks,
   ArrayWithFragments,
-  PropsDriven,
+  // PropsDriven,
 } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
@@ -250,6 +250,10 @@ const getMyAwesomePic = () => {
   });
 };
 
+const getDynCompo = () => {
+  return import("../compos/ComponentPatterns");
+};
+
 // SimpleRoute
 
 export const SimpleRoute = () => {
@@ -319,13 +323,14 @@ export const SimpleRoute = () => {
             );
           }}
         </Suspense>
-        <Suspense fallback={"Loading..."} fetch={getMyAwesomePic()}>
-          {(res) => {
-            // console.log(res);
-            return (
-              <div>
-                <img src={res} alt="pic" />
-              </div>
+        <Suspense fallback={"Loading..."} fetch={getDynCompo()}>
+          {(comp) => {
+            console.log(comp);
+            const Comp = comp?.PropsDriven2;
+            return Comp ? (
+              <Comp n={"This is dynamic componet"} />
+            ) : (
+              "Failed to load"
             );
           }}
         </Suspense>
@@ -373,6 +378,7 @@ export function App(props) {
   //foll 2 should match
   let curPath = "route2";
   const routeSt = atom("route2");
+  // const [route, setRoute] = signal("route2");
 
   const setupRoute = () =>
     navigoRouter.set(
@@ -401,6 +407,7 @@ export function App(props) {
           curPath = match.url;
           // setPath(match.url);
           routeSt.set(match?.url);
+          // setRoute(match.url);
         }
         // console.log(path());
       }
@@ -423,6 +430,7 @@ export function App(props) {
 
     (() => {
       switch (routeSt.get()) {
+        // switch (route()) {
         case "route2":
           return <SimpleRoute />;
         case "":
