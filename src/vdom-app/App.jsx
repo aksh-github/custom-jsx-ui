@@ -10,7 +10,7 @@ import {
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 import { navigoRouter, NavigoWrapper } from "../utils/navigo-router";
-import state from "../utils/simple-state";
+import { state } from "../utils/simple-state";
 import Link from "../compos/Link";
 import {
   ArrayWithMap,

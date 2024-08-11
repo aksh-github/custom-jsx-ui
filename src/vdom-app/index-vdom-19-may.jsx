@@ -1,6 +1,6 @@
 import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
-import state from "../utils/simple-state";
+import { state } from "../utils/simple-state";
 import {
   updateElement,
   h,

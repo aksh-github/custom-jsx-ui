@@ -17,7 +17,7 @@ let throtUpdate = null;
 let forceUpdate = () => {};
 let batchOp = false;
 
-const state = (iv) => {
+export const state = (iv) => {
   let st = {
     ...iv,
   };
@@ -51,4 +51,4 @@ const state = (iv) => {
   };
 };
 
-export default state;
+// export state;

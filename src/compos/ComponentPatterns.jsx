@@ -1,5 +1,6 @@
 import { createSignal } from "../utils/signal-complex";
-import state from "../utils/simple-state";
+import { signal } from "../utils/signal-v2";
+import { state } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const DoesNotWork = (props) => {
@@ -15,21 +16,16 @@ export const PropsDriven = (props) => {
 export const ArrayWithoutMap = () => {
   console.log("If you try to change the array it won't work");
   // let arr = [<p>10</p>, <p>20</p>];
-  const [arr, set] = createSignal([<p>10</p>, <p>20</p>]);
+  const [arr, set] = signal([<p>10</p>, <p>20</p>]);
 
-  // this definitely wont work
-  // setTimeout(() => {
-  //   console.log("exec");
-  //   // arr = [...arr, <p>40</p>];
-  //   set([...arr(), <p>40</p>]);
-  //   console.log(arr());
-  // }, 4000);
+  setTimeout(() => {
+    console.log("exec");
+    set([...arr(), <p>40</p>]);
+    // set([arr().filter((_, idx) => idx !== 0)]);
+    console.log(arr());
+  }, 4000);
 
-  // return () => {
-  //   return arr();
-  // };
-
-  return () => [<p>10</p>, <p>20</p>]; // NO
+  return () => ["some str", ...arr(), 100000];
 };
 
 export const ArrayWithMap = () => {
@@ -38,17 +34,25 @@ export const ArrayWithMap = () => {
   const [arr, set] = createSignal([<p>10</p>, <p>20</p>]);
 
   // this definitelys wont work
-  // setTimeout(() => {
-  //   console.log("exec");
-  //   // arr = [...arr, <p>40</p>];
-  //   set([...arr(), <p>40</p>]);
-  //   console.log(arr());
-  // }, 4000);
+  setTimeout(() => {
+    console.log("exec");
+    set([...arr(), <Row key={2} n={<p>40</p>} />]);
+    // set([arr().filter((_, idx) => idx !== 0)]);
+    console.log(arr());
+  }, 4000);
 
-  return () =>
-    arr().map((el) => {
-      return el;
-    });
+  const Row =
+    () =>
+    ({ n }) =>
+      n;
+
+  return () => (
+    <div>
+      {arr().map((el, idx) => {
+        return <Row key={idx} n={el} />;
+      })}
+    </div>
+  );
 };
 
 export const ArrayThatWorks = () => {

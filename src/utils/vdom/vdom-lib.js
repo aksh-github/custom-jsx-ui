@@ -1,6 +1,13 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-import { diff, patch } from "./vdom-yt";
+import { state } from "../simple-state";
+
+// suspend impl:
+console.log(
+  "https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f"
+);
+
+// import { diff, patch } from "./vdom-yt";
 
 let callStack = [];
 let counter = 0;
