@@ -200,8 +200,6 @@ function ComplexRoute(props) {
 
 // SimpleRoute (route 2)
 
-// const pst = state({ r: 0 });
-
 const Even = () => {
   onMount(() => {
     console.log("onMount for Even");
@@ -250,8 +248,10 @@ const getMyAwesomePic = () => {
   });
 };
 
-const getDynCompo = () => {
-  return import("../compos/ComponentPatterns");
+const DynCompo = () => {
+  return import("../compos/ComponentPatterns").then((comp) => {
+    return comp?.PropsDriven({ n: "This will be loaded dynamically" }) || null;
+  });
 };
 
 // SimpleRoute
@@ -323,16 +323,8 @@ export const SimpleRoute = () => {
             );
           }}
         </Suspense>
-        <Suspense fallback={"Loading..."} fetch={getDynCompo()}>
-          {(comp) => {
-            console.log(comp);
-            const Comp = comp?.PropsDriven2;
-            return Comp ? (
-              <Comp n={"This is dynamic componet"} />
-            ) : (
-              "Failed to load"
-            );
-          }}
+        <Suspense fallback={"Loading..."}>
+          <DynCompo />
         </Suspense>
       </div>
     );
@@ -374,10 +366,8 @@ export const TextArea = () => {
 };
 
 export function App(props) {
-  // let  = "Loading..."
-  //foll 2 should match
   let curPath = "route2";
-  const routeSt = atom("route2");
+  const routeSt = atom(null);
   // const [route, setRoute] = signal("route2");
 
   const setupRoute = () =>
@@ -403,6 +393,7 @@ export function App(props) {
       (Compo, match) => {
         console.log(Compo, match);
         // routeSt.set({ path: match?.url });
+
         if (curPath != match?.url) {
           curPath = match.url;
           // setPath(match.url);
@@ -417,26 +408,26 @@ export function App(props) {
     console.log("=== Main App mounted");
     setupRoute();
   });
-  return () =>
-    // <div>
-    // ({
-    //   <SimpleSwitch cond={routeSt.get("path")}>
-    //     <SimpleSwitch.Case render={"Wrong path 404"} />
-    //     <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
-    //     <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
-    //   </SimpleSwitch>
-    // })
-    // </div>
-
-    (() => {
-      switch (routeSt.get()) {
-        // switch (route()) {
-        case "route2":
-          return <SimpleRoute />;
-        case "":
-          return <ComplexRoute />;
-        default:
-          return "Wrong path 404";
-      }
-    })();
+  return () => {
+    switch (routeSt.get()) {
+      // switch (route()) {
+      case "route2":
+        return <SimpleRoute />;
+      case "":
+        return <ComplexRoute />;
+      case null:
+        return null;
+      default:
+        return "Wrong path 404";
+    }
+  };
+  // <div>
+  // ({
+  //   <SimpleSwitch cond={routeSt.get("path")}>
+  //     <SimpleSwitch.Case render={"Wrong path 404"} />
+  //     <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
+  //     <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
+  //   </SimpleSwitch>
+  // })
+  // </div>
 }

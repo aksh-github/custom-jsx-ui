@@ -626,17 +626,20 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   // console.log(patches);
 }
 
-export function Suspense(props) {
+export function Suspense(props, child) {
   // console.log(props);
   let returnVal;
   const resolved = atom(false);
 
-  if (props.fetchCompleted) {
+  // if (props.fetchCompleted) {
+  if (resolved.get()) {
+    // this is never exec'ted
     console.log("promise resolved");
     props.children[0](returnVal);
     } else {
     console.log("promise NOT resolved");
     // returnVal = props?.fallback;
+    // if fetch prop is provided (it can be any promise)
     if (props?.fetch?.then) {
       props.fetch.then((res) => {
         console.log("promise resolved", res);
@@ -644,10 +647,25 @@ export function Suspense(props) {
         returnVal = res;
         resolved.set(true);
       });
+    } else {
+      // else assume its dynamic child compo
+      console.log("NOT very stable, more testing reqd");
+      console.log(props, child);
+
+      child?.value?.then((res) => {
+        console.log("promise resolved", res);
+        // Suspense({ ...props, fetchCompleted: true }, res);
+        returnVal = res();
+        resolved.set(true);
+      });
     }
   }
 
   return (props) => {
-    return resolved.get() ? props.children[0](returnVal) : props?.fallback;
+    return resolved.get()
+      ? props?.fetch?.then
+        ? props.children[0](returnVal)
+        : returnVal // untested, but should work like lazy where it returns default compo
+      : props?.fallback;
   };
 }
