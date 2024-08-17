@@ -1,13 +1,50 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
+import { atom } from "../simple-state";
+
+// suspend impl:
+console.log(
+  "https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f"
+);
+
+// import { diff, patch } from "./vdom-yt";
+
 let callStack = [];
 let counter = 0;
+
+let stack = [];
+
+let rootNode = null;
+let curr = null;
+let old = null;
+
+// let set = new Set();
+// let __k = undefined;
+let oldCallStack = []; // copy of callStack to see cached results
+const ArrIterator = (_from) => {
+  let from = _from || 0;
+
+  return {
+    get: () => {
+      // console.log(from);
+      const rv = { curr: oldCallStack[from], idx: from };
+      from++;
+      return rv;
+    },
+    reset: (_from) => {
+      from = _from || 0;
+    },
+  };
+};
+let iter;
+
+// mount n unmount
 
 let currMount = null,
   currUnmount = null;
 
 export function onMount(cb) {
-  // console.log(callStack[counter]);
+  // console.log(counter, cb);
   currMount = cb;
 }
 
@@ -16,61 +53,162 @@ export function onCleanup(cb) {
   currUnmount = cb;
 }
 
+function callUnmountAll() {
+  let len = oldCallStack.length;
+  let clen = callStack.length;
+
+  for (let i = 0; i < len; ++i) {
+    let found = false;
+    for (let j = 0; j < clen; ++j) {
+      if (
+        oldCallStack[i].fname === callStack[j].fname &&
+        oldCallStack[i].p === callStack[j].p
+      ) {
+        found = true;
+        break;
+      } else {
+      }
+    }
+
+    if (!found) {
+      // console.log("call unmount for ", oldCallStack[i].fname);
+      oldCallStack[i]?.unMount?.();
+      oldCallStack[i].unMount = null;
+    }
+  }
+}
+
+function callMountAll() {
+  let len = callStack.length;
+  for (let i = 0; i < len; ++i) {
+    // console.log(callStack[i]);
+    callStack[i]?.mount?.();
+    // need to check carefully
+    callStack[i].mount = null;
+  }
+}
+
+// vdom
+
 export function h(type, props, ...children) {
   let _fn = null;
+  let curParent;
 
   if (Array.isArray(children)) children = children.flat();
 
   if (typeof type === "function") {
-    if (callStack[counter]?.fname !== type.name) {
-      console.log(type.name, " not found");
+    curParent = stack[stack.length - 1]?.n;
+    // console.log("curr parent is", curParent, type.name);
+    stack.push({ n: type?.name });
+    if (oldCallStack.length) {
+      const exisng = iter.get();
+      // console.log(type.name, exisng?.curr?.fname);
+      // console.log(
+      //   type.name,
+      //   exisng?.curr?.fname,
+      //   type.name == exisng?.curr?.fname ?? "matched"
+      // );
 
-      // unmount-logic
-      // console.log(callStack[counter]?.unMount);
-      callStack[counter]?.unMount?.();
-
-      if (callStack[counter]) callStack[counter].unMount = null;
-
-      // end unmount-logic
-
-      if (type.name === "h") {
-        // doc fragement case
-        _fn = h("df", props, ...children);
+      if (type.name == exisng?.curr?.fname && curParent == exisng?.curr?.p) {
+        // console.log("matched for ", exisng);
+        // iter.reset(exisng.idx);
+        _fn = exisng.curr.fn;
+        currMount = exisng.curr.mount;
+        currUnmount = exisng.curr.unMount;
       } else {
-        _fn = type(props, ...children);
+        let j = exisng.idx + 1;
+        let found = false;
+        iter.reset(j);
+        for (; j < oldCallStack.length; ++j) {
+          const exisng2 = iter.get();
+          // if (exisng2?.curr == null) break;
+          // console.log(
+          //   type.name,
+          //   exisng2?.curr?.fname,
+          //   type.name == exisng2?.curr?.fname ?? "matched"
+          // );
+          if (
+            type.name == exisng2?.curr?.fname &&
+            curParent == exisng2?.curr?.p
+          ) {
+            iter.reset(exisng2.idx); //next search should start from here
+            found = true;
+
+            _fn = exisng2.curr.fn;
+            currMount = exisng2.curr.mount;
+            currUnmount = exisng2.curr.unMount;
+            break;
+          }
+        }
+        if (!found) {
+          // reset to whatever last found idx
+          iter.reset(exisng.idx);
+          _fn = type(props, ...children);
+        }
+
+        // cache this func
+
+        // callStack[counter] = {
+        //   fname: type.name,
+        //   fn: _fn,
+        //   mount: currMount,
+        //   unMount: currUnmount,
+        //   // p: curParent,
+        // };
       }
-      // callStack.push({ fname: type.name, fn: _fn });
-      // console.log("call unmount for ", callStack[counter]?.fname);
-      callStack[counter] = {
-        fname: type.name,
-        fn: _fn,
-        mount: currMount,
-        unMount: currUnmount,
-      };
-      currMount = currUnmount = null; // v imp step
-
-      // console.log(unMountArr[counter]);
     } else {
-      if (callStack[counter].fname === "h")
-        console.log(
-          "Dont use for dynamic parts, Changes happening to {Component}, {Array} won't reflect in UI"
-        );
-      // console.log(callStack[counter].fname);
+      // const key = set.has(type.name) ? "k" + counter : undefined;
+      // props = { ...props, __k: key };
 
-      _fn = callStack[counter].fn;
+      _fn = type(props, ...children);
+      // callStack[counter] = {
+      //   fname: type.name,
+      //   key: key,
+      //   fn: _fn,
+      //   mount: currMount,
+      //   unMount: currUnmount,
+      // };
 
-      // console.log(unMountArr[counter]);
+      // stack.push(type.name);
+      // set.add(type.name);
     }
+
+    callStack[counter] = {
+      fname: type.name,
+      fn: _fn,
+      mount: currMount,
+      unMount: currUnmount,
+      p: curParent,
+    };
+
+    currMount = currUnmount = null;
+
     counter++;
+
+    // callStack[callStack.length - 1].p = stack[stack.length - 2]?.n;
+
+    // b4
+    // console.log(stack, callStack[callStack.length - 1]);
+
     const rv =
       typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
 
-    // console.log(rv);
+    stack.pop();
+
+    // const popped = stack.pop();
+    // if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
+    // else {
+    //   // console.log(JSON.stringify(stack));
+    //   // console.log(parChild);
+    //   stack = [];
+    // }
 
     // return { ...rv, $c: type.name, children: rv.children }; //perfect
 
     //complex node
-    if (rv?.type) return { ...rv, $c: type.name, children: rv.children };
+    if (rv?.type) {
+      return { ...rv, $c: type.name, children: rv.children, $p: curParent };
+    }
     // str, null etc
     else if (Array.isArray(rv)) {
       console.warn(
@@ -84,12 +222,34 @@ export function h(type, props, ...children) {
         $c: type.name,
         type: "df", //assign doc fragment type
         children: rv,
+        $p: curParent,
       };
-    } else
+    }
+    // return {
+    //   $c: type.name,
+    //   value: rv,
+    //   $p: curParent,
+    // };
+    else {
+      // there are 2 possiblities
+      // 1. complex node but with no type
+      if (rv?.$c) {
+        return {
+          $c: type.name,
+          // value: rv,
+          children: [rv],
+          type: "df", // sure that type is unavailable hence using df
+          $p: curParent,
+        };
+      } else {
+        // or 2. simple node
       return {
         $c: type.name,
         value: rv,
+        $p: curParent,
       };
+      }
+    }
   }
 
   // console.log(children);
@@ -101,6 +261,8 @@ export function h(type, props, ...children) {
     children,
   };
 }
+
+// dom helpers
 
 function setBooleanProp($target, name, value) {
   if (value) {
@@ -191,6 +353,8 @@ function addEventListeners($target, props) {
   });
 }
 
+// vdom to dom
+
 function createElement(node) {
   // if (node?.$c) {
   //   console.log("call mount for >>>>", node.$c);
@@ -226,6 +390,7 @@ function createElement(node) {
 
   const $el = document.createElement(node.type);
   setProps($el, node.props);
+  if (node?.$c) $el.dataset["cp"] = node.$c + ":" + node?.$p;
   addEventListeners($el, node.props);
   if (node?.$c) {
     // console.log("call mount for >>>>", node.$c);
@@ -251,6 +416,7 @@ function changed(node1, node2) {
 
 function CompoIterator() {
   let temp = [];
+  let s = null;
 
   function iterate(o) {
     if (o?.$c) {
@@ -271,14 +437,37 @@ function CompoIterator() {
     }
   }
 
+  function get(o, name, par) {
+    if (o?.$c) {
+      // temp.push(o.$c);
+      if (o.$c === name && o.$p === par) {
+        s = o;
+      }
+      if (o?.children && !s) {
+        o.children.forEach((_o) => {
+          get(_o, name, par);
+        });
+      }
+      return s;
+    } else if (o?.children) {
+      o.children.forEach((_o) => {
+        get(_o, name, par);
+      });
+    }
+  }
+
   return {
     iterate: iterate,
+    get,
   };
 }
 
-let rootNode = null;
-let curr = null;
-let old = null;
+// moved top
+// let rootNode = null;
+// let curr = null;
+// let old = null;
+
+// only 1st type (complete rewrite etc)
 
 export function mount($root, initCompo) {
   rootNode = $root;
@@ -296,7 +485,7 @@ export function mount($root, initCompo) {
   curr = initCompo;
   // console.log(curr);
   old = curr(); // create latest vdom
-  console.log(old);
+  console.log(callStack, old);
   // updateElement(rootNode, old);
   // 1. set dom
   // rootNode.appendChild(createElement(old));
@@ -304,126 +493,179 @@ export function mount($root, initCompo) {
     rootNode.replaceChild(createElement(old), rootNode.firstChild);
   else rootNode.appendChild(createElement(old));
 
-  // 2. trigger lifecycle
+  // console.log(callStack);
   callMountAll();
+
+  iter = ArrIterator();
+  oldCallStack = [...callStack];
+  callStack = [];
+  // oldCallStack = [];
+  // oldCallStack.push(callStack[0]);
+
+  // 2. trigger lifecycle
+  // callMountAll();
 }
 
+// all delta updates
 export function forceUpdate() {
   counter = 0; // v imp
+
   // callStack = [];
+  iter = ArrIterator();
+
   let current = curr(); // create latest vdom
   // console.log(old, current);
-  const oldStack = CompoIterator().iterate(old);
-  const currStack = CompoIterator().iterate(current);
+  // const oldStack = CompoIterator().iterate(old);
+  // const currStack = CompoIterator().iterate(current);
 
-  // 1. update dom
+  console.log(CompoIterator().get(old, "TextArea"));
+
+  console.log(oldCallStack, callStack);
+
+  // new diff from yt
+
+  // const patches = diff(current, old);
+  // console.log(patches);
+  // patch(rootNode, patches);
+
+  // end new diff from yt
+
+  // 1. call unmount before dom update
+  callUnmountAll();
+
+  // 2. update dom
   updateElement(rootNode, current, old);
-  // 2. trigger lifecycle
-  callLifeCycleHooks(callStack, oldStack);
-  console.log(callStack, oldStack);
+
+  // 3. trigger lifecycle
+  // callLifeCycleHooks(callStack, oldStack);
+
+  callMountAll();
+  // console.log(callStack, oldStack);
 
   // backup for future comparison
+  oldCallStack = [...callStack];
+  callStack = [];
   old = current;
-}
-
-function callMountAll() {
-  for (let i = 0; i < counter; ++i) {
-    // console.log(callStack[i]);
-    callStack[i]?.mount?.();
-    // need to check carefully
-    callStack[i].mount = null;
-  }
-}
-
-function callLifeCycleHooks(callStack, stack) {
-  // unmount-logic (this is getting done h func itself)
-  // for (let i = 0; i < stack.length; ++i) {
-  //   if (stack[i] !== callStack[i]?.fname) {
-  //     console.log("unmount reqd for >> ", stack[i]);
-  //     // callStack[i]?.unMount?.();
-  //     // callStack[i].unMount = null;
-  //   }
-  // }
-
-  // correct
-  for (let i = counter; i < callStack.length; ++i) {
-    // console.log("unmount reqd for >> ", callStack[i]?.fname);
-    callStack[i]?.unMount?.();
-    callStack[i].unMount = null;
-  }
-
-  // v imp step
-  if (counter < callStack.length)
-    callStack.splice(counter, callStack.length - counter);
-
-  // mount-logic
-
-  for (let i = 0; i < counter; ++i) {
-    callStack[i]?.mount?.();
-    callStack[i].mount = null;
-  }
 }
 
 function isValid(v) {
   return v !== undefined || v !== "";
 }
 
-// export function updateElement($parent, newNode, oldNode, index = 0) {
-//   if (!oldNode) {
-//     // if (oldNode?.type) {
-//     $parent.appendChild(createElement(newNode));
-//   } else if (!newNode) {
-//     $parent.removeChild($parent.childNodes[index]);
-//   } else if (changed(newNode, oldNode)) {
-//     $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
-//   } else if (newNode.type) {
-//     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
-//     const newLength = newNode.children.length;
-//     const oldLength = oldNode.children.length;
-//     for (let i = 0; i < newLength || i < oldLength; i++) {
-//       updateElement(
-//         $parent.childNodes[index],
-//         newNode.children[i],
-//         oldNode.children[i],
-//         i
-//       );
-//     }
-//   }
-// }
+// variation impl
+// 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
+// 2. https://www.youtube.com/watch?v=85gJMUEcnkc
+
+const patches = [];
 
 export function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
     // if (oldNode?.type) {
     $parent.appendChild(createElement(newNode));
+    // patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
   } else if (!isValid(newNode)) {
     $parent.removeChild($parent.childNodes[index]);
+    // patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
   } else if (changed(newNode, oldNode)) {
     if ($parent?.childNodes[index])
       $parent?.replaceChild(createElement(newNode), $parent.childNodes[index]);
+    // patches.push({
+    //   p: $parent,
+    //   op: "REPLACE",
+    //   c: [createElement(newNode), $parent.childNodes[index]],
+    // });
     else {
       //special case Compo with Array manipulation or no type (parent) for updating
-      if ($parent) {
-        $parent.appendChild(createElement(newNode));
+      if ($parent?.appendChild) {
+        const newEl = createElement(newNode);
+        if (newEl?.nodeName)
+          // its dom node
+          $parent.appendChild(newEl);
+        // patches.push({
+        //   p: $parent,
+        //   op: "APPEND",
+        //   c: newEl,
+        // });
+        // its text
+        else $parent.textContent = newEl?.textContent;
+        // else
+        //   patches.push({
+        //     p: $parent,
+        //     op: "CONTENT",
+        //     c: newEl?.textContent,
+        //   });
       } else {
         $parent?.parentNode?.appendChild(createElement(newNode));
+        // patches.push({
+        //   p: $parent?.parentNode,
+        //   op: "APPEND",
+        //   c: createElement(newNode),
+        // });
       }
     }
   } else if (newNode?.type) {
     updateProps($parent.childNodes[index], newNode.props, oldNode.props);
     const newLength = newNode.children.length;
     const oldLength = oldNode.children.length;
+
     for (let i = 0; i < newLength || i < oldLength; i++) {
+      // const parent =
+      //   newNode?.type === "df" ? $parent : $parent.childNodes[index];
+      // if (newNode?.type === "df") console.log(newNode, parent);
       updateElement(
         $parent.childNodes[index],
+        // parent,
+
         newNode.children[i],
         oldNode.children[i],
         i
       );
-    }
+      }
   }
+
+  // console.log(patches);
 }
 
-function devlog(msg) {
-  // if (window?.__dev === true)
-  console.log(msg);
+export function Suspense(props, child) {
+  // console.log(props);
+  let returnVal;
+  const resolved = atom(false);
+
+  // if (props.fetchCompleted) {
+  if (resolved.get()) {
+    // this is never exec'ted
+    console.log("promise resolved");
+    props.children[0](returnVal);
+    } else {
+    console.log("promise NOT resolved");
+    // returnVal = props?.fallback;
+    // if fetch prop is provided (it can be any promise)
+    if (props?.fetch?.then) {
+      props.fetch.then((res) => {
+        console.log("promise resolved", res);
+        // Suspense({ ...props, fetchCompleted: true }, res);
+        returnVal = res;
+        resolved.set(true);
+      });
+    } else {
+      // else assume its dynamic child compo
+      console.log("NOT very stable, more testing reqd");
+      console.log(props, child);
+
+      child?.value?.then((res) => {
+        console.log("promise resolved", res);
+        // Suspense({ ...props, fetchCompleted: true }, res);
+        returnVal = res();
+        resolved.set(true);
+      });
+    }
+  }
+
+  return (props) => {
+    return resolved.get()
+      ? props?.fetch?.then
+        ? props.children[0](returnVal)
+        : returnVal // untested, but should work like lazy where it returns default compo
+      : props?.fallback;
+  };
 }

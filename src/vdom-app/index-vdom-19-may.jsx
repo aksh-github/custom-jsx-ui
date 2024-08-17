@@ -1,8 +1,16 @@
 import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
-import state from "../utils/simple-state";
-import { updateElement, h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
-import NavigoRouter from "../utils/navigo-router";
+import { state } from "../utils/simple-state";
+import {
+  updateElement,
+  h,
+  mount,
+  forceUpdate,
+  onMount,
+} from "../utils/vdom/vdom-lib";
+import { SimpleSwitch } from "../compos/Switch";
+import { navigoRouter } from "../utils/navigo-router";
+import { registerRenderCallbackV2 } from "../utils/signal-v2";
 
 // v basic test 23may
 // let count = 0;
@@ -90,30 +98,60 @@ const root = document.getElementById("root-vdom");
 // for signal
 registerRenderCallback(forceUpdate);
 
+// for signal v2
+registerRenderCallbackV2(forceUpdate);
+
 // for my state
 const tempSt = state();
 tempSt.registerRenderCallback(forceUpdate);
 
-NavigoRouter.set(
-  {
-    // errorComponent: Error,
-    // basePath: "sommore",
-    routes: [
-      {
-        path: "/",
-        component: SimpleRoute,
-      },
-      // {
-      //   path: "/",
-      //   component: Chat,
-      // },
-      { path: "/route2", component: App },
-      { path: "*", component: () => () => <div>Error</div> },
-    ],
-  },
-  (Compo, match) => {
-    console.log(match);
-    //   renderUtils.render(root, () => <Compo />);
-    mount(root, () => <Compo />);
-  }
-);
+// mount(root, () => <App />);
+
+// router with switch try
+
+// const A = () => "Route A";
+// const B = () => "Route B";
+
+// const Index = () => {
+//   const rs = state({ path: "" });
+
+//   const setupRoute = () =>
+//     navigoRouter.set(
+//       {
+//         // errorComponent: Error,
+//         // basePath: window.location.pathname,
+//         routes: [
+//           {
+//             path: "/chat",
+//             // component: A,
+//           },
+//           {
+//             path: "/",
+//             // component: B,
+//           },
+//           {
+//             path: "*",
+//             // component: () => <div>Wrong url</div>,
+//           },
+//         ],
+//       },
+//       (Compo, match) => {
+//         console.log(Compo, match);
+//         rs.set({ path: match?.url });
+//       }
+//     );
+
+//   onMount(() => {
+//     console.log("index mounted");
+//     setupRoute();
+//   });
+//   return () => (
+//     <SimpleSwitch cond={rs.get("path")}>
+//       <SimpleSwitch.Case when={"chat"} render={<A />} />
+//       <SimpleSwitch.Case when={""} render={<B />} />
+//       <SimpleSwitch.Case render={"Loadin.."} />
+//     </SimpleSwitch>
+//   );
+// };
+
+mount(root, () => <App />);
