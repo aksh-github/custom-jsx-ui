@@ -1,12 +1,10 @@
-import { App, SimpleRoute } from "./App";
+import { App } from "./App";
 import { renderUtils, dom } from "../utils/dom/lib.v2";
 // import { renderUtils, dom } from "lib-jsx";
-import router from "../utils/router";
+// import router from "../utils/router";
 import { registerRenderCallback } from "../utils/signal-complex";
-import state from "../utils/simple-state";
-import router2 from "../utils/router-v2";
-import Login from "../chat/Login";
-import { Chat } from "../chat/Chat";
+import { registerCallback } from "../utils/simple-state";
+import { registerRenderCallbackV2 } from "../utils/signal-v2";
 
 // this is perfect implementation as of 7-may-2024
 
@@ -18,32 +16,15 @@ const root = document.getElementById("root");
 // for signal
 registerRenderCallback(renderUtils.forceUpdate);
 
-// for my state
-const tempSt = state();
-tempSt.registerRenderCallback(renderUtils.forceUpdate);
+// for signal v2
+registerRenderCallbackV2(renderUtils.forceUpdate);
 
-router2(
-  {
-    // errorComponent: Error,
-    // basePath: "sommore",
-    routes: [
-      {
-        path: "/route2",
-        component: SimpleRoute,
-      },
-      // {
-      //   path: "/",
-      //   component: Chat,
-      // },
-      { path: "/", component: App },
-      { path: "*", component: () => () => <div>Error</div> },
-    ],
-  },
-  (Compo, match) => {
-    console.log(match);
-    renderUtils.render(root, () => () => <Compo />);
-  }
-);
+// for my state
+registerCallback(renderUtils.forceUpdate);
+
+// router moved to App
+
+renderUtils.render(root, () => () => <App />);
 
 console.log(
   "Interesting ***; https://github.com/Matt-Esch/virtual-dom https://github.com/snabbdom/snabbdom https://github.com/themarcba/vue-vdom https://www.youtube.com/watch?v=85gJMUEcnkc"
