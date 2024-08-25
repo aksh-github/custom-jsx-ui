@@ -1,6 +1,6 @@
 import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
-import { state } from "../utils/simple-state";
+import { registerCallback } from "../utils/simple-state";
 import {
   updateElement,
   h,
@@ -102,8 +102,7 @@ registerRenderCallback(forceUpdate);
 registerRenderCallbackV2(forceUpdate);
 
 // for my state
-const tempSt = state();
-tempSt.registerRenderCallback(forceUpdate);
+registerCallback(forceUpdate);
 
 // mount(root, () => <App />);
 

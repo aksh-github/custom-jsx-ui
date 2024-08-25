@@ -626,6 +626,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   // console.log(patches);
 }
 
+// inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 export function Suspense(props, child) {
   // console.log(props);
   let returnVal;
