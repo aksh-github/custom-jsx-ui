@@ -28,6 +28,12 @@ const Topics = (p) => {
     // console.log(curPath.get());
     const { basepath, match } = props;
 
+    const item = items.find(({ name, slug }) => {
+      return match?.url?.endsWith(slug);
+    });
+
+    console.log(item);
+
     return (
       <div>
         <h2>Topics</h2>
@@ -59,7 +65,7 @@ const Topics = (p) => {
           console.log(item);
           return item ? <Topic topicId={item.name} /> : null;
         })()} */}
-        {<Topic topicId={match.url} />}
+        {<Topic topicId={(item?.name || "") + " on " + match.url} />}
       </div>
     );
   };
