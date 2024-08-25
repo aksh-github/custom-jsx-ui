@@ -17,6 +17,11 @@ let throtUpdate = null;
 let forceUpdate = () => {};
 let batchOp = false;
 
+export const registerCallback = (cb) => {
+  forceUpdate = cb;
+  throtUpdate = debounce(forceUpdate, 100);
+};
+
 export const state = (iv) => {
   let st = {
     ...iv,
@@ -37,17 +42,13 @@ export const state = (iv) => {
         throtUpdate();
       }
     },
-    reset: () => {
-      st = {};
-    },
-    registerRenderCallback: (cb) => {
-      forceUpdate = cb;
-      throtUpdate = debounce(forceUpdate, 100);
-    },
-    batch: (cb) => {
-      cb();
-      batchOp = false;
-    },
+    // reset: () => {
+    //   st = {};
+    // },
+    // batch: (cb) => {
+    //   cb();
+    //   batchOp = false;
+    // },
   };
 };
 
@@ -59,24 +60,26 @@ export const atom = (iv) => {
       return st;
     },
     set: (nv) => {
+      if (st == nv) {
+        return;
+      }
+
       st = nv;
+
       if (!batchOp) {
         // forceUpdate();
         // requestIdleCallback(forceUpdate);
+
         throtUpdate();
       }
     },
-    reset: () => {
-      st = null;
-    },
-    registerRenderCallback: (cb) => {
-      forceUpdate = cb;
-      throtUpdate = debounce(forceUpdate, 100);
-    },
-    batch: (cb) => {
-      cb();
-      batchOp = false;
-    },
+    // reset: () => {
+    //   st = null;
+    // },
+    // batch: (cb) => {
+    //   cb();
+    //   batchOp = false;
+    // },
   };
 };
 
