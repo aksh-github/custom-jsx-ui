@@ -514,11 +514,11 @@ export function forceUpdate() {
   iter = ArrIterator();
 
   let current = curr(); // create latest vdom
-  // console.log(old, current);
+  console.log(old, current);
   // const oldStack = CompoIterator().iterate(old);
   // const currStack = CompoIterator().iterate(current);
 
-  console.log(CompoIterator().get(old, "TextArea"));
+  // console.log(CompoIterator().get(old, "TextArea"));
 
   console.log(oldCallStack, callStack);
 
@@ -535,6 +535,10 @@ export function forceUpdate() {
 
   // 2. update dom
   updateElement(rootNode, current, old);
+
+  // console.log("===================");
+
+  // diff(rootNode, current, old);
 
   // 3. trigger lifecycle
   // callLifeCycleHooks(callStack, oldStack);
@@ -630,10 +634,10 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
 export function Suspense(props, child) {
   // console.log(props);
   let returnVal;
-  const resolved = atom(false);
+  const [resolved, setResolved] = atom(false);
 
   // if (props.fetchCompleted) {
-  if (resolved.get()) {
+  if (resolved()) {
     // this is never exec'ted
     console.log("promise resolved");
     props.children[0](returnVal);
@@ -646,7 +650,7 @@ export function Suspense(props, child) {
         console.log("promise resolved", res);
         // Suspense({ ...props, fetchCompleted: true }, res);
         returnVal = res;
-        resolved.set(true);
+        setResolved(true);
       });
     } else {
       // else assume its dynamic child compo
@@ -657,13 +661,13 @@ export function Suspense(props, child) {
         console.log("promise resolved", res);
         // Suspense({ ...props, fetchCompleted: true }, res);
         returnVal = res();
-        resolved.set(true);
+        setResolved(true);
       });
     }
   }
 
   return (props) => {
-    return resolved.get()
+    return resolved()
       ? props?.fetch?.then
         ? props.children[0](returnVal)
         : returnVal // untested, but should work like lazy where it returns default compo

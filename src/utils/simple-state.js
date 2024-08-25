@@ -12,6 +12,14 @@ function debounce(func, duration) {
   };
 }
 
+export const batch = (cb) => {
+  console.warn("untested code");
+  batchOp = true;
+  cb();
+  batchOp = false;
+  forceUpdate();
+};
+
 let throtUpdate = null;
 
 let forceUpdate = () => {};
@@ -27,60 +35,57 @@ export const state = (iv) => {
     ...iv,
   };
 
-  return {
-    get: (key) => {
-      return key ? st[key] : st;
-    },
-    set: (nv) => {
-      st = {
-        ...st,
-        ...nv,
-      };
-      if (!batchOp) {
-        // forceUpdate();
-        // requestIdleCallback(forceUpdate);
-        throtUpdate();
-      }
-    },
-    // reset: () => {
-    //   st = {};
-    // },
-    // batch: (cb) => {
-    //   cb();
-    //   batchOp = false;
-    // },
+  const get = (key) => {
+    return key ? st[key] : st;
   };
+
+  const set = (valueOrFn) => {
+    if (typeof valueOrFn === "function") {
+      st = valueOrFn(st);
+    } else {
+      if (st == valueOrFn) {
+        return;
+      }
+      st = { ...valueOrFn };
+    }
+
+    if (!batchOp) {
+      // forceUpdate();
+      // requestIdleCallback(forceUpdate);
+
+      throtUpdate();
+    }
+  };
+
+  return [get, set];
 };
 
 export const atom = (iv) => {
   let st = iv;
 
-  return {
-    get: () => {
-      return st;
-    },
-    set: (nv) => {
-      if (st == nv) {
+  const get = () => {
+    return st;
+  };
+
+  const set = (valueOrFn) => {
+    if (typeof valueOrFn === "function") {
+      st = valueOrFn(st);
+    } else {
+      if (st == valueOrFn) {
         return;
       }
+      st = valueOrFn;
+    }
 
-      st = nv;
+    if (!batchOp) {
+      // forceUpdate();
+      // requestIdleCallback(forceUpdate);
 
-      if (!batchOp) {
-        // forceUpdate();
-        // requestIdleCallback(forceUpdate);
-
-        throtUpdate();
-      }
-    },
-    // reset: () => {
-    //   st = null;
-    // },
-    // batch: (cb) => {
-    //   cb();
-    //   batchOp = false;
-    // },
+      throtUpdate();
+    }
   };
+
+  return [get, set];
 };
 
 // export state;

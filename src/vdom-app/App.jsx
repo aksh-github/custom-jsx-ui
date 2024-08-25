@@ -27,7 +27,7 @@ import { signal } from "../utils/signal-v2";
 // Ctr
 
 const Ctr = ({ v, __spl }) => {
-  const st = state({ c: 100, version: "Loading..." });
+  const [st, setSt] = state({ c: 100, version: "Loading..." });
 
   onCleanup(() => {
     console.log("unmount Ctr");
@@ -39,9 +39,10 @@ const Ctr = ({ v, __spl }) => {
       fetch("/package.json")
         .then((res) => res.json())
         .then((res) => {
-          st.set({
+          setSt((prev) => ({
+            ...prev,
             version: res.version,
-          });
+          }));
         });
     }, 4000);
   });
@@ -51,8 +52,8 @@ const Ctr = ({ v, __spl }) => {
     return (
       <div
         style={{
-          background: st.get("c") % 2 === 0 ? "orange" : "tomato",
-          color: st.get("c") % 2 === 0 ? "white" : "unset",
+          background: st("c") % 2 === 0 ? "orange" : "tomato",
+          color: st("c") % 2 === 0 ? "white" : "unset",
           padding: "2em",
         }}
       >
@@ -60,12 +61,12 @@ const Ctr = ({ v, __spl }) => {
         <p>
           Parent ctr: {props.v} {props.v % 2 === 0 ? "Even" : null}
         </p>
-        <p>My ctr: {st.get("c")}</p>
-        <p>Json Value: {st.get("version")}</p>
+        <p>My ctr: {st("c")}</p>
+        <p>Json Value: {st("version")}</p>
         <button
           onClick={(e) => {
             // setcc(cc() + 1);
-            st.set({ c: st.get("c") + 1 });
+            setSt({ c: st("c") + 1 });
           }}
         >
           click
@@ -78,11 +79,9 @@ const Ctr = ({ v, __spl }) => {
 // end Ctr
 
 const Input = () => {
-  const input = state({
-    input: {
-      v: "some",
-      e: "",
-    },
+  const [input, setInput] = state({
+    v: "some",
+    e: "",
   });
 
   onCleanup(() => {
@@ -99,16 +98,14 @@ const Input = () => {
           className="input"
           onInput={(e) => {
             // console.log(e, e.target.value);
-            input.set({
-              input: {
-                v: e.target.value,
-                e: e.target.value ? "" : "incorrect",
-              },
+            setInput({
+              v: e.target.value,
+              e: e.target.value ? "" : "incorrect",
             });
           }}
-          value={input.get("input").v}
+          value={input("v")}
         />
-        <p>{input.get("input").e}</p>
+        <p>{input("e")}</p>
         <TextArea />
       </div>
     );
@@ -262,7 +259,7 @@ const DynCompo = async () => {
 
 export const SimpleRoute = () => {
   const [r, setr] = createSignal(0);
-  const pst = atom(0);
+  const [pst, setPst] = atom(0);
   // const tv = pst.get("r");
   let ref = null;
 
@@ -300,15 +297,15 @@ export const SimpleRoute = () => {
   };
 
   return () => {
-    console.log(pst.get());
+    console.log(pst());
     return (
       <div ref={(_ref) => (ref = _ref)}>
         {/* route2
         <Link href="/">Go Back</Link>
         <hr /> */}
         <div>
-          <h3>{pst.get() % 2 === 0 ? <Even /> : <Odd />}</h3>
-          <button onClick={() => pst.set(pst.get() + 1)}>Change</button>
+          <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3>
+          <button onClick={() => setPst((_pst) => _pst + 1)}>Change</button>
         </div>
         {/* <ArrayWithMap /> */}
         {/* <ArrayWithoutMap /> */}
@@ -371,7 +368,7 @@ export const TextArea = () => {
 
 export function App(props) {
   let curPath = "";
-  const routeSt = atom("");
+  const [route, setRoute] = atom("");
   // const [route, setRoute] = signal("route2");
 
   const setupRoute = () =>
@@ -401,7 +398,7 @@ export function App(props) {
         if (curPath != match?.url) {
           curPath = match.url;
           // setPath(match.url);
-          routeSt.set(match?.url);
+          setRoute(match?.url);
           // setRoute(match.url);
         }
         // console.log(path());
@@ -413,7 +410,7 @@ export function App(props) {
     setupRoute();
   });
   return () => {
-    switch (routeSt.get()) {
+    switch (route()) {
       // switch (route()) {
       case "route2":
         return <SimpleRoute />;
