@@ -21,6 +21,7 @@ import {
 } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
+// import { Router } from "../utils/router-v2";
 // import { useState } from "./utils/hooks-experi";
 
 // Ctr
@@ -248,7 +249,10 @@ const getMyAwesomePic = () => {
   });
 };
 
-const DynCompo = () => {
+const DynCompo = async () => {
+  await new Promise((resolve, reject) => {
+    setTimeout(() => resolve(photoURL), 3000);
+  });
   return import("../compos/ComponentPatterns").then((comp) => {
     return comp?.PropsDriven({ n: "This will be loaded dynamically" }) || null;
   });
@@ -366,8 +370,8 @@ export const TextArea = () => {
 };
 
 export function App(props) {
-  let curPath = "route2";
-  const routeSt = atom(null);
+  let curPath = "";
+  const routeSt = atom("");
   // const [route, setRoute] = signal("route2");
 
   const setupRoute = () =>
@@ -415,8 +419,8 @@ export function App(props) {
         return <SimpleRoute />;
       case "":
         return <ComplexRoute />;
-      case null:
-        return null;
+      // case null:
+      //   return null;
       default:
         return "Wrong path 404";
     }
