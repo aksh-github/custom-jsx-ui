@@ -47,43 +47,43 @@ const matchPath = (pathname, options) => {
   };
 };
 
-// const [currentPath, setCurentPath] = atom(window.location.pathname);
+const [currentPath, setCurentPath] = atom(window.location.pathname);
 
-// export function Route() {
-//   //   const currentPath = atom(window.location.pathname);
+export function Route() {
+  //   const currentPath = atom(window.location.pathname);
 
-//   const navigate = (abcd) => {
-//     console.log(window.location.pathname, abcd);
-//     if (currentPath() !== window.location.pathname)
-//       setCurentPath(window.location.pathname);
-//   };
+  const navigate = (abcd) => {
+    console.log(window.location.pathname, abcd);
+    if (currentPath() !== window.location.pathname)
+      setCurentPath(window.location.pathname);
+  };
 
-//   onMount(() => {
-//     window.addEventListener("popstate", navigate);
-//     window.addEventListener("navigate", navigate);
-//   });
+  onMount(() => {
+    window.addEventListener("popstate", navigate);
+    window.addEventListener("navigate", navigate);
+  });
 
-//   onCleanup(() => {
-//     window.removeEventListener("popstate", navigate);
-//     window.removeEventListener("navigate", navigate);
-//   });
+  onCleanup(() => {
+    window.removeEventListener("popstate", navigate);
+    window.removeEventListener("navigate", navigate);
+  });
 
-//   return (props) => {
-//     const { path, exact, component, render } = props;
+  return (props) => {
+    const { path, exact, component, render } = props;
 
-//     const match = matchPath(window.location.pathname, { path, exact });
+    const match = matchPath(window.location.pathname, { path, exact });
 
-//     if (!match) return null;
+    if (!match) return null;
 
-//     if (component) return h(component, { match });
+    if (component) return h(component, { match });
 
-//     console.log(props);
+    console.log(props);
 
-//     if (render) return render({ match });
+    if (render) return render({ match });
 
-//     return null;
-//   };
-// }
+    return null;
+  };
+}
 
 export function LinkV2({ to, replace }) {
   const handleClick = (event) => {
@@ -125,57 +125,57 @@ export function Router() {
   };
 }
 
-// export const SimpleSwitch = (pmain) => {
-//   const currentPath = atom(window.location.pathname);
+export const SimpleSwitch = (pmain) => {
+  const [curPath, setCurPath] = atom(window.location.pathname);
 
-//   console.log(pmain);
+  console.log(pmain);
 
-//   const navigate = (abcd) => {
-//     console.log(window.location.pathname, abcd);
-//     if (currentPath.get() !== window.location.pathname)
-//       currentPath.set(window.location.pathname);
-//   };
+  const navigate = (abcd) => {
+    console.log(window.location.pathname, abcd);
+    if (curPath() !== window.location.pathname)
+      setCurPath(window.location.pathname);
+  };
 
-//   onMount(() => {
-//     window.addEventListener("popstate", navigate);
-//     window.addEventListener("navigate", navigate);
-//   });
+  onMount(() => {
+    window.addEventListener("popstate", navigate);
+    window.addEventListener("navigate", navigate);
+  });
 
-//   onCleanup(() => {
-//     window.removeEventListener("popstate", navigate);
-//     window.removeEventListener("navigate", navigate);
-//   });
+  onCleanup(() => {
+    window.removeEventListener("popstate", navigate);
+    window.removeEventListener("navigate", navigate);
+  });
 
-//   return (props) => {
-//     console.log(props);
-//     const { cond, children } = props;
+  return (props) => {
+    console.log(props);
+    const { cond, children } = props;
 
-//     let defaultc = null;
-//     let match = null;
+    let defaultc = null;
+    let match = null;
 
-//     const selected = children?.find((c) => {
-//       console.log(c);
-//       const { value } = c;
+    const selected = children?.find((c) => {
+      console.log(c);
+      const { value } = c;
 
-//       if (value.path === undefined) defaultc = c;
+      if (value.path === undefined) defaultc = c;
 
-//       match = matchPath(window.location.pathname, {
-//         path: value.path,
-//         exact: value.exact,
-//       });
-//       // return mp ? true : false;
-//       return value.path === window.location.pathname;
-//     });
+      match = matchPath(window.location.pathname, {
+        path: value.path,
+        exact: value.exact,
+      });
+      // return mp ? true : false;
+      return value.path === window.location.pathname;
+    });
 
-//     console.log(selected);
+    console.log(selected);
 
-//     return (selected || defaultc)?.value?.render({ match });
-//   };
-// };
+    return (selected || defaultc)?.value?.render({ match });
+  };
+};
 
-// SimpleSwitch.Case = () => {
-//   return (props) => {
-//     const { path, render } = props;
-//     return { render, path };
-//   };
-// };
+SimpleSwitch.Case = () => {
+  return (props) => {
+    const { path, render } = props;
+    return { render, path };
+  };
+};

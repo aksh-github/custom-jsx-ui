@@ -1,5 +1,5 @@
 // import { SimpleSwitch } from "../compos/Switch";
-import { LinkV2, Router } from "../utils/router-v2";
+import { LinkV2, Route, Router, SimpleSwitch } from "../utils/router-v2";
 import { atom, registerCallback, state } from "../utils/simple-state";
 import {
   mount,
@@ -44,7 +44,7 @@ const Topics = (p) => {
             </li>
           ))}
         </ul>
-        {/* {items.map(({ name, slug }) => (
+        {items.map(({ name, slug }) => (
           <Route
             key={name}
             path={`${match.path}/${slug}`}
@@ -55,38 +55,30 @@ const Topics = (p) => {
           exact
           path={match.url}
           render={() => <h3>Please select a topic.</h3>}
-        /> */}
-        {/* {(() => {
-          const item = items.find(({ name, slug }) => {
-            console.log(curPath.get(), url, slug);
-            return curPath.get()?.url === `${url}/${slug}`; //curPath.get()?.url.endsWith(slug);
-          });
+        />
 
-          console.log(item);
-          return item ? <Topic topicId={item.name} /> : null;
-        })()} */}
-        {<Topic topicId={(item?.name || "") + " on " + match.url} />}
+        {/* <Topic topicId={(item?.name || "") + " on " + match.url} /> */}
       </div>
     );
   };
 };
 
 function App() {
-  const [curPath, setCurPath] = state(window.location.pathname);
+  // const [curPath, setCurPath] = state(window.location.pathname);
 
-  const onRouteChange = (newPath) => {
-    console.log(newPath);
-    setCurPath(newPath);
-  };
-  let routeHandler = Router();
+  // const onRouteChange = (newPath) => {
+  //   console.log(newPath);
+  //   setCurPath(newPath);
+  // };
+  // let routeHandler = Router();
 
-  onMount(() => {
-    routeHandler.init(onRouteChange);
-  });
+  // onMount(() => {
+  //   routeHandler.init(onRouteChange);
+  // });
 
-  onCleanup(() => {
-    routeHandler.cleanup();
-  });
+  // onCleanup(() => {
+  //   routeHandler.cleanup();
+  // });
 
   return () => (
     <div>
@@ -104,7 +96,7 @@ function App() {
 
       <hr />
 
-      {(() => {
+      {/* {(() => {
         console.log("this works 25aug");
         switch (curPath("url")) {
           // switch (route()) {
@@ -119,23 +111,37 @@ function App() {
               return <Topics basepath="/topics" match={curPath()} />;
             else return "Wrong path 404";
         }
-      })()}
+      })()} */}
 
-      {/* <Route exact path="/" component={Home} />
-      <Route path="/about" component={About} />
-      <Route path="/topics" component={Topics} /> */}
+      <Route exact path="/" render={() => <Home />} />
+      <Route path="/about" render={() => <About />} />
+      <Route
+        path="/topics"
+        render={(props) => {
+          console.log(props);
+          return <Topics basepath="/topics" {...props} />;
+        }}
+      />
 
       {/* <SimpleSwitch>
-        <SimpleSwitch.Case render={() => "Wrong path 404"} />
         <SimpleSwitch.Case
           path={"/topics"}
           render={(props) => {
             console.log(props);
-            return <Topics {...props} />;
+            return <Topics basepath="/topics" {...props} />;
           }}
         />
         <SimpleSwitch.Case path={"/about"} render={() => <About />} />
         <SimpleSwitch.Case path={"/"} render={() => <Home />} />
+        <SimpleSwitch.Case
+          render={(props) => {
+            // if (curPath("url")?.startsWith("/topics"))
+            //   return <Topics basepath="/topics" match={curPath()} />;
+            // else
+            console.log(props);
+            return "Wrong path 404";
+          }}
+        />
       </SimpleSwitch> */}
     </div>
   );
