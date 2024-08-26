@@ -66,7 +66,11 @@ const Ctr = ({ v, __spl }) => {
         <button
           onClick={(e) => {
             // setcc(cc() + 1);
-            setSt({ c: st("c") + 1 });
+            // setSt(()=>{ c: st("c") + 1 });
+            setSt((prev) => ({
+              ...prev,
+              c: st("c") + 1,
+            }));
           }}
         >
           click
@@ -248,7 +252,7 @@ const getMyAwesomePic = () => {
 
 const DynCompo = async () => {
   await new Promise((resolve, reject) => {
-    setTimeout(() => resolve(photoURL), 3000);
+    setTimeout(() => resolve(10), 3000);
   });
   return import("../compos/ComponentPatterns").then((comp) => {
     return comp?.PropsDriven({ n: "This will be loaded dynamically" }) || null;
