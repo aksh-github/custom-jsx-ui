@@ -12,6 +12,7 @@ const historyPush = (path) => {
   window.history.pushState({}, null, path);
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
+  // window.dispatchEvent(new Event("pushstate"));
 };
 
 const historyReplace = (path) => {
@@ -85,15 +86,17 @@ export function Route() {
   };
 }
 
-export function LinkV2({ to, replace }) {
-  const handleClick = (event) => {
-    event.preventDefault();
-    replace ? historyReplace(to) : historyPush(to);
-  };
-
-  return ({ to, children }) => {
+export function LinkV2() {
+  return ({ to, children, replace }) => {
     return (
-      <a href={to} onClick={handleClick}>
+      <a
+        href={to}
+        onClick={(e) => {
+          e.preventDefault();
+          const to = e.target.getAttribute("href");
+          replace ? historyReplace(to) : historyPush(to);
+        }}
+      >
         {children}
       </a>
     );
@@ -114,12 +117,14 @@ export function Router() {
   return {
     init: (cb) => {
       window.addEventListener("popstate", navigate);
+      // window.addEventListener("pushstate", navigate);
       window.addEventListener("navigate", navigate);
       onRouteChange = cb || (() => {});
       onRouteChange(matchPath(currPath(), {}));
     },
     cleanup: () => {
       window.removeEventListener("popstate", navigate);
+      // window.removeEventListener("pushstate", navigate);
       window.removeEventListener("navigate", navigate);
     },
   };

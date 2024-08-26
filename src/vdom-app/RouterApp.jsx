@@ -1,5 +1,7 @@
 // import { SimpleSwitch } from "../compos/Switch";
 import { LinkV2, Route, Router, SimpleSwitch } from "../utils/router-v2";
+import { createSignal } from "../utils/signal-complex";
+import { signal } from "../utils/signal-v2";
 import { atom, registerCallback, state } from "../utils/simple-state";
 import {
   mount,
@@ -9,8 +11,20 @@ import {
   onCleanup,
 } from "../utils/vdom/vdom-lib";
 
-const Home = () => () => <h2>Home</h2>;
-const About = () => () => <h2>About</h2>;
+const Home = () => () =>
+  (
+    <div>
+      <h2>Home</h2>
+      <LinkV2 to="/about">Go to About</LinkV2>
+    </div>
+  );
+const About = () => () =>
+  (
+    <div>
+      <h2>About</h2>
+      <LinkV2 to="/">Go to Home</LinkV2>
+    </div>
+  );
 const Topic =
   () =>
   ({ topicId }) =>
@@ -44,7 +58,7 @@ const Topics = (p) => {
             </li>
           ))}
         </ul>
-        {items.map(({ name, slug }) => (
+        {/* {items.map(({ name, slug }) => (
           <Route
             key={name}
             path={`${match.path}/${slug}`}
@@ -55,30 +69,33 @@ const Topics = (p) => {
           exact
           path={match.url}
           render={() => <h3>Please select a topic.</h3>}
-        />
+        /> */}
 
-        {/* <Topic topicId={(item?.name || "") + " on " + match.url} /> */}
+        <Topic topicId={(item?.name || "") + " on " + match.url} />
       </div>
     );
   };
 };
 
 function App() {
-  // const [curPath, setCurPath] = state(window.location.pathname);
+  const [curPath, setCurPath] = state(window.location.pathname);
 
-  // const onRouteChange = (newPath) => {
-  //   console.log(newPath);
-  //   setCurPath(newPath);
-  // };
-  // let routeHandler = Router();
+  // signal can be used but for nested router refresh case there is some issue
+  // const [curPath, setCurPath] = signal(window.location.pathname);
 
-  // onMount(() => {
-  //   routeHandler.init(onRouteChange);
-  // });
+  const onRouteChange = (newPath) => {
+    console.log(newPath);
+    setCurPath(newPath);
+  };
+  let routeHandler = Router();
 
-  // onCleanup(() => {
-  //   routeHandler.cleanup();
-  // });
+  onMount(() => {
+    routeHandler.init(onRouteChange);
+  });
+
+  onCleanup(() => {
+    routeHandler.cleanup();
+  });
 
   return () => (
     <div>
@@ -96,9 +113,9 @@ function App() {
 
       <hr />
 
-      {/* {(() => {
+      {(() => {
         console.log("this works 25aug");
-        switch (curPath("url")) {
+        switch (curPath().url) {
           // switch (route()) {
           case "/about":
             return <About />;
@@ -107,13 +124,13 @@ function App() {
           // case "/topics":
           //   return <Topics match={curPath.get()} />;
           default:
-            if (curPath("url")?.startsWith("/topics"))
+            if (curPath()?.url?.startsWith("/topics"))
               return <Topics basepath="/topics" match={curPath()} />;
             else return "Wrong path 404";
         }
-      })()} */}
+      })()}
 
-      <Route exact path="/" render={() => <Home />} />
+      {/* <Route exact path="/" render={() => <Home />} />
       <Route path="/about" render={() => <About />} />
       <Route
         path="/topics"
@@ -121,7 +138,7 @@ function App() {
           console.log(props);
           return <Topics basepath="/topics" {...props} />;
         }}
-      />
+      /> */}
 
       {/* <SimpleSwitch>
         <SimpleSwitch.Case
