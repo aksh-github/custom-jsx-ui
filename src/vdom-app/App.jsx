@@ -184,7 +184,7 @@ function ComplexRoute(props) {
       ) : // <Number n={10} />
       null}
       <p>
-        <Link href="route2">Go next</Link>
+        <Link href="/route2">Go next</Link>
         <button
           onClick={() => {
             navigoRouter.get().navigate("route2");
