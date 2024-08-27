@@ -2,11 +2,6 @@
 
 import { atom } from "../simple-state";
 
-// suspend impl:
-console.log(
-  "https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f"
-);
-
 // import { diff, patch } from "./vdom-yt";
 
 let callStack = [];
@@ -207,7 +202,16 @@ export function h(type, props, ...children) {
 
     //complex node
     if (rv?.type) {
-      return { ...rv, $c: type.name, children: rv.children, $p: curParent };
+      return {
+        ...rv,
+        // props: rv.props,
+        $c: type.name,
+        // children: rv.children,
+        children: [rv],
+        $p: curParent,
+        key: props?.key,
+        // type: "df",
+      };
     }
     // str, null etc
     else if (Array.isArray(rv)) {
@@ -234,11 +238,14 @@ export function h(type, props, ...children) {
       // there are 2 possiblities
       // 1. complex node but with no type
       if (rv?.$c) {
+        // if (!rv.type) {
+        //   rv.type = "df";
+        // }
         return {
           $c: type.name,
           // value: rv,
           children: [rv],
-          type: "df", // sure that type is unavailable hence using df
+          // type: "df", // sure that type is unavailable hence using df
           $p: curParent,
         };
       } else {
@@ -362,13 +369,18 @@ function createElement(node) {
 
   if (!node?.type) {
     if (node?.$c) {
+      // const tnode = document.createTextNode(
+      //   node?.value == null || node?.value == undefined ? "" : node?.value
+      // );
+      // return tnode;
+      if (!node.children) {
       const tnode = document.createTextNode(
         node?.value == null || node?.value == undefined ? "" : node?.value
       );
-      // console.log("call mount for >>>>", node.$c);
-      // callStack[counter]?.mount?.();
-      // counter++;
       return tnode;
+      } else {
+        return createElement(node.children[0]);
+      }
     } else
       return document.createTextNode(
         node == null || node == undefined ? "" : node
