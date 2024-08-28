@@ -210,7 +210,8 @@ export function h(type, props, ...children) {
         children: [rv],
         $p: curParent,
         key: props?.key,
-        // type: "df",
+        props: props || {},
+        // type: "$c",
       };
     }
     // str, null etc
@@ -237,6 +238,7 @@ export function h(type, props, ...children) {
     else {
       // there are 2 possiblities
       // 1. complex node but with no type
+
       if (rv?.$c) {
         // if (!rv.type) {
         //   rv.type = "df";
@@ -244,6 +246,7 @@ export function h(type, props, ...children) {
         return {
           $c: type.name,
           // value: rv,
+          // ...rv,
           children: [rv],
           // type: "df", // sure that type is unavailable hence using df
           $p: curParent,
@@ -363,10 +366,6 @@ function addEventListeners($target, props) {
 // vdom to dom
 
 function createElement(node) {
-  // if (node?.$c) {
-  //   console.log("call mount for >>>>", node.$c);
-  // }
-
   if (!node?.type) {
     if (node?.$c) {
       // const tnode = document.createTextNode(
@@ -401,14 +400,13 @@ function createElement(node) {
   }
 
   const $el = document.createElement(node.type);
-  setProps($el, node.props);
-  if (node?.$c) $el.dataset["cp"] = node.$c + ":" + node?.$p;
-  addEventListeners($el, node.props);
   if (node?.$c) {
-    // console.log("call mount for >>>>", node.$c);
-    // callStack[counter]?.mount?.();
-    // counter++;
+    $el.dataset["cp"] = node.$c + ":" + node?.$p;
+  } else {
+    setProps($el, node.props);
+    addEventListeners($el, node.props);
   }
+
   node.children.map(createElement).forEach($el.appendChild.bind($el));
 
   return $el;
