@@ -13,6 +13,10 @@ let rootNode = null;
 let curr = null;
 let old = null;
 
+let parent;
+let stk = [],
+  CTR = 0;
+
 // let set = new Set();
 // let __k = undefined;
 let oldCallStack = []; // copy of callStack to see cached results
@@ -104,7 +108,11 @@ export function h(type, props, ...children) {
       //   type.name == exisng?.curr?.fname ?? "matched"
       // );
 
-      if (type.name == exisng?.curr?.fname && curParent == exisng?.curr?.p) {
+      if (
+        type.name == exisng?.curr?.fname &&
+        curParent == exisng?.curr?.p &&
+        props?.key === exisng?.curr?.key
+      ) {
         // console.log("matched for ", exisng);
         // iter.reset(exisng.idx);
         _fn = exisng.curr.fn;
@@ -176,6 +184,8 @@ export function h(type, props, ...children) {
       p: curParent,
     };
 
+    if (props?.key !== undefined) callStack[counter].key = props.key;
+
     currMount = currUnmount = null;
 
     counter++;
@@ -211,7 +221,7 @@ export function h(type, props, ...children) {
         $p: curParent,
         key: props?.key,
         props: props || {},
-        // type: "$c",
+        type: "df",
       };
     }
     // str, null etc
@@ -502,6 +512,7 @@ export function mount($root, initCompo) {
   if (rootNode.firstChild)
     rootNode.replaceChild(createElement(old), rootNode.firstChild);
   else rootNode.appendChild(createElement(old));
+  walkDom(rootNode);
 
   // console.log(callStack);
   callMountAll();
@@ -542,6 +553,9 @@ export function forceUpdate() {
 
   // 1. call unmount before dom update
   callUnmountAll();
+  CTR = 0;
+  stk = [];
+  stk = walkDom(rootNode);
 
   // 2. update dom
   updateElement(rootNode, current, old);
@@ -618,17 +632,28 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       }
     }
   } else if (newNode?.type) {
-    updateProps($parent.childNodes[index], newNode.props, oldNode.props);
+    // if ($parent.childNodes[index])
+    if (newNode?.type !== "df") {
+      CTR += 1;
+      if (rootNode.contains(stk[CTR])) {
+      } else {
+        while (CTR < stk.length) {
+          CTR += 1;
+          if (rootNode.contains(stk[CTR])) break;
+        }
+      }
+    }
+    const domNode = stk[CTR];
+    // updateProps($parent.childNodes[index], newNode.props, oldNode.props);
+    updateProps(domNode, newNode.props, oldNode.props);
+
     const newLength = newNode.children.length;
     const oldLength = oldNode.children.length;
 
     for (let i = 0; i < newLength || i < oldLength; i++) {
-      // const parent =
-      //   newNode?.type === "df" ? $parent : $parent.childNodes[index];
-      // if (newNode?.type === "df") console.log(newNode, parent);
       updateElement(
-        $parent.childNodes[index],
-        // parent,
+        // $parent.childNodes[index],
+        domNode,
 
         newNode.children[i],
         oldNode.children[i],
@@ -638,6 +663,25 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   }
 
   // console.log(patches);
+}
+
+// taken from: https://gist.github.com/umidjons/6865350
+
+function walkDom(start_element) {
+  let arr = []; // we can gather elements here
+  let loop = function (element) {
+    do {
+      // we can do something with element
+      if (element.nodeType == 1)
+        // do not include text nodes
+        arr.push(element);
+      if (element.hasChildNodes()) loop(element.firstChild);
+    } while ((element = element.nextSibling));
+  };
+  //loop(start_element);
+  arr.push(start_element);
+  loop(start_element.firstChild); // do not include siblings of start element
+  return arr;
 }
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
