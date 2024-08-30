@@ -665,25 +665,6 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   // console.log(patches);
 }
 
-// taken from: https://gist.github.com/umidjons/6865350
-
-function walkDom(start_element) {
-  let arr = []; // we can gather elements here
-  let loop = function (element) {
-    do {
-      // we can do something with element
-      if (element.nodeType == 1)
-        // do not include text nodes
-        arr.push(element);
-      if (element.hasChildNodes()) loop(element.firstChild);
-    } while ((element = element.nextSibling));
-  };
-  //loop(start_element);
-  arr.push(start_element);
-  loop(start_element.firstChild); // do not include siblings of start element
-  return arr;
-}
-
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 export function Suspense(props, child) {
   // console.log(props);
@@ -727,4 +708,105 @@ export function Suspense(props, child) {
         : returnVal // untested, but should work like lazy where it returns default compo
       : props?.fallback;
   };
+}
+
+// taken from: https://gist.github.com/umidjons/6865350
+
+// alternate based on react fiber
+
+function walkDom(start_element) {
+  let arr = []; // we can gather elements here
+  let loop = function (element) {
+    do {
+      // we can do something with element
+      if (element.nodeType == 1)
+        // do not include text nodes
+        arr.push(element);
+      if (element.hasChildNodes()) loop(element.firstChild);
+    } while ((element = element.nextSibling));
+  };
+  //loop(start_element);
+  arr.push(start_element);
+  loop(start_element.firstChild); // do not include siblings of start element
+  return arr;
+}
+
+///////////////
+// alternate for walkDom
+
+let startNode;
+let nextUnitOfWork;
+
+// how to use / call
+// setTimeout(() => {
+//   startNode = nextUnitOfWork = document.querySelector("#root-vdom");
+//   console.log(performance.now());
+//   workLoop();
+//   console.log(performance.now());
+// }, 1000);
+
+function workLoop() {
+  while (nextUnitOfWork !== null) {
+    nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+  }
+}
+
+function performUnitOfWork(workInProgress) {
+  let next = beginWork(workInProgress);
+  if (next === null) {
+    next = completeUnitOfWork(workInProgress);
+  }
+  return next;
+}
+
+function beginWork(workInProgress) {
+  // log("work performed for ", workInProgress);
+  // return workInProgress.child;
+  return workInProgress.firstElementChild;
+}
+
+function completeUnitOfWork(workInProgress) {
+  while (true) {
+    // let returnFiber = workInProgress.return;
+    // let siblingFiber = workInProgress.sibling;
+    let siblingFiber = workInProgress.nextElementSibling;
+    let returnFiber = workInProgress.parentElement;
+
+    nextUnitOfWork = completeWork(workInProgress);
+
+    if (siblingFiber !== null) {
+      // If there is a sibling, return it
+      // to perform work for this sibling
+
+      // if we started here
+      if (workInProgress === startNode) {
+        // console.log("sibling block");
+        return null;
+      }
+
+      return siblingFiber;
+    } else if (returnFiber !== null) {
+      // If there's no more work in this returnFiber,
+      // continue the loop to complete the returnFiber.
+      workInProgress = returnFiber;
+
+      continue;
+    } else {
+      // We've reached the root.
+
+      return null;
+    }
+  }
+}
+
+function completeWork(workInProgress) {
+  // log("work completed for ", workInProgress);
+  return null;
+}
+
+function log(message, node) {
+  // let node = document.createElement("div");
+  // node.textContent = message;
+  // document.body.appendChild(node);
+  console.log(message, node);
 }
