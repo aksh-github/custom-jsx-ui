@@ -424,8 +424,8 @@ function createElement(node) {
 
 function changed(node1, node2) {
   // if both are compo nodes of type df
-  if (node1?.type === node2?.type && node1.type === "df") {
-    return node1.$c === node2.$c;
+  if (node1?.type === node2?.type && node1?.type === "df") {
+    return node1?.$c !== node2?.$c;
   } // they are dom nodes
   else
   return (
@@ -517,7 +517,6 @@ export function mount($root, initCompo) {
   if (rootNode.firstChild)
     rootNode.replaceChild(createElement(old), rootNode.firstChild);
   else rootNode.appendChild(createElement(old));
-  walkDom(rootNode);
 
   // console.log(callStack);
   callMountAll();
