@@ -423,6 +423,11 @@ function createElement(node) {
 }
 
 function changed(node1, node2) {
+  // if both are compo nodes of type df
+  if (node1?.type === node2?.type && node1.type === "df") {
+    return node1.$c === node2.$c;
+  } // they are dom nodes
+  else
   return (
     // node1 != node2 ||
     typeof node1 !== typeof node2 ||
@@ -640,6 +645,9 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
         while (CTR < stk.length) {
           CTR += 1;
           if (rootNode.contains(stk[CTR])) break;
+          else {
+            stk[CTR] = null;
+          }
         }
       }
     }
@@ -709,6 +717,9 @@ export function Suspense(props, child) {
       : props?.fallback;
   };
 }
+
+//
+console.log("check this", "https://www.youtube.com/watch?v=3nwupG2Joaw");
 
 // taken from: https://gist.github.com/umidjons/6865350
 
