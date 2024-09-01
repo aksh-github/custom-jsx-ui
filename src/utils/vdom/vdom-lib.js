@@ -16,6 +16,7 @@ let old = null;
 let parent;
 let stk = [],
   CTR = 0;
+let genObj, genNode;
 
 // let set = new Set();
 // let __k = undefined;
@@ -559,7 +560,11 @@ export function forceUpdate() {
   callUnmountAll();
   CTR = 0;
   stk = [];
-  stk = walkDom(rootNode);
+  // stk = walkDom(rootNode);
+  stk = domListIterator(rootNode);
+  // genObj = traverseTree(rootNode);
+  // genNode = genObj.next();
+  // console.log(genObj.next());
 
   // 2. update dom
   updateElement(rootNode, current, old);
@@ -638,6 +643,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   } else if (newNode?.type) {
     // if ($parent.childNodes[index])
     if (newNode?.type !== "df") {
+      // genNode = genObj.next();
       CTR += 1;
       if (rootNode.contains(stk[CTR])) {
       } else {
@@ -651,6 +657,8 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       }
     }
     const domNode = stk[CTR];
+    // const temp = genObj.next();
+    // console.log(domNode, genNode?.value);
     // updateProps($parent.childNodes[index], newNode.props, oldNode.props);
     updateProps(domNode, newNode.props, oldNode.props);
 
@@ -661,6 +669,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       updateElement(
         // $parent.childNodes[index],
         domNode,
+        // genNode?.value,
 
         newNode.children[i],
         oldNode.children[i],
@@ -722,8 +731,6 @@ console.log("check this", "https://www.youtube.com/watch?v=3nwupG2Joaw");
 
 // taken from: https://gist.github.com/umidjons/6865350
 
-// alternate based on react fiber
-
 function walkDom(start_element) {
   let arr = []; // we can gather elements here
   let loop = function (element) {
@@ -742,7 +749,69 @@ function walkDom(start_element) {
 }
 
 ///////////////
-// alternate for walkDom
+// alternate 1 (non recursive) for walkDom // tested and works
+
+function domListIterator() {
+  // pass rootNode if its not global
+  // console.log(next);
+  let arr = [rootNode];
+  let next = rootNode;
+
+  function iterChild() {
+    while (next) {
+      // console.log(next);
+      // arr.push(next);
+      if (next.firstElementChild) {
+        next = next.firstElementChild;
+        // console.log(next);
+        arr.push(next);
+      } else {
+        iterSibling();
+      }
+    }
+  }
+
+  function iterSibling() {
+    while (next) {
+      if (next.nextElementSibling) {
+        next = next.nextElementSibling;
+
+        // console.log(next);
+        arr.push(next);
+        return;
+      }
+
+      next = next.parentElement;
+
+      if (next === rootNode) {
+        next = null;
+      }
+    }
+  }
+
+  iterChild();
+  return arr;
+}
+
+///////////////
+// possible alternate 2 for walkDom
+// actually this doesn't work correctly further investigation reqd
+
+function* traverseTree(node) {
+  yield node;
+
+  for (let child of node?.childNodes) {
+    if (child.nodeType == 1 && rootNode.contains(child)) {
+      yield* traverseTree(child);
+    }
+  }
+}
+
+///////////////
+// possible alternate 3 (complex) for walkDom
+
+// https://blog.ag-grid.com/inside-fiber-an-in-depth-overview-of-the-new-reconciliation-algorithm-in-react/#general-algorithm
+// below code modified for dom iteration by me
 
 let startNode;
 let nextUnitOfWork;
