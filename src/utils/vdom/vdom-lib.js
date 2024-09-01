@@ -595,6 +595,8 @@ function isValid(v) {
 
 const patches = [];
 
+let last = null;
+
 export function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
     // if (oldNode?.type) {
@@ -660,7 +662,11 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     // const temp = genObj.next();
     // console.log(domNode, genNode?.value);
     // updateProps($parent.childNodes[index], newNode.props, oldNode.props);
+    if (last !== domNode) {
     updateProps(domNode, newNode.props, oldNode.props);
+      last = domNode;
+    }
+    // updateProps(domNode, newNode.props, oldNode.props);
 
     const newLength = newNode.children.length;
     const oldLength = oldNode.children.length;
