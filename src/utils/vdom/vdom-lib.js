@@ -213,6 +213,12 @@ export function h(type, props, ...children) {
 
     //complex node
     if (rv?.type) {
+      // rv is frag
+      if (rv.type === "df") {
+        // rv.props = { ...rv.props, _cc: rv?.children.length };
+        props = { ...props, fragChildLen: rv?.children.length };
+      }
+
       return {
         ...rv,
         // props: rv.props,
@@ -275,6 +281,22 @@ export function h(type, props, ...children) {
 
   // console.log(children);
 
+  // frag case
+  if (type === "df") {
+    let ct = 0;
+    for (let i = 0; i < children.length; ++i) {
+      if (children[i]?.type === "df") {
+        ct += children[i]?.props?.fragChildLen || 0;
+      } else {
+        ct += 1;
+      }
+    }
+    return {
+      type,
+      props: { ...props, fragChildLen: ct },
+      children,
+    };
+  } else
   return {
     // _c,
     type,
@@ -400,9 +422,9 @@ function createElement(node) {
   //special case Compo with Array return and no type (parent)
   // doc fragement case
   if (node?.type === "df") {
-    console.warn(
-      "fragment support is experimental and nested fragments NOT supported!!!"
-    );
+    // console.warn(
+    //   "fragment support is experimental and nested fragments NOT supported!!!"
+    // );
     const $el2 = document.createDocumentFragment();
 
     node.children.map(createElement).forEach($el2.appendChild.bind($el2));
@@ -606,8 +628,20 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     $parent.removeChild($parent.childNodes[index]);
     // patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
   } else if (changed(newNode, oldNode)) {
-    if ($parent?.childNodes[index])
+    if ($parent?.childNodes[index]) {
       $parent?.replaceChild(createElement(newNode), $parent.childNodes[index]);
+
+      // additoinal logic for frag modify. This changed on 2-sep
+      const fragChildLen = oldNode?.props?.fragChildLen;
+      // for frag case remove additional as well
+      if (oldNode?.type === "df" && fragChildLen) {
+        // for (let i = 1; i < fragChildLen; ++i) {
+        for (let i = fragChildLen - 1; i >= 1; --i) {
+          console.log("remove: ", $parent.childNodes[index + i]);
+          $parent?.removeChild($parent.childNodes[index + i]);
+        }
+      }
+    }
     // patches.push({
     //   p: $parent,
     //   op: "REPLACE",
@@ -643,7 +677,6 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       }
     }
   } else if (newNode?.type) {
-    // if ($parent.childNodes[index])
     if (newNode?.type !== "df") {
       // genNode = genObj.next();
       CTR += 1;
