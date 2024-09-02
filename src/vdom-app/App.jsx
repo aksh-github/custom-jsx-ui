@@ -9,20 +9,74 @@ import {
 } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
-import { navigoRouter, NavigoWrapper } from "../utils/navigo-router";
+
 import { state, atom } from "../utils/simple-state";
-import Link from "../compos/Link";
+import { LinkV2, Router } from "../utils/router-v2";
+
 import {
   ArrayWithMap,
   ArrayWithoutMap,
   ArrayThatWorks,
   ArrayWithFragments,
+  ArrayWithFragmentsComplex,
   // PropsDriven,
 } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
-// import { Router } from "../utils/router-v2";
-// import { useState } from "./utils/hooks-experi";
+
+let routeHandler = Router();
+
+const Topic =
+  () =>
+  ({ topicId }) =>
+    <h3>{topicId}</h3>;
+
+const Topics = (p) => {
+  const items = [
+    { name: "Props v. State", slug: "props-v-state" },
+    { name: "Rendering with React", slug: "rendering" },
+    { name: "Components", slug: "components" },
+  ];
+  // console.log(p);
+
+  return (props) => {
+    // console.log(curPath.get());
+    const { basepath, match } = props;
+
+    const item = items.find(({ name, slug }) => {
+      return match?.url?.endsWith(slug);
+    });
+
+    console.log(item);
+
+    return (
+      <div>
+        <h2>Topics</h2>
+        <ul>
+          {items.map(({ name, slug }) => (
+            <li key={name}>
+              <LinkV2 to={`${basepath}/${slug}`}>{name}</LinkV2>
+            </li>
+          ))}
+        </ul>
+        {/* {items.map(({ name, slug }) => (
+          <Route
+            key={name}
+            path={`${match.path}/${slug}`}
+            render={() => <Topic topicId={name} />}
+          />
+        ))}
+        <Route
+          exact
+          path={match.url}
+          render={() => <h3>Please select a topic.</h3>}
+        /> */}
+
+        <Topic topicId={(item?.name || "") + " on " + match.url} />
+      </div>
+    );
+  };
+};
 
 // Ctr
 
@@ -184,10 +238,11 @@ function ComplexRoute(props) {
       ) : // <Number n={10} />
       null}
       <p>
-        <Link href="/route2">Go next</Link>
+        <LinkV2 to="/route2">Go next</LinkV2>
         <button
           onClick={() => {
-            navigoRouter.get().navigate("route2");
+            // alert("prog'matic navigatiion to be implemented");
+            routeHandler.navigator.go("/route2", { a: 10 });
           }}
         >
           Go to simple
@@ -371,68 +426,79 @@ export const TextArea = () => {
 };
 
 export function App(props) {
-  let curPath = "";
-  const [route, setRoute] = atom("");
+  const [curPath, setCurPath] = state(window.location.pathname);
   // const [route, setRoute] = signal("route2");
 
-  const setupRoute = () =>
-    navigoRouter.set(
-      {
-        // errorComponent: Error,
-        // basePath: window.location.pathname,
-        routes: [
-          {
-            path: "route2",
-            // component: A,
-          },
-          {
-            path: "/",
-            // component: B,
-          },
-          {
-            path: "*",
-            // component: () => <div>Wrong url</div>,
-          },
-        ],
-      },
-      (Compo, match) => {
-        console.log(Compo, match);
-        // routeSt.set({ path: match?.url });
-
-        if (curPath != match?.url) {
-          curPath = match.url;
-          // setPath(match.url);
-          setRoute(match?.url);
-          // setRoute(match.url);
-        }
-        // console.log(path());
-      }
-    );
+  const onRouteChange = (newPath) => {
+    console.log(newPath);
+    setCurPath(newPath);
+  };
+  // moved globally
+  // let routeHandler = Router();
 
   onMount(() => {
-    console.log("=== Main App mounted");
-    setupRoute();
+    routeHandler.init(onRouteChange);
   });
+
+  onCleanup(() => {
+    routeHandler.cleanup();
+  });
+
   return () => {
-    switch (route()) {
-      // switch (route()) {
-      case "route2":
-        return <SimpleRoute />;
-      case "":
-        return <ComplexRoute />;
-      // case null:
-      //   return null;
-      default:
-        return "Wrong path 404";
-    }
+    // switch (route()) {
+    //   // switch (route()) {
+    //   case "route2":
+    //     return <SimpleRoute />;
+    //   case "":
+    //     return <ComplexRoute />;
+    //   // case null:
+    //   //   return null;
+    //   default:
+    //     return "Wrong path 404";
+    // }
+
+    return (
+      <div>
+        <ul>
+          <li>
+            <LinkV2 to="/">Complex</LinkV2>
+          </li>
+          <li>
+            <LinkV2 to="/route2">Simple</LinkV2>
+          </li>
+          <li>
+            <LinkV2 to="/topics">Topics</LinkV2>
+          </li>
+          <li>
+            <LinkV2 to="/frag">Fragments</LinkV2>
+          </li>
+        </ul>
+
+        <hr />
+
+        {(() => {
+          switch (curPath().url) {
+            // switch (route()) {
+            case "/route2":
+              return <SimpleRoute />;
+            case "/":
+              return <ComplexRoute />;
+            case "/frag":
+              return (
+                <df>
+                  <ArrayWithFragmentsComplex />
+                  <p>in between</p>
+                  <ArrayWithFragments />
+                </df>
+              );
+            default:
+              if (curPath()?.url?.startsWith("/topics"))
+                return <Topics basepath="/topics" match={curPath()} />;
+              else return "Wrong path 404";
+          }
+        })()}
+        <footer>some footer for all</footer>
+      </div>
+    );
   };
-  // <div>
-  // ({
-  //   <SimpleSwitch cond={routeSt.get("path")}>
-  //     <SimpleSwitch.Case render={"Wrong path 404"} />
-  //     <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
-  //     <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
-  //   </SimpleSwitch>
-  // })
-  // </div>
 }

@@ -18,12 +18,12 @@ export const ArrayWithoutMap = () => {
   // let arr = [<p>10</p>, <p>20</p>];
   const [arr, set] = signal([<p>10</p>, <p>20</p>]);
 
-  setTimeout(() => {
-    console.log("exec");
-    set([...arr(), <p>40</p>]);
-    // set([arr().filter((_, idx) => idx !== 0)]);
-    console.log(arr());
-  }, 4000);
+  // setTimeout(() => {
+  //   console.log("exec");
+  //   set([...arr(), <p>40</p>]);
+  //   // set([arr().filter((_, idx) => idx !== 0)]);
+  //   console.log(arr());
+  // }, 4000);
 
   return () => ["some str", ...arr(), 100000];
 };
@@ -93,6 +93,30 @@ export const ArrayThatWorks = () => {
 
 export const ArrayWithFragments = () => {
   console.log("This works for only static, changes won't reflect");
-  const arr = [<p>10</p>, <p>20</p>];
-  return () => <>{arr}</>;
+  // const arr = [<p>1000</p>, <p>20000</p>];
+  // return () => <p>10</p>;
+  return () => (
+    <df>
+      <p>10</p>
+      <p>20</p>
+      {/* {arr} */}
+    </df>
+  );
+};
+
+export const ArrayWithFragmentsComplex = () => {
+  console.log("This works for only static, changes won't reflect");
+  // const arr = [<p>1000</p>, <p>20000</p>];
+  // return () => <p>10</p>;
+  return () => (
+    <df>
+      <p>10</p>
+      <div>
+        <h2>some complex</h2>
+        <h2>some complex2</h2>
+      </div>
+      <p>20</p>
+      {/* {arr} */}
+    </df>
+  );
 };
