@@ -744,8 +744,8 @@ export function Suspense(props, child) {
       });
     } else {
       // else assume its dynamic child compo
-      console.log("NOT very stable, more testing reqd");
-      console.log(props, child);
+      // console.log("NOT very stable, more testing reqd");
+      // console.log(props, child);
 
       child?.value?.then((res) => {
         console.log("promise resolved", res);

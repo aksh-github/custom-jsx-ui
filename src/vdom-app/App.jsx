@@ -426,7 +426,7 @@ export const TextArea = () => {
 };
 
 export function App(props) {
-  const [curPath, setCurPath] = state(window.location.pathname);
+  const [curPath, setCurPath] = state({ url: window.location.pathname });
   // const [route, setRoute] = signal("route2");
 
   const onRouteChange = (newPath) => {

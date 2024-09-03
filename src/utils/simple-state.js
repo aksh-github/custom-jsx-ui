@@ -25,9 +25,9 @@ let throtUpdate = null;
 let forceUpdate = () => {};
 let batchOp = false;
 
-export const registerCallback = (cb) => {
+export const registerCallback = (cb, duration = 100) => {
   forceUpdate = cb;
-  throtUpdate = debounce(forceUpdate, 100);
+  throtUpdate = debounce(forceUpdate, duration);
 };
 
 export const state = (iv) => {
