@@ -12,7 +12,8 @@ function debounce(func, duration) {
   };
 }
 
-export const batch = (cb) => {
+const SimState = (() => {
+  const batch = (cb) => {
   console.warn("untested code");
   batchOp = true;
   cb();
@@ -25,12 +26,12 @@ let throtUpdate = null;
 let forceUpdate = () => {};
 let batchOp = false;
 
-export const registerCallback = (cb, duration = 100) => {
+  const registerCallback = (cb, duration = 100) => {
   forceUpdate = cb;
   throtUpdate = debounce(forceUpdate, duration);
 };
 
-export const state = (iv) => {
+  const state = (iv) => {
   let st = {
     ...iv,
   };
@@ -60,7 +61,7 @@ export const state = (iv) => {
   return [get, set];
 };
 
-export const atom = (iv) => {
+  const atom = (iv) => {
   let st = iv;
 
   const get = () => {
@@ -88,4 +89,15 @@ export const atom = (iv) => {
   return [get, set];
 };
 
-// export state;
+  return {
+    batch,
+    registerCallback,
+    state,
+    atom,
+  };
+})();
+
+export const registerCallback = SimState.registerCallback;
+export const batch = SimState.batch;
+export const state = SimState.state;
+export const atom = SimState.atom;

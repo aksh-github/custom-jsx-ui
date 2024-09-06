@@ -1,12 +1,5 @@
 import { createSignal, batch, createEffect } from "../utils/signal-complex";
-import {
-  h,
-  onMount,
-  onCleanup,
-  updateSingle,
-  forceUpdate,
-  Suspense,
-} from "../utils/vdom/vdom-lib";
+import { h, onMount, onCleanup, Suspense } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
@@ -356,7 +349,7 @@ export const SimpleRoute = () => {
   };
 
   return () => {
-    console.log(pst());
+    // console.log(pst());
     return (
       <div ref={(_ref) => (ref = _ref)}>
         {/* route2
@@ -373,7 +366,21 @@ export const SimpleRoute = () => {
         {/* <PropsDriven n="Property to Component" /> */}
         <TextArea />
 
-        <Suspense fallback={"Loading..."} fetch={getMyAwesomePic()}>
+        <Suspense
+          fallback={
+            <div className="lds-roller">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          }
+          fetch={getMyAwesomePic()}
+        >
           {(res) => {
             // console.log(res);
             return (

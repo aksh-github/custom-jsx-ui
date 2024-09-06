@@ -1,16 +1,11 @@
-import { App, SimpleRoute } from "./App";
+import { App, SimpleRoute, TextArea } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import { registerCallback } from "../utils/simple-state";
-import {
-  updateElement,
-  h,
-  mount,
-  forceUpdate,
-  onMount,
-} from "../utils/vdom/vdom-lib";
+import { h, mount, forceUpdate, onMount } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
+import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
 // v basic test 23may
 // let count = 0;

@@ -127,6 +127,10 @@ export function Router() {
       // window.removeEventListener("pushstate", navigate);
       window.removeEventListener("navigate", navigate);
     },
+    navigator: {
+      go: historyPush,
+      replace: historyReplace,
+    },
   };
 }
 

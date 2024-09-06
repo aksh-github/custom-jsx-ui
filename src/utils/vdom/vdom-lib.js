@@ -4,6 +4,7 @@ import { atom } from "../simple-state";
 
 // import { diff, patch } from "./vdom-yt";
 
+const microframe = (() => {
 let callStack = [];
 let counter = 0;
 
@@ -43,12 +44,12 @@ let iter;
 let currMount = null,
   currUnmount = null;
 
-export function onMount(cb) {
+  function onMount(cb) {
   // console.log(counter, cb);
   currMount = cb;
 }
 
-export function onCleanup(cb) {
+  function onCleanup(cb) {
   // console.log(callStack[counter]);
   currUnmount = cb;
 }
@@ -90,7 +91,7 @@ function callMountAll() {
 
 // vdom
 
-export function h(type, props, ...children) {
+  function h(type, props, ...children) {
   let _fn = null;
   let curParent;
 
@@ -201,7 +202,6 @@ export function h(type, props, ...children) {
 
     stack.pop();
 
-    // const popped = stack.pop();
     // if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
     // else {
     //   // console.log(JSON.stringify(stack));
@@ -517,7 +517,7 @@ function CompoIterator() {
 
 // only 1st type (complete rewrite etc)
 
-export function mount($root, initCompo) {
+  function mount($root, initCompo) {
   rootNode = $root;
   // 0. for route change clean existing things
   if (rootNode?.firstChild) {
@@ -555,7 +555,7 @@ export function mount($root, initCompo) {
 }
 
 // all delta updates
-export function forceUpdate() {
+  function forceUpdate() {
   counter = 0; // v imp
 
   // callStack = [];
@@ -568,7 +568,7 @@ export function forceUpdate() {
 
   // console.log(CompoIterator().get(old, "TextArea"));
 
-  console.log(oldCallStack, callStack);
+    // console.log(oldCallStack, callStack);
 
   // new diff from yt
 
@@ -619,7 +619,7 @@ const patches = [];
 
 let last = null;
 
-export function updateElement($parent, newNode, oldNode, index = 0) {
+  function updateElement($parent, newNode, oldNode, index = 0) {
   if (!isValid(oldNode)) {
     // if (oldNode?.type) {
     $parent.appendChild(createElement(newNode));
@@ -629,7 +629,10 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
     // patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
   } else if (changed(newNode, oldNode)) {
     if ($parent?.childNodes[index]) {
-      $parent?.replaceChild(createElement(newNode), $parent.childNodes[index]);
+        $parent?.replaceChild(
+          createElement(newNode),
+          $parent.childNodes[index]
+        );
 
       // additoinal logic for frag modify. This changed on 2-sep
       const fragChildLen = oldNode?.props?.fragChildLen;
@@ -637,7 +640,7 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
       if (oldNode?.type === "df" && fragChildLen) {
         // for (let i = 1; i < fragChildLen; ++i) {
         for (let i = fragChildLen - 1; i >= 1; --i) {
-          console.log("remove: ", $parent.childNodes[index + i]);
+            // console.log("remove: ", $parent.childNodes[index + i]);
           $parent?.removeChild($parent.childNodes[index + i]);
         }
       }
@@ -720,6 +723,21 @@ export function updateElement($parent, newNode, oldNode, index = 0) {
   // console.log(patches);
 }
 
+  return {
+    mount,
+    forceUpdate,
+    onMount,
+    onCleanup,
+    h,
+  };
+})();
+
+export const mount = microframe.mount;
+export const forceUpdate = microframe.forceUpdate;
+export const onMount = microframe.onMount;
+export const onCleanup = microframe.onCleanup;
+export const h = microframe.h;
+
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 export function Suspense(props, child) {
   // console.log(props);
@@ -765,9 +783,6 @@ export function Suspense(props, child) {
   };
 }
 
-//
-console.log("check this", "https://www.youtube.com/watch?v=3nwupG2Joaw");
-
 // taken from: https://gist.github.com/umidjons/6865350
 
 function walkDom(start_element) {
@@ -789,8 +804,8 @@ function walkDom(start_element) {
 
 ///////////////
 // alternate 1 (non recursive) for walkDom // tested and works
-
-function domListIterator() {
+// inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
+function domListIterator(rootNode) {
   // pass rootNode if its not global
   // console.log(next);
   let arr = [rootNode];
