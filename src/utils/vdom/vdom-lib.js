@@ -348,7 +348,7 @@ function setProp($target, name, value) {
   } else if (typeof value === "boolean") {
     setBooleanProp($target, name, value);
   } else {
-    if (name === "value")
+      if (name === "value" || name === "htmlFor")
       // special case
       $target[name] = value;
     $target.setAttribute(name, value);
