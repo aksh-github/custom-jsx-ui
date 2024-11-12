@@ -180,14 +180,14 @@ function ComplexRoute(props) {
   });
 
   const arr = [];
-  for (let i = 0; i < 2; ++i) arr.push(i);
+  for (let i = 0; i < 5000; ++i) arr.push(i);
 
   const Number = () => {
     onMount(() => {
-      console.log("mounting number");
+      // console.log("mounting number");
     });
     onCleanup(() => {
-      console.log("unmounting number");
+      // console.log("unmounting number");
     });
     return ({ n }) => <li>{n}</li>;
   };
@@ -312,13 +312,27 @@ const DynCompo = async () => {
 export const SimpleRoute = () => {
   const [r, setr] = createSignal(0);
   const [pst, setPst] = atom(0);
+  const [data, setData] = atom(null);
   // const tv = pst.get("r");
   let ref = null;
 
-  const arrState = state({ arr: ["10", "20"] });
+  // const [arrState] = state({ arr: ["10", "20"] });
 
   onMount(() => {
     console.log("Ref available in onMount for SimpleRoute", ref);
+
+    fetch("http://192.168.2.15:8080/verbs-v2.json")
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        // console.log(res);
+        setData(res);
+      });
+
+    setTimeout(() => {
+      setData(null);
+    }, 7000);
   });
 
   onCleanup(() => {
@@ -348,6 +362,8 @@ export const SimpleRoute = () => {
     );
   };
 
+  const Row = ({ n }) => <p>{n}</p>;
+
   return () => {
     // console.log(pst());
     return (
@@ -355,18 +371,14 @@ export const SimpleRoute = () => {
         {/* route2
         <Link href="/">Go Back</Link>
         <hr /> */}
-        <div>
+        {/* <div>
           <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3>
           <button onClick={() => setPst((_pst) => _pst + 1)}>Change</button>
-        </div>
-        {/* <ArrayWithMap /> */}
-        {/* <ArrayWithoutMap /> */}
-        {/* <ArrayThatWorks /> */}
-        {/* <ArrayWithFragments /> */}
-        {/* <PropsDriven n="Property to Component" /> */}
+        </div> */}
+
         <TextArea />
 
-        <Suspense
+        {/* <Suspense
           fallback={
             <div className="lds-roller">
               <div></div>
@@ -392,7 +404,17 @@ export const SimpleRoute = () => {
         </Suspense>
         <Suspense fallback={"Loading..."}>
           <DynCompo />
-        </Suspense>
+        </Suspense> */}
+
+        {data() ? (
+          <div>
+            <h3>This data will get erased after 7 seconds</h3>
+            {data()?.map((d) => {
+              const sv = d?.sv?.join(", ");
+              return <Row n={JSON.stringify(d)} />;
+            })}
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -466,7 +488,7 @@ export function App(props) {
 
     return (
       <div>
-        <ul>
+        {/* <ul>
           <li>
             <LinkV2 to="/">Complex</LinkV2>
           </li>
@@ -479,7 +501,7 @@ export function App(props) {
           <li>
             <LinkV2 to="/frag">Fragments</LinkV2>
           </li>
-        </ul>
+        </ul> */}
 
         <hr />
 
@@ -493,8 +515,8 @@ export function App(props) {
             case "/frag":
               return (
                 <df>
-                  <ArrayWithFragmentsComplex />
-                  <p>in between</p>
+                  {/* <ArrayWithFragmentsComplex />
+                  <p>in between</p> */}
                   <ArrayWithFragments />
                 </df>
               );
