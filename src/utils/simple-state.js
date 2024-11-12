@@ -14,80 +14,80 @@ function debounce(func, duration) {
 
 const SimState = (() => {
   const batch = (cb) => {
-  console.warn("untested code");
-  batchOp = true;
-  cb();
-  batchOp = false;
-  forceUpdate();
-};
+    console.warn("untested code");
+    batchOp = true;
+    cb();
+    batchOp = false;
+    forceUpdate();
+  };
 
-let throtUpdate = null;
+  let throtUpdate = null;
 
-let forceUpdate = () => {};
-let batchOp = false;
+  let forceUpdate = () => {};
+  let batchOp = false;
 
   const registerCallback = (cb, duration = 100) => {
-  forceUpdate = cb;
-  throtUpdate = debounce(forceUpdate, duration);
-};
+    forceUpdate = cb;
+    throtUpdate = debounce(forceUpdate, duration);
+  };
 
   const state = (iv) => {
-  let st = {
-    ...iv,
-  };
+    let st = {
+      ...iv,
+    };
 
-  const get = (key) => {
-    return key ? st[key] : st;
-  };
+    const get = (key) => {
+      return key ? st[key] : st;
+    };
 
-  const set = (valueOrFn) => {
-    if (typeof valueOrFn === "function") {
-      st = valueOrFn(st);
-    } else {
-      if (st == valueOrFn) {
-        return;
+    const set = (valueOrFn) => {
+      if (typeof valueOrFn === "function") {
+        st = valueOrFn(st);
+      } else {
+        if (st == valueOrFn) {
+          return;
+        }
+        st = { ...valueOrFn };
       }
-      st = { ...valueOrFn };
-    }
 
-    if (!batchOp) {
-      // forceUpdate();
-      // requestIdleCallback(forceUpdate);
+      if (!batchOp) {
+        // forceUpdate();
+        // requestIdleCallback(forceUpdate);
 
-      throtUpdate();
-    }
+        throtUpdate();
+      }
+    };
+
+    return [get, set];
   };
-
-  return [get, set];
-};
 
   const atom = (iv) => {
-  let st = iv;
+    let st = iv;
 
-  const get = () => {
-    return st;
-  };
+    const get = () => {
+      return st;
+    };
 
-  const set = (valueOrFn) => {
-    if (typeof valueOrFn === "function") {
-      st = valueOrFn(st);
-    } else {
-      if (st == valueOrFn) {
-        return;
+    const set = (valueOrFn) => {
+      if (typeof valueOrFn === "function") {
+        st = valueOrFn(st);
+      } else {
+        if (st == valueOrFn) {
+          return;
+        }
+        st = valueOrFn;
       }
-      st = valueOrFn;
-    }
 
-    if (!batchOp) {
-      // forceUpdate();
-      // requestIdleCallback(forceUpdate);
+      if (!batchOp) {
+        // forceUpdate();
+        // requestIdleCallback(forceUpdate);
 
-      throtUpdate();
-    }
+        throtUpdate();
+      }
+    };
+
+    return [get, set];
   };
-
-  return [get, set];
-};
 
   return {
     batch,
