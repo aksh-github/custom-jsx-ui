@@ -1,5 +1,5 @@
 import { createSignal, batch, createEffect } from "../utils/signal-complex";
-import { dom, onMount, onCleanup } from "../utils/dom/lib.v2";
+import { domv2, onMount, onCleanup } from "../utils/dom/lib.v2";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 import Link from "../compos/Link";
 import { state, atom } from "../utils/simple-state";
@@ -227,7 +227,7 @@ const Odd = () => {
 
 export const SimpleRoute = () => {
   const [r, setr] = createSignal(0);
-  const pst = atom(0);
+  const [pst, setPst] = atom(0);
   // const tv = pst.get("r");
   let ref = null;
 
@@ -264,22 +264,44 @@ export const SimpleRoute = () => {
     );
   };
 
+  const arr = [];
+  for (let i = 0; i < 5000; ++i) arr.push(i);
+
+  const Number = () => {
+    onMount(() => {
+      // console.log("mounting number");
+    });
+    onCleanup(() => {
+      // console.log("unmounting number");
+    });
+    return ({ n }) => <li>{n}</li>;
+  };
+
   return () => {
-    console.log(pst.get());
+    console.log(pst());
     return (
       <div ref={(_ref) => (ref = _ref)}>
         {/* route2
         <Link href="/">Go Back</Link>
         <hr /> */}
         <div>
-          <h3>{pst.get() % 2 === 0 ? <Even /> : <Odd />}</h3>
-          <button onClick={() => pst.set(pst.get() + 1)}>Change</button>
+          <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3>
+          <button onClick={() => setPst(pst() + 1)}>Change</button>
         </div>
         {/* <ArrayWithMap /> */}
         {/* <ArrayWithoutMap /> */}
         {/* <ArrayThatWorks /> */}
         {/* <ArrayWithFragments /> */}
         {/* <PropsDriven n="Property to Component" /> */}
+
+        {pst() % 2 === 0 ? (
+          <ul>
+            {arr.map((n) => (
+              <Number n={n} />
+            ))}
+          </ul>
+        ) : null}
+
         <TextArea />
       </div>
     );
@@ -287,8 +309,8 @@ export const SimpleRoute = () => {
 };
 
 export const TextArea = () => {
-  const [txt, settxt] = createSignal("");
-  const [t, set] = signal("");
+  const [txt, settxt] = atom("");
+  const [t, set] = atom("dfd");
   let txtRef;
 
   console.log("came here");
@@ -298,22 +320,16 @@ export const TextArea = () => {
     settxt("");
   };
 
-  // createEffect(() => {
-  //   t();
-  //   // below code doesn't work properly
-  //   if (txtRef) updateSingle(txtRef);
-  // });
-
   return () => (
     <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
-      {/* <br />
+      <br />
       <span>{txt()}</span>
       <textarea
         value={txt()}
         onInput={(e) => settxt(e.target.value)}
       ></textarea>
-      <br /> */}
+      <br />
       <span>{t()}</span>
       <input value={t()} onInput={(e) => set(e.target.value)} />
     </div>
@@ -364,17 +380,18 @@ export function App(props) {
     setupRoute();
   });
   return () => {
-    switch (routeSt.get()) {
-      // switch (route()) {
-      case "route2":
-        return <SimpleRoute />;
-      case "":
-        return <ComplexRoute />;
-      // case null:
-      //   return null;
-      default:
-        return "Wrong path 404";
-    }
+    // switch (routeSt.get()) {
+    //   // switch (route()) {
+    //   case "route2":
+    //     return <SimpleRoute />;
+    //   case "":
+    //     return <ComplexRoute />;
+    //   // case null:
+    //   //   return null;
+    //   default:
+    //     return "Wrong path 404";
+    // }
+    return <SimpleRoute />;
   };
   // <div>
   // ({

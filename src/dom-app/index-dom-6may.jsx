@@ -1,5 +1,5 @@
 import { App } from "./App";
-import { renderUtils, dom } from "../utils/dom/lib.v2";
+import { renderUtils, domv2 } from "../utils/dom/lib.v2";
 // import { renderUtils, dom } from "lib-jsx";
 // import router from "../utils/router";
 import { registerRenderCallback } from "../utils/signal-complex";
