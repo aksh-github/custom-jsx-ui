@@ -360,7 +360,7 @@ function computeDiff(node1, node2) {
 }
 
 // Function to apply a patch to a DOM tree
-function applyPatchv2(root, diffs) {
+export function applyPatchv2(root, diffs) {
   diffs.forEach((diff) => {
     const { type, path, node, value, attrs } = diff;
     const parent = path

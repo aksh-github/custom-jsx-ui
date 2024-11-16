@@ -25,10 +25,15 @@ const SimState = (() => {
 
   let forceUpdate = () => {};
   let batchOp = false;
+  let isSkipping = false;
 
   const registerCallback = (cb, duration = 100) => {
     forceUpdate = cb;
     throtUpdate = debounce(forceUpdate, duration);
+  };
+
+  const skipUpdate = (flag) => {
+    isSkipping = flag;
   };
 
   const state = (iv) => {
@@ -50,10 +55,8 @@ const SimState = (() => {
         st = { ...valueOrFn };
       }
 
-      if (!batchOp) {
-        // forceUpdate();
-        // requestIdleCallback(forceUpdate);
-
+      if (batchOp || isSkipping) {
+      } else {
         throtUpdate();
       }
     };
@@ -78,10 +81,8 @@ const SimState = (() => {
         st = valueOrFn;
       }
 
-      if (!batchOp) {
-        // forceUpdate();
-        // requestIdleCallback(forceUpdate);
-
+      if (batchOp || isSkipping) {
+      } else {
         throtUpdate();
       }
     };
@@ -94,6 +95,7 @@ const SimState = (() => {
     registerCallback,
     state,
     atom,
+    skipUpdate,
   };
 })();
 
@@ -101,3 +103,4 @@ export const registerCallback = SimState.registerCallback;
 export const batch = SimState.batch;
 export const state = SimState.state;
 export const atom = SimState.atom;
+export const skipUpdate = SimState.skipUpdate;

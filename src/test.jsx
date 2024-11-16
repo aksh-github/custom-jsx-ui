@@ -1,5 +1,16 @@
-import { atom, state, registerCallback } from "./utils/simple-state";
-import { renderUtils, onMount, onCleanup, domv2 } from "./utils/dom/lib.v2";
+import {
+  atom,
+  state,
+  registerCallback,
+  skipUpdate,
+} from "./utils/simple-state";
+import {
+  renderUtils,
+  onMount,
+  onCleanup,
+  domv2,
+  applyPatchv2,
+} from "./utils/dom/lib.v2";
 
 // -------------------------------
 
@@ -33,9 +44,10 @@ const Child = {
 
 const Timer = () => {
   const tpair = atom(0);
+  let keeper;
 
   onMount(() => {
-    const keeper = setInterval(() => {
+    keeper = setInterval(() => {
       if (tpair[0]() > 10) {
         clearInterval(keeper);
         return;
@@ -55,6 +67,7 @@ const AppTemp = () => {
   const [data, setData] = state({
     txt: "some existing",
     ref: null,
+    ctr: 0,
     oldRef: null,
     arr: [],
   });
@@ -66,7 +79,6 @@ const AppTemp = () => {
   return () => {
     return (
       <div>
-        <>something</>
         <h1>Static Text</h1>
         {/* <Child /> */}
         <span>{data().txt}</span>
@@ -75,12 +87,32 @@ const AppTemp = () => {
           value={data().txt}
           onInput={(e) => {
             // data.txt = e.target.value;
-            setData({ ...data, txt: e.target.value });
+            setData({ ...data(), txt: e.target.value });
           }}
         />
-        <p id="timer">
+        {/* <p id="timer">
           <Timer />
-        </p>
+        </p> */}
+        <button
+          onClick={() => {
+            skipUpdate(true);
+            setData((_data) => ({
+              ..._data,
+              ctr: _data.ctr + 1,
+            }));
+
+            applyPatchv2(document.getElementById("apply").firstChild, [
+              {
+                type: "TEXT",
+                path: [3, 1],
+                value: data().ctr,
+              },
+            ]);
+            skipUpdate(false);
+          }}
+        >
+          Click {data().ctr}
+        </button>
         {/* <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3> */}
       </div>
     );
