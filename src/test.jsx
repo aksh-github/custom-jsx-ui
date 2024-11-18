@@ -10,6 +10,9 @@ import {
   onCleanup,
   domv2,
   applyPatchv2,
+  microPatch,
+  getPath,
+  computeDiff,
 } from "./utils/dom/lib.v2";
 
 // -------------------------------
@@ -18,28 +21,29 @@ registerCallback(() => {
   renderUtils.forceUpdate();
 });
 
-const Child = {
-  data: {
-    cpair: atom(0),
-  },
-  render: () => {
-    const { cpair } = Child.data;
-    // const [c, setC] = cpair;
+const Child = () => {
+  const cpair = atom(0);
+  let ref = null;
 
+  return () => {
     return (
-      <div>
+      <div ref={(el) => (ref = el)}>
         Child {cpair[0]()}
         <button
           onClick={() => {
             // cpair[1](cpair[0] => cpair[0]() + 1);
+            skipUpdate(true);
             cpair[1](cpair[0]() + 1);
+            microPatch("Child", ref);
+            console.log(ref);
+            skipUpdate(false);
           }}
         >
           Increment
         </button>
       </div>
     );
-  },
+  };
 };
 
 const Timer = () => {
@@ -74,6 +78,15 @@ const AppTemp = () => {
 
   onMount(() => {
     console.log("rendered AppTemp");
+
+    setTimeout(() => {
+      console.log(
+        computeDiff(
+          document.querySelector("button"),
+          document.querySelectorAll("button")[1]
+        )
+      );
+    }, 4000);
   });
 
   return () => {
@@ -90,29 +103,41 @@ const AppTemp = () => {
             setData({ ...data(), txt: e.target.value });
           }}
         />
-        {/* <p id="timer">
+        <p>
           <Timer />
-        </p> */}
+        </p>
+        <p>
+          <Timer />
+        </p>
         <button
           onClick={() => {
-            skipUpdate(true);
-            setData((_data) => ({
-              ..._data,
-              ctr: _data.ctr + 1,
-            }));
+            skipUpdate(() => {
+              // update data
+              setData((_data) => ({
+                ..._data,
+                ctr: _data.ctr + 1,
+              }));
 
-            applyPatchv2(document.getElementById("apply").firstChild, [
-              {
-                type: "TEXT",
-                path: [3, 1],
-                value: data().ctr,
-              },
-            ]);
-            skipUpdate(false);
+              // update dom
+              const path = getPath(
+                document.getElementById("apply"),
+                document.querySelector("#apply button ")
+              );
+              path.push(1);
+              console.log(path);
+              applyPatchv2(document.getElementById("apply"), [
+                {
+                  type: "TEXT",
+                  path,
+                  value: data().ctr,
+                },
+              ]);
+            });
           }}
         >
           Click {data().ctr}
         </button>
+        <button>Click 1</button>
         {/* <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3> */}
       </div>
     );
