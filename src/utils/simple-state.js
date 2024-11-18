@@ -21,6 +21,12 @@ const SimState = (() => {
     forceUpdate();
   };
 
+  const skipUpdate = (cb) => {
+    isSkipping = true;
+    cb();
+    isSkipping = false;
+  };
+
   let throtUpdate = null;
 
   let forceUpdate = () => {};
@@ -30,10 +36,6 @@ const SimState = (() => {
   const registerCallback = (cb, duration = 100) => {
     forceUpdate = cb;
     throtUpdate = debounce(forceUpdate, duration);
-  };
-
-  const skipUpdate = (flag) => {
-    isSkipping = flag;
   };
 
   const state = (iv) => {
