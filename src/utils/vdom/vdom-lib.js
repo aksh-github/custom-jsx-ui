@@ -623,6 +623,8 @@ const microframe = (() => {
     // callMountAll();
   }
 
+  let patches = [];
+
   // all delta updates
   function forceUpdate() {
     counter = 0; // v imp
@@ -640,6 +642,8 @@ const microframe = (() => {
     // console.log(CompoIterator().get(old, "TextArea"));
 
     // console.log(oldCallStack, callStack);
+
+    // console.log(performance.now());
 
     // new diff from yt
 
@@ -660,25 +664,26 @@ const microframe = (() => {
     // console.log(genObj.next());
 
     // 2. update dom
-
+    patches = [];
     updateElement(rootNode, current, old);
 
     console.log(performance.now());
 
     // console.log("===================");
 
-    // diff(rootNode, current, old);
+    setTimeout(() => {
+      applyPatches(patches);
+      // 3. trigger lifecycle
+      // callLifeCycleHooks(callStack, oldStack);
 
-    // 3. trigger lifecycle
-    // callLifeCycleHooks(callStack, oldStack);
+      callMountAll();
+      // console.log(callStack, oldStack);
 
-    callMountAll();
-    // console.log(callStack, oldStack);
-
-    // backup for future comparison
-    oldCallStack = [...callStack];
-    callStack = [];
-    old = current;
+      // backup for future comparison
+      oldCallStack = [...callStack];
+      callStack = [];
+      old = current;
+    }, 0);
   }
 
   function isValid(v) {
@@ -689,8 +694,6 @@ const microframe = (() => {
   // 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
   // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
 
-  let patches = [];
-
   let last = null;
   let optiPossible = false;
   let gdf = null;
@@ -699,17 +702,24 @@ const microframe = (() => {
     if (!isValid(oldNode)) {
       // if (oldNode?.type) {
       console.log("append: ");
-      $parent.appendChild(createElement(newNode));
-      // patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
+      // $parent.appendChild(createElement(newNode));
+      patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
     } else if (!isValid(newNode)) {
-      $parent.removeChild($parent.childNodes[index]);
-      // patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
+      // $parent.removeChild($parent.childNodes[index]);
+
+      patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
     } else if (changed(newNode, oldNode)) {
       if ($parent?.childNodes[index]) {
-        $parent?.replaceChild(
-          createElement(newNode),
-          $parent.childNodes[index]
-        );
+        // $parent?.replaceChild(
+        //   createElement(newNode),
+        //   $parent.childNodes[index]
+        // );
+
+        patches.push({
+          p: $parent,
+          op: "REPLACE",
+          c: [createElement(newNode), $parent.childNodes[index]],
+        });
 
         // additoinal logic for frag modify. This changed on 2-sep
         const fragChildLen = oldNode?.props?.fragChildLen;
@@ -718,16 +728,15 @@ const microframe = (() => {
           // for (let i = 1; i < fragChildLen; ++i) {
           for (let i = fragChildLen - 1; i >= 1; --i) {
             // console.log("remove: ", $parent.childNodes[index + i]);
-            $parent?.removeChild($parent.childNodes[index + i]);
+            // $parent?.removeChild($parent.childNodes[index + i]);
+            patches.push({
+              p: $parent,
+              op: "REMOVE",
+              c: $parent.childNodes[index + i],
+            });
           }
         }
-      }
-      // patches.push({
-      //   p: $parent,
-      //   op: "REPLACE",
-      //   c: [createElement(newNode), $parent.childNodes[index]],
-      // });
-      else {
+      } else {
         //special case Compo with Array manipulation or no type (parent) for updating
         if ($parent?.appendChild) {
           // console.log("changed append: ");
@@ -735,27 +744,43 @@ const microframe = (() => {
           if (newEl?.nodeName) {
             // its dom node
             // console.log("use df");
-            if (optiPossible) gdf.appendChild(newEl);
-            else $parent.appendChild(newEl);
+            if (optiPossible) {
+              // gdf.appendChild(newEl);
 
-            // $parent.appendChild(newEl);
+              patches.push({
+                p: gdf,
+                op: "APPEND",
+                c: newEl,
+              });
+            } else {
+              // $parent.appendChild(newEl);
+
+              patches.push({
+                p: $parent,
+                op: "APPEND",
+                c: newEl,
+              });
+            }
           }
 
           // its text
-          else $parent.textContent = newEl?.textContent;
-          // else
-          //   patches.push({
-          //     p: $parent,
-          //     op: "CONTENT",
-          //     c: newEl?.textContent,
-          //   });
+          else {
+            // $parent.textContent = newEl?.textContent;
+
+            patches.push({
+              p: $parent,
+              op: "CONTENT",
+              c: newEl?.textContent,
+            });
+          }
         } else {
-          $parent?.parentNode?.appendChild(createElement(newNode));
-          // patches.push({
-          //   p: $parent?.parentNode,
-          //   op: "APPEND",
-          //   c: createElement(newNode),
-          // });
+          // $parent?.parentNode?.appendChild(createElement(newNode));
+
+          patches.push({
+            p: $parent?.parentNode,
+            op: "APPEND",
+            c: createElement(newNode),
+          });
         }
       }
     } else if (newNode?.type) {
@@ -808,7 +833,14 @@ const microframe = (() => {
 
       if (optiPossible) {
         console.log("after for", domNode);
-        domNode.appendChild(gdf);
+        // domNode.appendChild(gdf);
+
+        patches.push({
+          p: domNode,
+          op: "APPEND",
+          c: gdf,
+        });
+
         optiPossible = false;
         gdf = null;
       }
@@ -837,6 +869,47 @@ const microframe = (() => {
       }
     });
   }
+
+  // let patchIndex = 0;
+  // function applyPatches(patches) {
+  //   console.log(patches);
+  //   window.requestAnimationFrame(() => {
+  //     applyPatchBatch(patches);
+  //   });
+  // }
+
+  // function applyPatchBatch(patches) {
+  //   const batchSize = 50; // Adjust batch size based on performance needs
+  //   const batchEnd = Math.min(patchIndex + batchSize, patches.length);
+
+  //   for (let i = patchIndex; i < batchEnd; i++) {
+  //     const patch = patches[i];
+  //     switch (patch.op) {
+  //       case "APPEND":
+  //         patch.p.appendChild(patch.c);
+  //         break;
+  //       case "REMOVE":
+  //         patch.p.removeChild(patch.c);
+  //         break;
+  //       case "REPLACE":
+  //         patch.p.replaceChild(patch.c[0], patch.c[1]);
+  //         break;
+  //       case "CONTENT":
+  //         patch.p.textContent = patch.c;
+  //         break;
+  //     }
+  //   }
+
+  //   patchIndex = batchEnd;
+  //   if (patchIndex < patches.length) {
+  //     window.requestAnimationFrame(() => {
+  //       applyPatchBatch(patches);
+  //     });
+  //   } else {
+  //     patchIndex = 0;
+  //     patches = [];
+  //   }
+  // }
 
   return {
     mount,
