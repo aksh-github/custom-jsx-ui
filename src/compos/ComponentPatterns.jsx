@@ -1,6 +1,6 @@
 import { createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { state } from "../utils/simple-state";
+import { atom, state } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const DoesNotWork = (props) => {
@@ -93,13 +93,28 @@ export const ArrayThatWorks = () => {
 
 export const ArrayWithFragments = () => {
   console.log("This works for only static, changes won't reflect");
-  // const arr = [<p>1000</p>, <p>20000</p>];
+
+  const [st, setSt] = atom(null);
+
+  setTimeout(() => {
+    setSt("some value");
+  }, 4000);
+
+  const Row =
+    ({ n }) =>
+    () =>
+      <p>{n}</p>;
+
+  const arr = [1000, 2000];
   // return () => <p>10</p>;
   return () => (
     <df>
-      <p>10</p>
-      <p>20</p>
-      {/* {arr} */}
+      {/* <p>10</p>
+      <p>20</p> */}
+      {st()}
+      {arr.map((el, idx) => {
+        return <Row key={idx} n={el} />;
+      })}
     </df>
   );
 };
