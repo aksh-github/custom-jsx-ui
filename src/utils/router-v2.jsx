@@ -1,5 +1,6 @@
 import { atom } from "./simple-state";
 import { onCleanup, onMount, h } from "./vdom/vdom-lib";
+// import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
 console.log(
   "check: https://github.com/nanojsx/nano/blob/master/src/components/router.ts"
