@@ -244,6 +244,8 @@ const microframe = (() => {
       // callStack = [];
       iter = ArrIterator();
 
+      console.log(performance.now());
+
       const newc = domv2(Main);
       const diffs = computeDiff(oldc, newc);
 
@@ -252,6 +254,8 @@ const microframe = (() => {
       callUnmountAll();
 
       applyPatchv2(rootNode.firstChild, diffs);
+
+      console.log(performance.now());
 
       // call mount for all
       callMountAll();
@@ -265,6 +269,24 @@ const microframe = (() => {
     return { render, forceUpdate };
   }
 
+  const microPatch = (compName, existNode) => {
+    console.log(oldCallStack, callStack);
+
+    oldCallStack.forEach((item) => {
+      if (item.fname == compName) {
+        // item.fn = null;
+        const newNode = item.fn();
+        // console.log(computeDiff(existNode, newNode));
+        const diffs = computeDiff(existNode, newNode);
+        console.log(diffs);
+        applyPatchv2(existNode, diffs);
+        // existNode = newNode;
+
+        renderUtils.forceUpdate();
+      }
+    });
+  };
+
   return {
     domv2,
     onMount,
@@ -272,6 +294,7 @@ const microframe = (() => {
     // callMountAll,
     // ArrIterator,
     _renderUtils,
+    microPatch,
   };
 })();
 
@@ -280,13 +303,14 @@ export const domv2 = microframe.domv2;
 export const forceUpdate = microframe.forceUpdate;
 export const onMount = microframe.onMount;
 export const onCleanup = microframe.onCleanup;
+export const microPatch = microframe.microPatch;
 
 export const renderUtils = microframe._renderUtils();
 
 // version 2
 
 // Function to compute the diff between two DOM nodes
-function computeDiff(node1, node2) {
+export function computeDiff(node1, node2) {
   const diffs = [];
 
   function walk(node1, node2, path) {
@@ -299,6 +323,8 @@ function computeDiff(node1, node2) {
       node1.nodeName !== node2.nodeName
     ) {
       diffs.push({ type: "REPLACE", path, node: node2.cloneNode(true) });
+      // diffs.push({ type: "REMOVE", path });
+      // diffs.push({ type: "ADD", path, node: node2.cloneNode(true) });
     } else if (
       node1.nodeType === Node.TEXT_NODE &&
       node1.nodeValue !== node2.nodeValue
@@ -357,6 +383,31 @@ function computeDiff(node1, node2) {
 
   walk(node1, node2, []);
   return diffs;
+}
+
+export function getPath(node, target) {
+  const fpath = [];
+
+  function walk(node, path) {
+    if (node === target) {
+      console.log(node, " got it");
+      console.log(path);
+      fpath.push(path);
+      // return path;
+    }
+
+    const children1 = node.childNodes;
+
+    for (let i = 0; i < children1.length; i++) {
+      walk(children1[i], path.concat(i));
+
+      // console.log(node);
+    }
+  }
+
+  walk(node, []);
+
+  return fpath[0];
 }
 
 // Function to apply a patch to a DOM tree
