@@ -1,14 +1,16 @@
 import { createSignal, batch, createEffect } from "../utils/signal-complex";
 import { domv2, onMount, onCleanup } from "../utils/dom/lib.v2";
 // import { dom, onMount, onCleanup } from "lib-jsx";
-import Link from "../compos/Link";
+// import Link from "../compos/Link";
 import { state, atom } from "../utils/simple-state";
 import { signal } from "../utils/signal-v2";
 // import { useState } from "./utils/hooks-experi";
-import { navigoRouter, NavigoWrapper } from "../utils/navigo-router";
+import { LinkV2, Router } from "../utils/router-v2";
+
+let routeHandler = Router();
 
 const Ctr = ({ v, __spl }) => {
-  const st = state({ c: 100, version: "Loading..." });
+  const [st, setSt] = state({ c: 100, version: "Loading..." });
 
   onCleanup(() => {
     console.log("unmount Ctr");
@@ -20,20 +22,21 @@ const Ctr = ({ v, __spl }) => {
       fetch("/package.json")
         .then((res) => res.json())
         .then((res) => {
-          st.set({
+          setSt((st) => ({
+            ...st,
             version: res.version,
-          });
+          }));
         });
     }, 4000);
   });
 
   return (props) => {
-    // console.log(props);
+    console.log(props);
     return (
       <div
         style={{
-          background: st.get("c") % 2 === 0 ? "orange" : "tomato",
-          color: st.get("c") % 2 === 0 ? "white" : "unset",
+          background: st().c % 2 === 0 ? "orange" : "tomato",
+          color: st().c % 2 === 0 ? "white" : "unset",
           padding: "2em",
         }}
       >
@@ -41,12 +44,12 @@ const Ctr = ({ v, __spl }) => {
         <p>
           Parent ctr: {props.v} {props.v % 2 === 0 ? "Even" : null}
         </p>
-        <p>My ctr: {st.get("c")}</p>
-        <p>Json Value: {st.get("version")}</p>
+        <p>My ctr: {st().c}</p>
+        <p>Json Value: {st().version}</p>
         <button
           onClick={(e) => {
             // setcc(cc() + 1);
-            st.set({ c: st.get("c") + 1 });
+            setSt((st) => ({ ...st, c: st.c + 1 }));
           }}
         >
           click
@@ -59,7 +62,7 @@ const Ctr = ({ v, __spl }) => {
 // end Ctr
 
 const Input = () => {
-  const input = state({
+  const [input, setInput] = state({
     input: {
       v: "some",
       e: "",
@@ -80,16 +83,17 @@ const Input = () => {
           className="input"
           onInput={(e) => {
             // console.log(e, e.target.value);
-            input.set({
+            setInput((st) => ({
+              ...st,
               input: {
                 v: e.target.value,
                 e: e.target.value ? "" : "incorrect",
               },
-            });
+            }));
           }}
-          value={input.get("input").v}
+          value={input().input.v}
         />
-        <p>{input.get("input").e}</p>
+        <p>{input().input.e}</p>
         <TextArea />
       </div>
     );
@@ -100,8 +104,8 @@ const Input = () => {
 
 function ComplexRoute(props) {
   console.log("rendered App", props);
-  const [c, setc] = createSignal(0);
-  const [s, sets] = createSignal("akshay");
+  const [c, setc] = atom(0);
+  const [s, sets] = atom("akshay");
   let ref = null;
 
   createEffect(() => {
@@ -129,7 +133,7 @@ function ComplexRoute(props) {
     (
       <div>
         <Ctr v={c()} />
-        <Input />
+        {/* <Input /> */}
       </div>
     );
 
@@ -144,10 +148,11 @@ function ComplexRoute(props) {
       <div>
         <button
           onClick={(e) => {
-            batch(() => {
-              setc(c() + 1);
-              sets("akshay is smart");
-            });
+            // batch(() => {
+            //   setc(c() + 1);
+            //   sets("akshay is smart");
+            // });
+            setc(c() + 1);
           }}
         >
           Counter
@@ -164,7 +169,7 @@ function ComplexRoute(props) {
       ) : // <Number n={10} />
       null}
       <p>
-        <Link href="route2">Go next</Link>
+        <LinkV2 href="route2">Go next</LinkV2>
         <button
           onClick={() => {
             navigoRouter.get().navigate("route2");
@@ -175,7 +180,6 @@ function ComplexRoute(props) {
       </p>
       <Ctr v={c()} key={"k1"} />
       {c() % 2 === 0 ? <Master /> : "NA"}
-      {/* {c() % 2 === 0 ? <Master /> : "NA"} */}
     </div>
   );
 }
@@ -228,7 +232,7 @@ const Odd = () => {
 export const SimpleRoute = () => {
   const [r, setr] = createSignal(0);
   const [pst, setPst] = atom(0);
-  // const tv = pst.get("r");
+  // const tv = pst().r;
   let ref = null;
 
   const arrState = state({ arr: ["10", "20"] });
@@ -274,7 +278,7 @@ export const SimpleRoute = () => {
     onCleanup(() => {
       // console.log("unmounting number");
     });
-    return ({ n }) => <li>{n}</li>;
+    return ({ n }) => <li className="list-item">{n}</li>;
   };
 
   return () => {
@@ -337,69 +341,64 @@ export const TextArea = () => {
 };
 
 export function App(props) {
-  let curPath = "";
-  const routeSt = atom("");
-  // const [route, setRoute] = signal("route2");
-
-  const setupRoute = () =>
-    navigoRouter.set(
-      {
-        // errorComponent: Error,
-        // basePath: window.location.pathname,
-        routes: [
-          {
-            path: "route2",
-            // component: A,
-          },
-          {
-            path: "/",
-            // component: B,
-          },
-          {
-            path: "*",
-            // component: () => <div>Wrong url</div>,
-          },
-        ],
-      },
-      (Compo, match) => {
-        console.log(Compo, match);
-        // routeSt.set({ path: match?.url });
-
-        if (curPath != match?.url) {
-          curPath = match.url;
-          // setPath(match.url);
-          routeSt.set(match?.url);
-          // setRoute(match.url);
-        }
-        // console.log(path());
-      }
-    );
+  const [curPath, setCurPath] = state({ url: window.location.pathname });
 
   onMount(() => {
     console.log("=== Main App mounted");
-    setupRoute();
+    routeHandler.init(onRouteChange);
   });
+
+  onCleanup(() => {
+    routeHandler.cleanup();
+  });
+
+  function onRouteChange(path) {
+    setCurPath(path);
+  }
   return () => {
-    // switch (routeSt.get()) {
-    //   // switch (route()) {
-    //   case "route2":
-    //     return <SimpleRoute />;
-    //   case "":
-    //     return <ComplexRoute />;
-    //   // case null:
-    //   //   return null;
-    //   default:
-    //     return "Wrong path 404";
-    // }
-    return <SimpleRoute />;
+    return (
+      <div>
+        {/* <ul>
+          <li>
+            <LinkV2 to="/">Complex</LinkV2>
+          </li>
+          <li>
+            <LinkV2 to="/route2">Simple</LinkV2>
+          </li>
+          <li>
+            <LinkV2 to="/topics">Topics</LinkV2>
+          </li>
+          <li>
+            <LinkV2 to="/frag">Fragments</LinkV2>
+          </li>
+        </ul> */}
+
+        <hr />
+
+        {(() => {
+          switch (curPath().url) {
+            // switch (route()) {
+            case "/route2":
+              return <SimpleRoute />;
+            case "/":
+              return <ComplexRoute />;
+            case "/frag":
+              return (
+                <df>
+                  {/* <ArrayWithFragmentsComplex />
+                  <p>in between</p> */}
+                  <ArrayWithFragments />
+                </df>
+              );
+            default:
+              if (curPath()?.url?.startsWith("/topics"))
+                return <Topics basepath="/topics" match={curPath()} />;
+              else return "Wrong path 404";
+          }
+        })()}
+        <footer>some footer for all</footer>
+      </div>
+    );
+    // return <SimpleRoute />;
   };
-  // <div>
-  // ({
-  //   <SimpleSwitch cond={routeSt.get("path")}>
-  //     <SimpleSwitch.Case render={"Wrong path 404"} />
-  //     <SimpleSwitch.Case when={"route2"} render={<SimpleRoute />} />
-  //     <SimpleSwitch.Case when={""} render={<ComplexRoute />} />
-  //   </SimpleSwitch>
-  // })
-  // </div>
 }
