@@ -2,6 +2,65 @@
 
 console.log("check https://github.com/pomber/incremental-rendering-demo");
 
+// meta answer to locate obj in json and also gives path
+// on 17 nov 24
+
+// use it as
+// const matches = findMatchingObjects(vdomjson, "key", "value");
+
+function findMatchingObjects(json, key, value) {
+  const matches = [];
+
+  // Recursive function to traverse the JSON object
+  function traverse(obj, path) {
+    // Check if the object has the matching key-value pair
+    if (
+      Object.prototype.hasOwnProperty.call(obj, key) &&
+      isEqual(obj[key], value)
+    ) {
+      matches.push({ object: obj, path: path });
+    }
+
+    // Traverse child objects
+    Object.keys(obj).forEach((k) => {
+      if (typeof obj[k] === "object" && obj[k] !== null) {
+        traverse(obj[k], `${path}.${k}`);
+      } else if (Array.isArray(obj[k])) {
+        obj[k].forEach((item, index) => {
+          traverse(item, `${path}.${k}[${index}]`);
+        });
+      }
+    });
+  }
+
+  // Helper function for deep equality check
+  function isEqual(a, b) {
+    // Handle primitive types
+    if (a === b) return true;
+    if (a === null || b === null) return false;
+    if (typeof a !== "object" || typeof b !== "object") return false;
+
+    // Handle arrays
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      return a.every((item, index) => isEqual(item, b[index]));
+    }
+
+    // Handle objects
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every((key) => isEqual(a[key], b[key]));
+  }
+
+  // Start traversing from the root object
+  traverse(json, "$");
+
+  return matches;
+}
+
+// end meta
+
 import { atom } from "../simple-state";
 // publish as lib: https://www.youtube.com/watch?v=FITxnIDsMnw
 // import { diff, patch } from "./vdom-yt";
