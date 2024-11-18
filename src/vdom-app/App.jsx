@@ -488,7 +488,7 @@ export function App(props) {
 
     return (
       <div>
-        {/* <ul>
+        <ul>
           <li>
             <LinkV2 to="/">Complex</LinkV2>
           </li>
@@ -501,7 +501,7 @@ export function App(props) {
           <li>
             <LinkV2 to="/frag">Fragments</LinkV2>
           </li>
-        </ul> */}
+        </ul>
 
         <hr />
 
