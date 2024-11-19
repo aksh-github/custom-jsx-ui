@@ -148,4 +148,53 @@ registerCallback(forceUpdate);
 //   );
 // };
 
-mount(root, () => <App />);
+// mount(root, () => <App />);
+
+mount(root, () => <Captcha />);
+
+export function generateCaptcha() {
+  let uniquechar = "";
+
+  const randomchar =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  // Generate captcha for length of 5 with random character
+  for (let i = 1; i < 6; i++) {
+    uniquechar += randomchar.charAt(Math.random() * randomchar.length);
+  }
+
+  return uniquechar;
+}
+
+function Captcha() {
+  onMount(() => {
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Set font properties
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Write sample text
+    const captchaText = generateCaptcha();
+    ctx.fillText(captchaText, canvas.width / 2, canvas.height / 2);
+
+    // Strike through the text
+    ctx.strokeStyle = "red"; // Color of the strike-through line
+    ctx.lineWidth = 2; // Thickness of the strike-through line
+    ctx.lineCap = "round"; // Rounded ends for the line
+
+    const strikeThroughX = canvas.width / 2;
+    const strikeThroughY = canvas.height / 2;
+    const strikeThroughLength = captchaText.length * 20; // Adjust based on font size
+
+    ctx.beginPath();
+    ctx.moveTo(strikeThroughX - strikeThroughLength / 2, strikeThroughY);
+    ctx.lineTo(strikeThroughX + strikeThroughLength / 2, strikeThroughY);
+    ctx.stroke();
+  });
+
+  return () => <canvas id="myCanvas" width="100" height="50"></canvas>;
+}
