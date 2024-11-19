@@ -1,7 +1,7 @@
 import { App, SimpleRoute, TextArea } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import { registerCallback } from "../utils/simple-state";
-import { h, mount, forceUpdate, onMount } from "../utils/vdom/vdom-lib";
+import { h, mount, forceUpdate, onMount, df } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
@@ -148,18 +148,14 @@ registerCallback(forceUpdate);
 //   );
 // };
 
-// mount(root, () => <App />);
+mount(root, () => <App />);
 
-alert(
-  "check this for fragment: https://blog.r0b.io/post/using-jsx-without-react/"
-);
-
-mount(root, () => (
-  <div>
-    <Captcha />
-    <Svg />
-  </div>
-));
+// mount(root, () => (
+//   <>
+//     <Captcha />
+//     <Svg />
+//   </>
+// ));
 
 export function generateCaptcha() {
   let uniquechar = "";

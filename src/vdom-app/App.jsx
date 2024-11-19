@@ -1,5 +1,5 @@
 import { createSignal, batch, createEffect } from "../utils/signal-complex";
-import { h, onMount, onCleanup, Suspense } from "../utils/vdom/vdom-lib";
+import { h, onMount, onCleanup, Suspense, df } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
