@@ -378,7 +378,7 @@ export const SimpleRoute = () => {
 
         <TextArea />
 
-        {/* <Suspense
+        <Suspense
           fallback={
             <div className="lds-roller">
               <div></div>
@@ -404,7 +404,7 @@ export const SimpleRoute = () => {
         </Suspense>
         <Suspense fallback={"Loading..."}>
           <DynCompo />
-        </Suspense> */}
+        </Suspense>
 
         {data() ? (
           <div>
