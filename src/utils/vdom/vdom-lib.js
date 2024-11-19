@@ -465,6 +465,40 @@ const microframe = (() => {
 
   // vdom to dom
 
+  // SVG
+  const createAndAppendSVG = (tag, attrs, ...children) => {
+    function setPropsNS($target, props) {
+      Object.keys(props).forEach((name) => {
+        // setProp($target, name, props[name]);
+        $target.setAttributeNS(null, name, props[name]);
+      });
+    }
+
+    const element = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    );
+    // addAttributes(element, attrs);
+
+    setPropsNS(element, attrs);
+
+    for (const child of children) {
+      const childElement = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        child.type
+      );
+
+      setPropsNS(childElement, child.props);
+
+      // appendChild(element, childElement);
+      element.appendChild(childElement);
+    }
+
+    return element;
+  };
+
+  // end SVG
+
   function createElement(node) {
     if (!node?.type) {
       if (node?.$c) {
@@ -497,6 +531,10 @@ const microframe = (() => {
       node.children.map(createElement).forEach($el2.appendChild.bind($el2));
 
       return $el2;
+    }
+
+    if (node.type === "svg") {
+      return createAndAppendSVG(node.type, node.props, ...node.children);
     }
 
     const $el = document.createElement(node.type);
@@ -663,7 +701,7 @@ const microframe = (() => {
     // genNode = genObj.next();
     // console.log(genObj.next());
 
-    // 2. update dom
+    // 2. calculate diff
     patches = [];
     updateElement(rootNode, current, old);
 
@@ -672,6 +710,7 @@ const microframe = (() => {
     // console.log("===================");
 
     setTimeout(() => {
+      // 3. update dom
       console.log(patches);
       applyPatches(patches);
       // 3. trigger lifecycle
