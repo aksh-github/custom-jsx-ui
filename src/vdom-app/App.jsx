@@ -180,7 +180,7 @@ function ComplexRoute(props) {
   });
 
   const arr = [];
-  for (let i = 0; i < 5000; ++i) arr.push(i);
+  for (let i = 0; i < 1000; ++i) arr.push(i);
 
   const Number = () => {
     onMount(() => {
@@ -223,7 +223,7 @@ function ComplexRoute(props) {
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
       {c() % 2 !== 0 ? (
-        <ul>
+        <ul style={{ minHeight: "5000px", contentVisibility2: "auto" }}>
           {arr.map((n) => (
             <Number n={n} />
           ))}
