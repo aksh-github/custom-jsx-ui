@@ -672,6 +672,7 @@ const microframe = (() => {
     // console.log("===================");
 
     setTimeout(() => {
+      console.log(patches);
       applyPatches(patches);
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
@@ -849,7 +850,7 @@ const microframe = (() => {
     // console.log(patches);
   }
 
-  function applyPatches() {
+  function applyPatches(patches) {
     // console.log(patches);
     patches.forEach((patch) => {
       switch (patch.op) {
