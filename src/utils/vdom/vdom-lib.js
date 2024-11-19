@@ -158,7 +158,15 @@ const microframe = (() => {
 
   // vdom
 
+  function df(type, props, ...children) {
+    return children;
+  }
+
   function h(type, props, ...children) {
+    if (type === "df") {
+      return children;
+    }
+
     let _fn = null;
     let curParent;
 
@@ -957,6 +965,7 @@ const microframe = (() => {
     onMount,
     onCleanup,
     h,
+    df,
   };
 })();
 
@@ -965,6 +974,7 @@ export const forceUpdate = microframe.forceUpdate;
 export const onMount = microframe.onMount;
 export const onCleanup = microframe.onCleanup;
 export const h = microframe.h;
+// export const df = microframe.df;
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 export function Suspense(props, child) {

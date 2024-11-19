@@ -150,6 +150,10 @@ registerCallback(forceUpdate);
 
 // mount(root, () => <App />);
 
+alert(
+  "check this for fragment: https://blog.r0b.io/post/using-jsx-without-react/"
+);
+
 mount(root, () => (
   <div>
     <Captcha />
