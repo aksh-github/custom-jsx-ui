@@ -717,6 +717,7 @@ const microframe = (() => {
       // 3. update dom
       console.log(patches);
       applyPatches(patches);
+      patches = [];
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
 
