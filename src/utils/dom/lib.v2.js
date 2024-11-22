@@ -1,3 +1,84 @@
+(function () {
+  const eventListeners = new WeakMap();
+
+  const originalAddEventListener = EventTarget.prototype.addEventListener;
+  const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+
+  EventTarget.prototype.addEventListener = function (type, listener, options) {
+    if (!eventListeners.has(this)) {
+      eventListeners.set(this, []);
+    }
+    eventListeners.get(this).push({ type, listener, options });
+    originalAddEventListener.call(this, type, listener, options);
+  };
+
+  EventTarget.prototype.removeEventListener = function (
+    type,
+    listener,
+    options
+  ) {
+    if (eventListeners.has(this)) {
+      const listeners = eventListeners.get(this);
+      for (let i = 0; i < listeners.length; i++) {
+        if (listeners[i].type === type && listeners[i].listener === listener) {
+          listeners.splice(i, 1);
+          break;
+        }
+      }
+    }
+    originalRemoveEventListener.call(this, type, listener, options);
+  };
+
+  window.getEventListeners = function (node) {
+    return eventListeners.get(node) || [];
+  };
+})();
+
+function domListIterator(rootNode) {
+  // pass rootNode if its not global
+  // console.log(next);
+  let arr = [rootNode];
+
+  if (rootNode?.nodeType === 3) return arr;
+
+  let next = rootNode;
+
+  function iterChild() {
+    while (next) {
+      // console.log(next);
+      // arr.push(next);
+      if (next.firstElementChild) {
+        next = next.firstElementChild;
+        // console.log(next);
+        arr.push(next);
+      } else {
+        iterSibling();
+      }
+    }
+  }
+
+  function iterSibling() {
+    while (next) {
+      if (next.nextElementSibling) {
+        next = next.nextElementSibling;
+
+        // console.log(next);
+        arr.push(next);
+        return;
+      }
+
+      next = next.parentElement;
+
+      if (next === rootNode) {
+        next = null;
+      }
+    }
+  }
+
+  iterChild();
+  return arr;
+}
+
 const microframe = (() => {
   let stack = [];
 
@@ -85,6 +166,8 @@ const microframe = (() => {
         if (k?.startsWith("on")) {
           const evtName = k.replace(/on/, "").toLowerCase();
           el.addEventListener(evtName, props[k]);
+          // rootNode.addEventListener(evtName, handleEvent);
+          // eventList.push({ el, evtName, cb: props[k] });
         } else if (k?.startsWith("data")) {
           el.setAttribute(k, props[k]);
         } else if (k === "ref") {
@@ -113,6 +196,7 @@ const microframe = (() => {
 
   const domv2 = (type, props, ...children) => {
     // console.log(type, props, children);
+    // console.log(rootNode);
 
     if (!type) return null;
 
@@ -210,6 +294,10 @@ const microframe = (() => {
       // lc.reset(true);
 
       rootNode = _node;
+
+      // event handler for all
+      // rootNode.addEventListener("click", handleEvent);
+
       Main = _Main;
       // imp step: set the latest state
       // oldc = Main();
@@ -322,9 +410,26 @@ export function computeDiff(node1, node2) {
       node1.nodeType !== node2.nodeType ||
       node1.nodeName !== node2.nodeName
     ) {
-      diffs.push({ type: "REPLACE", path, node: node2.cloneNode(true) });
-      // diffs.push({ type: "REMOVE", path });
-      // diffs.push({ type: "ADD", path, node: node2.cloneNode(true) });
+      const clone = node2.cloneNode(true);
+      const ogNodes = domListIterator(node2);
+      const cloneNodes = domListIterator(clone);
+
+      // console.log(ogNodes, cloneNodes);
+
+      if (ogNodes.length === cloneNodes.length && node2.nodeType === 1) {
+        for (let i = 0; i < ogNodes.length; i++) {
+          getEventListeners(ogNodes[i]).forEach((listener) => {
+            cloneNodes[i].addEventListener(
+              listener.type,
+              listener.listener,
+              listener.options
+            );
+          });
+        }
+      }
+      // updateList(old, clone);
+      diffs.push({ type: "REPLACE", path, node: clone });
+      // diffs.push({ type: "REPLACE", path, node: node2.cloneNode(true) });
     } else if (
       node1.nodeType === Node.TEXT_NODE &&
       node1.nodeValue !== node2.nodeValue

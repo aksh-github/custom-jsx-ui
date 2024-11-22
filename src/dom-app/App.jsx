@@ -31,7 +31,7 @@ const Ctr = ({ v, __spl }) => {
   });
 
   return (props) => {
-    console.log(props);
+    // console.log(props);
     return (
       <div
         style={{
@@ -133,7 +133,7 @@ function ComplexRoute(props) {
     (
       <div>
         <Ctr v={c()} />
-        {/* <Input /> */}
+        <Input />
       </div>
     );
 
@@ -172,7 +172,7 @@ function ComplexRoute(props) {
         <LinkV2 href="route2">Go next</LinkV2>
         <button
           onClick={() => {
-            navigoRouter.get().navigate("route2");
+            routeHandler.navigator.go("route2");
           }}
         >
           Go to simple
