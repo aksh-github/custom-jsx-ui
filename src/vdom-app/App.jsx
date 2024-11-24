@@ -328,6 +328,9 @@ export const SimpleRoute = () => {
       .then((res) => {
         // console.log(res);
         setData(res);
+      })
+      .catch((e) => {
+        console.log(e);
       });
 
     setTimeout(() => {

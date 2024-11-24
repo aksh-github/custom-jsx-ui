@@ -713,11 +713,12 @@ const microframe = (() => {
 
     // console.log("===================");
 
-    setTimeout(() => {
+    let tout = setTimeout(() => {
+      clearTimeout(tout);
       // 3. update dom
       console.log(patches);
-      applyPatches(patches);
-      patches = [];
+      if (patches) applyPatches(patches);
+      // patches = [];
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
 
@@ -729,6 +730,22 @@ const microframe = (() => {
       callStack = [];
       old = current;
     }, 0);
+    // requestAnimationFrame(() => {
+    //   // 3. update dom
+    //   console.log(patches);
+    //   applyPatches(patches);
+    //   patches = [];
+    //   // 3. trigger lifecycle
+    //   // callLifeCycleHooks(callStack, oldStack);
+
+    //   callMountAll();
+    //   // console.log(callStack, oldStack);
+
+    //   // backup for future comparison
+    //   oldCallStack = [...callStack];
+    //   callStack = [];
+    //   old = current;
+    // });
   }
 
   function isValid(v) {
