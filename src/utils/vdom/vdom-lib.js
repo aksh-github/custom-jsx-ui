@@ -372,7 +372,7 @@ const microframe = (() => {
         // _c,
         type,
         props: props || {},
-        children,
+        children: props?.ignoreNode ? [] : children,
       };
   }
 
@@ -1067,7 +1067,7 @@ function domListIterator(rootNode) {
     while (next) {
       // console.log(next);
       // arr.push(next);
-      if (next.firstElementChild) {
+      if (next.firstElementChild && !next.ignoreNode) {
         next = next.firstElementChild;
         // console.log(next);
         arr.push(next);
