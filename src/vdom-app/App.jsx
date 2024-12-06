@@ -3,21 +3,24 @@ import { h, onMount, onCleanup, Suspense, df } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { state, atom } from "../utils/simple-state";
+import { state, atom, skipUpdate } from "../utils/simple-state";
 import { LinkV2, Router } from "../utils/router-v2";
 
-import {
-  ArrayWithMap,
-  ArrayWithoutMap,
-  ArrayThatWorks,
-  ArrayWithFragments,
-  ArrayWithFragmentsComplex,
-  // PropsDriven,
-} from "../compos/ComponentPatterns";
+// import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
 
 let routeHandler = Router();
+
+let ArrayWithFragments = null;
+(() => {
+  console.log("importing");
+  const promise = import("../compos/ComponentPatterns").then((mod) => {
+    // ArrayWithFragments = mod.default;
+    console.log(mod);
+    ArrayWithFragments = mod.ArrayWithFragments;
+  });
+})();
 
 const Topic =
   () =>
@@ -299,9 +302,9 @@ const getMyAwesomePic = () => {
 };
 
 const DynCompo = async () => {
-  await new Promise((resolve, reject) => {
-    setTimeout(() => resolve(10), 3000);
-  });
+  // await new Promise((resolve, reject) => {
+  //   setTimeout(() => resolve(10), 3000);
+  // });
   return import("../compos/ComponentPatterns").then((comp) => {
     return comp?.PropsDriven({ n: "This will be loaded dynamically" }) || null;
   });
@@ -470,10 +473,22 @@ export function App(props) {
 
   onMount(() => {
     routeHandler.init(onRouteChange);
+    if (footRef) {
+      const p = document.createElement("p");
+      p.textContent = footerTp();
+
+      footRef.appendChild(p);
+
+      timer = setInterval(() => {
+        skipUpdate(() => setFooterTp((_tp) => _tp + 1));
+        p.textContent = footerTp();
+      }, 1000);
+    }
   });
 
   onCleanup(() => {
     routeHandler.cleanup();
+    clearInterval(timer);
   });
 
   return () => {
@@ -506,6 +521,11 @@ export function App(props) {
           </li>
         </ul>
 
+        <footer
+          ref={(_ref) => (footRef = _ref)}
+          ignoreNode
+          style={{ backgroundColor: "bisque" }}
+        ></footer>
         <hr />
 
         {(() => {
@@ -516,12 +536,12 @@ export function App(props) {
             case "/":
               return <ComplexRoute />;
             case "/frag":
+              console.log("frag");
+
               return (
-                <df>
-                  {/* <ArrayWithFragmentsComplex />
-                  <p>in between</p> */}
+                <div>
                   <ArrayWithFragments />
-                </df>
+                </div>
               );
             default:
               if (curPath()?.url?.startsWith("/topics"))
@@ -529,7 +549,11 @@ export function App(props) {
               else return "Wrong path 404";
           }
         })()}
-        <footer>some footer for all</footer>
+        <footer
+          ref={(_ref) => (footRef = _ref)}
+          ignoreNode
+          style={{ backgroundColor: "bisque" }}
+        ></footer>
       </div>
     );
   };

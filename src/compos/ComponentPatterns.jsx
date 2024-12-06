@@ -96,9 +96,9 @@ export const ArrayWithFragments = () => {
 
   const [st, setSt] = atom(null);
 
-  setTimeout(() => {
-    setSt("some value");
-  }, 4000);
+  // setTimeout(() => {
+  //   setSt("some value");
+  // }, 4000);
 
   const Row =
     ({ n }) =>
