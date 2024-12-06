@@ -5,7 +5,6 @@ import { h, mount, forceUpdate, onMount, df } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
-import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
 // v basic test 23may
 // let count = 0;
@@ -184,7 +183,7 @@ function Svg() {
 
 function Captcha() {
   onMount(() => {
-    const canvas = document.getElementById("myCanvas");
+    const canvas = document.getElementById("captcha");
     const ctx = canvas.getContext("2d");
 
     // Set font properties
@@ -212,5 +211,5 @@ function Captcha() {
     ctx.stroke();
   });
 
-  return () => <canvas id="myCanvas" width="100" height="50"></canvas>;
+  return () => <canvas id="myCanvas" height="50"></canvas>;
 }
