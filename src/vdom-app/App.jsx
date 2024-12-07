@@ -4,7 +4,7 @@ import { h, onMount, onCleanup, Suspense, df } from "../utils/vdom/vdom-lib";
 // import Link from "./compos/Link";
 
 import { state, atom, skipUpdate } from "../utils/simple-state";
-import { LinkV2, Router } from "../utils/router-v2";
+import { LinkV2, Router, Route } from "../utils/router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
@@ -477,14 +477,17 @@ export function App(props) {
   onMount(() => {
     routeHandler.init(onRouteChange);
     if (footRef) {
-      const p = document.createElement("p");
-      p.textContent = footerTp();
+      // const p = document.createElement("p");
+      // p.textContent = footerTp();
 
-      footRef.appendChild(p);
+      // footRef.appendChild(p);
+      const p = footRef.querySelector("p");
+      let ct = 0;
 
       timer = setInterval(() => {
-        skipUpdate(() => setFooterTp((_tp) => _tp + 1));
-        p.textContent = footerTp();
+        // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with state but skips ui comparison
+        // p.textContent = footerTp();
+        p.textContent = ++ct; // without using state
       }, 1000);
     }
   });
@@ -523,12 +526,6 @@ export function App(props) {
             <LinkV2 to="/frag">Fragments</LinkV2>
           </li>
         </ul>
-
-        <footer
-          ref={(_ref) => (footRef = _ref)}
-          ignoreNode
-          style={{ backgroundColor: "bisque" }}
-        ></footer>
         <hr />
 
         {(() => {
@@ -554,9 +551,12 @@ export function App(props) {
         })()}
         <footer
           ref={(_ref) => (footRef = _ref)}
-          ignoreNode
+          // ignoreNode
+          ignoreLater={true}
           style={{ backgroundColor: "bisque" }}
-        ></footer>
+        >
+          <p>{footerTp()}</p>
+        </footer>
       </div>
     );
   };

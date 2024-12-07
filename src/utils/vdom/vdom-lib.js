@@ -416,6 +416,10 @@ const microframe = (() => {
       });
     } else if (name === "ref") {
       value?.($target);
+    } else if (name === "ignoreLater") {
+      // $target["ignorenode"] = true;
+      $target.setAttribute("ignorenode", true);
+      $target.removeAttribute(name.toLowerCase());
     } else if (typeof value === "boolean") {
       setBooleanProp($target, name, value);
     } else {
