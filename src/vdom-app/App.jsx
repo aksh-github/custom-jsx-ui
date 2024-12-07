@@ -463,6 +463,9 @@ export const TextArea = () => {
 export function App(props) {
   const [curPath, setCurPath] = state({ url: window.location.pathname });
   // const [route, setRoute] = signal("route2");
+  let footRef = null;
+  let [footerTp, setFooterTp] = atom(0);
+  let timer = null;
 
   const onRouteChange = (newPath) => {
     console.log(newPath);
