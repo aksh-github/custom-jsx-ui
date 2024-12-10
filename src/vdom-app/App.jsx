@@ -12,15 +12,65 @@ import { signal } from "../utils/signal-v2";
 
 let routeHandler = Router();
 
-let ArrayWithFragments = null;
-(() => {
-  console.log("importing");
-  const promise = import("../compos/ComponentPatterns").then((mod) => {
-    // ArrayWithFragments = mod.default;
-    console.log(mod);
+// Type 1: Lazy import
+
+const LoadModule = (path) => import(path);
+
+// let ArrayWithFragments = null,
+//   resolved = false;
+// let _i = 0;
+// const LoadArrayWithFragments = () => {
+//   console.log("importing");
+//   const promise = LoadModule("../compos/ComponentPatterns?" + _i++)
+//     .then((mod) => {
+//       // ArrayWithFragments = mod.default;
+//       console.log(mod);
+//       resolved = true;
+//       ArrayWithFragments = mod.ArrayWithFragments;
+//     })
+//     .catch((e) => {
+//       console.log(e);
+//       ArrayWithFragments = () => <div>Something went wrong</div>;
+//     });
+// };
+// LoadArrayWithFragments();
+
+// Type 2: Load only when needed
+
+let _i = 0,
+  ArrayWithFragments = null;
+const ArrayWithFragmentsPromise = () => {
+  // if cond is not reqd strictly
+  if (ArrayWithFragments) {
+    return Promise.resolve(ArrayWithFragments);
+  }
+
+  return LoadModule("../compos/ComponentPatterns?" + _i++).then((mod) => {
     ArrayWithFragments = mod.ArrayWithFragments;
+    // return ArrayWithFragments;
+    return ArrayWithFragments;
   });
-})();
+  // .catch((e) => {
+  //   console.log(e);
+  // });
+};
+
+const photoURL = "https://picsum.photos/200"; // Gives pic of size 200x200
+const getMyAwesomePic = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(photoURL), 500);
+  });
+};
+
+let _j = 0;
+const DynCompoPromise = () => {
+  // await new Promise((resolve, reject) => {
+  //   setTimeout(() => resolve(10), 3000);
+  // });
+  return LoadModule("../compos/ComponentPatterns?" + _j++).then(
+    (mod) => mod?.PropsDriven
+  );
+};
 
 const Topic =
   () =>
@@ -294,22 +344,6 @@ const Odd = () => {
   );
 };
 
-const photoURL = "https://picsum.photos/200"; // Gives pic of size 200x200
-const getMyAwesomePic = () => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => resolve(photoURL), 500);
-  });
-};
-
-const DynCompo = async () => {
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(() => resolve(10), 3000);
-  // });
-  return import("../compos/ComponentPatterns").then((comp) => {
-    return comp?.PropsDriven({ n: "This will be loaded dynamically" }) || null;
-  });
-};
-
 // SimpleRoute
 
 export const SimpleRoute = () => {
@@ -397,6 +431,7 @@ export const SimpleRoute = () => {
               <div></div>
             </div>
           }
+          cacheKey="picurl"
           fetch={getMyAwesomePic()}
         >
           {(res) => {
@@ -408,8 +443,8 @@ export const SimpleRoute = () => {
             );
           }}
         </Suspense>
-        <Suspense fallback={"Loading..."}>
-          <DynCompo />
+        <Suspense cacheKey="dyncompo" fallback={"Loading..."}>
+          <DynCompoPromise n="This will be loaded dynamically" />
         </Suspense>
 
         {data() ? (
@@ -487,7 +522,7 @@ export function App(props) {
       timer = setInterval(() => {
         // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with state but skips ui comparison
         // p.textContent = footerTp();
-        p.textContent = ++ct; // without using state
+        p.textContent = "This footer demoes ignoreNode ignoreLater " + ++ct; // without using state
       }, 1000);
     }
   });
@@ -537,10 +572,22 @@ export function App(props) {
               return <ComplexRoute />;
             case "/frag":
               console.log("frag");
+              const t = Date.now();
+
+              // if (!resolved && !ArrayWithFragments) {
+              //   LoadArrayWithFragments();
+              //   return <div>Loading...</div>;
+              // }
 
               return (
                 <div>
-                  <ArrayWithFragments />
+                  <div>before text</div>
+                  {/* <ArrayWithFragments some={200} /> */}
+                  <Suspense cacheKey={"awfp"} fallback={<div>Loading...</div>}>
+                    <ArrayWithFragmentsPromise some={t} />
+                  </Suspense>
+
+                  <div>after text</div>
                 </div>
               );
             default:

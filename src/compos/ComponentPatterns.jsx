@@ -91,8 +91,8 @@ export const ArrayThatWorks = () => {
   );
 };
 
-export const ArrayWithFragments = () => {
-  console.log("This works for only static, changes won't reflect");
+export const ArrayWithFragments = (props) => {
+  console.log("This works for only static, changes won't reflect", props?.some);
 
   const [st, setSt] = atom(null);
 
@@ -107,15 +107,16 @@ export const ArrayWithFragments = () => {
 
   const arr = [1000, 2000];
   // return () => <p>10</p>;
-  return () => (
-    <df>
+  return (props) => (
+    <div>
       {/* <p>10</p>
       <p>20</p> */}
       {st()}
+      <p>time is {props?.some}</p>
       {arr.map((el, idx) => {
         return <Row key={idx} n={el} />;
       })}
-    </df>
+    </div>
   );
 };
 

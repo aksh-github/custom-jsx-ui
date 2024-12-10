@@ -344,6 +344,7 @@ const microframe = (() => {
           return {
             $c: type.name,
             value: rv,
+            props: props || {},
             $p: curParent,
           };
         }
@@ -709,11 +710,13 @@ const microframe = (() => {
     // genNode = genObj.next();
     // console.log(genObj.next());
 
+    // console.log(performance.now());
+
     // 2. calculate diff
     patches = [];
     updateElement(rootNode, current, old);
 
-    console.log(performance.now());
+    // console.log(performance.now());
 
     // console.log("===================");
 
@@ -994,48 +997,74 @@ export const onCleanup = microframe.onCleanup;
 export const h = microframe.h;
 export const df = microframe.df;
 
+const suspenseCache = {};
+
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 export function Suspense(props, child) {
+  // if already in cache then return
+  if (suspenseCache[`${props?.cacheKey}`]) {
+    return suspenseCache[`${props?.cacheKey}`](child?.props);
+  }
+
   // console.log(props);
   let returnVal;
   const [resolved, setResolved] = atom(false);
 
-  // if (props.fetchCompleted) {
-  if (resolved()) {
-    // this is never exec'ted
-    console.log("promise resolved");
-    props.children[0](returnVal);
-  } else {
-    console.log("promise NOT resolved");
-    // returnVal = props?.fallback;
-    // if fetch prop is provided (it can be any promise)
-    if (props?.fetch?.then) {
-      props.fetch.then((res) => {
-        console.log("promise resolved", res);
-        // Suspense({ ...props, fetchCompleted: true }, res);
-        returnVal = res;
-        setResolved(true);
-      });
-    } else {
-      // else assume its dynamic child compo
-      // console.log("NOT very stable, more testing reqd");
-      // console.log(props, child);
+  // console.log("promise NOT resolved");
 
-      child?.value?.then((res) => {
-        console.log("promise resolved", res);
-        // Suspense({ ...props, fetchCompleted: true }, res);
-        returnVal = res();
+  if (props?.fetch?.then) {
+    // case 1. if fetch prop is provided (it can be any promise)
+    props.fetch.then((res) => {
+      // console.log("promise resolved", res);
+      // Suspense({ ...props, fetchCompleted: true }, res);
+      returnVal = res;
+      setResolved(true);
+    });
+  } else {
+    // case 2. if child is a promise module
+    child?.value
+      ?.then((res) => {
+        returnVal = res;
+        // update suspense cache
+        suspenseCache[`${props?.cacheKey}`] = res;
+
+        setResolved(true);
+      })
+      .catch((e) => {
+        console.log(e);
         setResolved(true);
       });
-    }
   }
 
   return (props) => {
-    return resolved()
-      ? props?.fetch?.then
-        ? props.children[0](returnVal)
-        : returnVal // untested, but should work like lazy where it returns default compo
-      : props?.fallback;
+    if (resolved()) {
+      if (props?.fetch?.then) {
+        return props.children[0](returnVal);
+      } else {
+        if (returnVal) {
+          // step 2 cache the resolved compo
+
+          // console.log(returnVal, returnVal(props?.children?.[0]?.props || {}));
+
+          // suspenseCache[`${props?.cacheKey}`] = h(
+          //   returnVal,
+          //   props?.children?.[0]?.props || {}
+          // );
+          suspenseCache[`${props?.cacheKey}`] = returnVal(
+            props?.children?.[0]?.props || {}
+          );
+          console.log(suspenseCache[`${props?.cacheKey}`]);
+
+          return suspenseCache[`${props?.cacheKey}`](
+            props?.children?.[0]?.props || {}
+          );
+        } else return h("div", {}, [null]);
+      }
+    } else {
+      return props?.fallback;
+      // return "Loading..."; // works
+      // return h("div", {}, ["Loading..."]);
+    }
   };
 }
 
