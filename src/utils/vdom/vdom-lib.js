@@ -1018,7 +1018,7 @@ export function Suspense(props, child) {
       // console.log("promise resolved", res);
       // Suspense({ ...props, fetchCompleted: true }, res);
       returnVal = res;
-      setResolved(true);
+      setResolved(true); // need so render is triggered
     });
   } else {
     // case 2. if child is a promise module
@@ -1028,28 +1028,24 @@ export function Suspense(props, child) {
         // update suspense cache
         suspenseCache[`${props?.cacheKey}`] = res;
 
-        setResolved(true);
+        setResolved(true); // need so render is triggered
       })
       .catch((e) => {
-        console.log(e);
-        setResolved(true);
+        // console.log(e);
+        setResolved(true); // need so render is triggered
       });
   }
 
   return (props) => {
     if (resolved()) {
       if (props?.fetch?.then) {
+        // case when child is render props
         return props.children[0](returnVal);
       } else {
+        // case when child is normal component
         if (returnVal) {
-          // step 2 cache the resolved compo
+          //cache the resolved compo
 
-          // console.log(returnVal, returnVal(props?.children?.[0]?.props || {}));
-
-          // suspenseCache[`${props?.cacheKey}`] = h(
-          //   returnVal,
-          //   props?.children?.[0]?.props || {}
-          // );
           suspenseCache[`${props?.cacheKey}`] = returnVal(
             props?.children?.[0]?.props || {}
           );
@@ -1058,12 +1054,13 @@ export function Suspense(props, child) {
           return suspenseCache[`${props?.cacheKey}`](
             props?.children?.[0]?.props || {}
           );
-        } else return h("div", {}, [null]);
+        } else {
+          if (props?.errorFallback) return props?.errorFallback;
+          else return h("div", {}, [null]);
+        }
       }
     } else {
       return props?.fallback;
-      // return "Loading..."; // works
-      // return h("div", {}, ["Loading..."]);
     }
   };
 }

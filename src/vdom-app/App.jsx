@@ -443,7 +443,11 @@ export const SimpleRoute = () => {
             );
           }}
         </Suspense>
-        <Suspense cacheKey="dyncompo" fallback={"Loading..."}>
+        <Suspense
+          cacheKey="dyncompo"
+          fallback={"Loading..."}
+          errorFallback={<div>Something went wrong</div>}
+        >
           <DynCompoPromise n="This will be loaded dynamically" />
         </Suspense>
 
