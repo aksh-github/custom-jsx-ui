@@ -1,6 +1,8 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-console.log("check https://github.com/pomber/incremental-rendering-demo");
+const log = console.log;
+
+log("check https://github.com/pomber/incremental-rendering-demo");
 
 // meta answer to locate obj in json and also gives path
 // on 17 nov 24
@@ -88,7 +90,7 @@ const microframe = (() => {
 
     return {
       get: () => {
-        // console.log(from);
+        // log(from);
         const rv = { curr: oldCallStack[from], idx: from };
         from++;
         return rv;
@@ -112,12 +114,12 @@ const microframe = (() => {
     currUnmount = null;
 
   function onMount(cb) {
-    // console.log(counter, cb);
+    // log(counter, cb);
     currMount = cb;
   }
 
   function onCleanup(cb) {
-    // console.log(callStack[counter]);
+    // log(callStack[counter]);
     currUnmount = cb;
   }
 
@@ -139,7 +141,7 @@ const microframe = (() => {
       }
 
       if (!found) {
-        // console.log("call unmount for ", oldCallStack[i].fname);
+        // log("call unmount for ", oldCallStack[i].fname);
         oldCallStack[i]?.unMount?.();
         oldCallStack[i].unMount = null;
       }
@@ -149,7 +151,7 @@ const microframe = (() => {
   function callMountAll() {
     let len = callStack.length;
     for (let i = 0; i < len; ++i) {
-      // console.log(callStack[i]);
+      // log(callStack[i]);
       callStack[i]?.mount?.();
       // need to check carefully
       callStack[i].mount = null;
@@ -170,12 +172,12 @@ const microframe = (() => {
 
     if (typeof type === "function") {
       curParent = stack[stack.length - 1]?.n;
-      // console.log("curr parent is", curParent, type.name);
+      // log("curr parent is", curParent, type.name);
       stack.push({ n: type?.name });
       if (oldCallStack.length) {
         const exisng = iter.get();
-        // console.log(type.name, exisng?.curr?.fname);
-        // console.log(
+        // log(type.name, exisng?.curr?.fname);
+        // log(
         //   type.name,
         //   exisng?.curr?.fname,
         //   type.name == exisng?.curr?.fname ?? "matched"
@@ -186,7 +188,7 @@ const microframe = (() => {
           curParent == exisng?.curr?.p &&
           props?.key === exisng?.curr?.key
         ) {
-          // console.log("matched for ", exisng);
+          // log("matched for ", exisng);
           // iter.reset(exisng.idx);
           _fn = exisng.curr.fn;
           currMount = exisng.curr.mount;
@@ -198,7 +200,7 @@ const microframe = (() => {
           for (; j < oldCallStack.length; ++j) {
             const exisng2 = iter.get();
             // if (exisng2?.curr == null) break;
-            // console.log(
+            // log(
             //   type.name,
             //   exisng2?.curr?.fname,
             //   type.name == exisng2?.curr?.fname ?? "matched"
@@ -266,7 +268,7 @@ const microframe = (() => {
       // callStack[callStack.length - 1].p = stack[stack.length - 2]?.n;
 
       // b4
-      // console.log(stack, callStack[callStack.length - 1]);
+      // log(stack, callStack[callStack.length - 1]);
 
       const rv =
         typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
@@ -275,8 +277,8 @@ const microframe = (() => {
 
       // if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
       // else {
-      //   // console.log(JSON.stringify(stack));
-      //   // console.log(parChild);
+      //   // log(JSON.stringify(stack));
+      //   // log(parChild);
       //   stack = [];
       // }
 
@@ -351,7 +353,7 @@ const microframe = (() => {
       }
     }
 
-    // console.log(children);
+    // log(children);
 
     // frag case
     if (type === "df") {
@@ -406,7 +408,7 @@ const microframe = (() => {
   }
 
   function setProp($target, name, value) {
-    // console.log(name, value);
+    // log(name, value);
     if (isCustomProp(name)) {
       return;
     } else if (name === "className") {
@@ -588,9 +590,9 @@ const microframe = (() => {
             iterate(_o);
           });
         }
-        // console.log(o.$c);
+        // log(o.$c);
 
-        // console.log(temp);
+        // log(temp);
         return [...temp];
       } else if (o?.children) {
         o.children.forEach((_o) => {
@@ -635,21 +637,21 @@ const microframe = (() => {
     rootNode = $root;
     // 0. for route change clean existing things
     if (rootNode?.firstChild) {
-      console.log(">>> this is route change");
+      log(">>> this is route change");
       while (callStack?.length) {
         const fn = callStack.splice(callStack.length - 1, 1)?.[0];
-        // console.log(fn);
+        // log(fn);
         fn?.unMount?.();
 
         counter--;
       }
     }
     curr = initCompo;
-    // console.log(curr);
-    // console.log(performance.now());
+    // log(curr);
+    // log(performance.now());
     old = curr(); // create latest vdom
-    // console.log(performance.now());
-    console.log(callStack, old);
+    // log(performance.now());
+    log(callStack, old);
     // updateElement(rootNode, old);
     // 1. set dom
     // rootNode.appendChild(createElement(old));
@@ -657,7 +659,7 @@ const microframe = (() => {
       rootNode.replaceChild(createElement(old), rootNode.firstChild);
     else rootNode.appendChild(createElement(old));
 
-    // console.log(callStack);
+    // log(callStack);
     callMountAll();
 
     iter = ArrIterator();
@@ -679,23 +681,23 @@ const microframe = (() => {
     // callStack = [];
     iter = ArrIterator();
 
-    console.log(performance.now());
+    log(performance.now());
 
     let current = curr(); // create latest vdom
-    console.log(old, current);
+    log(old, current);
     // const oldStack = CompoIterator().iterate(old);
     // const currStack = CompoIterator().iterate(current);
 
-    // console.log(CompoIterator().get(old, "TextArea"));
+    // log(CompoIterator().get(old, "TextArea"));
 
-    // console.log(oldCallStack, callStack);
+    // log(oldCallStack, callStack);
 
-    // console.log(performance.now());
+    // log(performance.now());
 
     // new diff from yt
 
     // const patches = diff(current, old);
-    // console.log(patches);
+    // log(patches);
     // patch(rootNode, patches);
 
     // end new diff from yt
@@ -708,29 +710,30 @@ const microframe = (() => {
     stk = domListIterator(rootNode);
     // genObj = traverseTree(rootNode);
     // genNode = genObj.next();
-    // console.log(genObj.next());
+    // log(genObj.next());
 
-    // console.log(performance.now());
+    // log(performance.now());
 
     // 2. calculate diff
     patches = [];
+
     updateElement(rootNode, current, old);
 
-    // console.log(performance.now());
+    // log(performance.now());
 
-    // console.log("===================");
+    // log("===================");
 
     let tout = setTimeout(() => {
       clearTimeout(tout);
       // 3. update dom
-      console.log(patches);
+      log(patches);
       if (patches) applyPatches(patches);
       // patches = [];
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
 
       callMountAll();
-      // console.log(callStack, oldStack);
+      // log(callStack, oldStack);
 
       // backup for future comparison
       oldCallStack = [...callStack];
@@ -739,14 +742,14 @@ const microframe = (() => {
     }, 0);
     // requestAnimationFrame(() => {
     //   // 3. update dom
-    //   console.log(patches);
+    //   log(patches);
     //   applyPatches(patches);
     //   patches = [];
     //   // 3. trigger lifecycle
     //   // callLifeCycleHooks(callStack, oldStack);
 
     //   callMountAll();
-    //   // console.log(callStack, oldStack);
+    //   // log(callStack, oldStack);
 
     //   // backup for future comparison
     //   oldCallStack = [...callStack];
@@ -770,7 +773,7 @@ const microframe = (() => {
   function updateElement($parent, newNode, oldNode, index = 0) {
     if (!isValid(oldNode)) {
       // if (oldNode?.type) {
-      console.log("append: ");
+      log("append: ");
       // $parent.appendChild(createElement(newNode));
       patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
     } else if (!isValid(newNode)) {
@@ -796,7 +799,7 @@ const microframe = (() => {
         if (oldNode?.type === "df" && fragChildLen) {
           // for (let i = 1; i < fragChildLen; ++i) {
           for (let i = fragChildLen - 1; i >= 1; --i) {
-            // console.log("remove: ", $parent.childNodes[index + i]);
+            // log("remove: ", $parent.childNodes[index + i]);
             // $parent?.removeChild($parent.childNodes[index + i]);
             patches.push({
               p: $parent,
@@ -808,11 +811,11 @@ const microframe = (() => {
       } else {
         //special case Compo with Array manipulation or no type (parent) for updating
         if ($parent?.appendChild) {
-          // console.log("changed append: ");
+          // log("changed append: ");
           const newEl = createElement(newNode);
           if (newEl?.nodeName) {
             // its dom node
-            // console.log("use df");
+            // log("use df");
             if (optiPossible) {
               // gdf.appendChild(newEl);
 
@@ -869,7 +872,7 @@ const microframe = (() => {
       }
       const domNode = stk[CTR];
       // const temp = genObj.next();
-      // console.log(domNode, genNode?.value);
+      // log(domNode, genNode?.value);
       // updateProps($parent.childNodes[index], newNode.props, oldNode.props);
       if (last !== domNode) {
         updateProps(domNode, newNode.props, oldNode.props);
@@ -883,9 +886,7 @@ const microframe = (() => {
       if (newLength > 100) {
         optiPossible = true;
         gdf = document.createDocumentFragment();
-        console.log(
-          "have for loop custom component or see how this can be optimized"
-        );
+        log("have for loop custom component or see how this can be optimized");
       }
 
       for (let i = 0; i < newLength || i < oldLength; i++) {
@@ -893,7 +894,6 @@ const microframe = (() => {
           // $parent.childNodes[index],
           domNode,
           // genNode?.value,
-
           newNode.children[i],
           oldNode.children[i],
           i
@@ -901,7 +901,7 @@ const microframe = (() => {
       }
 
       if (optiPossible) {
-        console.log("after for", domNode);
+        log("after for", domNode);
         // domNode.appendChild(gdf);
 
         patches.push({
@@ -915,11 +915,11 @@ const microframe = (() => {
       }
     }
 
-    // console.log(patches);
+    // log(patches);
   }
 
   function applyPatches(patches) {
-    // console.log(patches);
+    // log(patches);
     patches.forEach((patch) => {
       switch (patch.op) {
         case "APPEND":
@@ -929,7 +929,7 @@ const microframe = (() => {
           patch.p.removeChild(patch.c);
           break;
         case "REPLACE":
-          console.log(patch);
+          log(patch);
           patch.p.replaceChild(patch.c[0], patch.c[1]);
           break;
         case "CONTENT":
@@ -941,7 +941,7 @@ const microframe = (() => {
 
   // let patchIndex = 0;
   // function applyPatches(patches) {
-  //   console.log(patches);
+  //   log(patches);
   //   window.requestAnimationFrame(() => {
   //     applyPatchBatch(patches);
   //   });
@@ -1006,16 +1006,16 @@ export function Suspense(props, child) {
     return suspenseCache[`${props?.cacheKey}`](child?.props);
   }
 
-  // console.log(props);
+  // log(props);
   let returnVal;
   const [resolved, setResolved] = atom(false);
 
-  // console.log("promise NOT resolved");
+  // log("promise NOT resolved");
 
   if (props?.fetch?.then) {
     // case 1. if fetch prop is provided (it can be any promise)
     props.fetch.then((res) => {
-      // console.log("promise resolved", res);
+      // log("promise resolved", res);
       // Suspense({ ...props, fetchCompleted: true }, res);
       returnVal = res;
       setResolved(true); // need so render is triggered
@@ -1031,7 +1031,7 @@ export function Suspense(props, child) {
         setResolved(true); // need so render is triggered
       })
       .catch((e) => {
-        // console.log(e);
+        // log(e);
         setResolved(true); // need so render is triggered
       });
   }
@@ -1049,7 +1049,7 @@ export function Suspense(props, child) {
           suspenseCache[`${props?.cacheKey}`] = returnVal(
             props?.children?.[0]?.props || {}
           );
-          console.log(suspenseCache[`${props?.cacheKey}`]);
+          log(suspenseCache[`${props?.cacheKey}`]);
 
           return suspenseCache[`${props?.cacheKey}`](
             props?.children?.[0]?.props || {}
@@ -1089,17 +1089,17 @@ function walkDom(start_element) {
 // inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
 function domListIterator(rootNode) {
   // pass rootNode if its not global
-  // console.log(next);
+  // log(next);
   let arr = [rootNode];
   let next = rootNode;
 
   function iterChild() {
     while (next) {
-      // console.log(next);
+      // log(next);
       // arr.push(next);
       if (next.firstElementChild && !next.ignoreNode) {
         next = next.firstElementChild;
-        // console.log(next);
+        // log(next);
         arr.push(next);
       } else {
         iterSibling();
@@ -1112,7 +1112,7 @@ function domListIterator(rootNode) {
       if (next.nextElementSibling) {
         next = next.nextElementSibling;
 
-        // console.log(next);
+        // log(next);
         arr.push(next);
         return;
       }
@@ -1155,9 +1155,9 @@ let nextUnitOfWork;
 // how to use / call
 // setTimeout(() => {
 //   startNode = nextUnitOfWork = document.querySelector("#root-vdom");
-//   console.log(performance.now());
+//   log(performance.now());
 //   workLoop();
-//   console.log(performance.now());
+//   log(performance.now());
 // }, 1000);
 
 function workLoop() {
@@ -1195,7 +1195,7 @@ function completeUnitOfWork(workInProgress) {
 
       // if we started here
       if (workInProgress === startNode) {
-        // console.log("sibling block");
+        // log("sibling block");
         return null;
       }
 
@@ -1217,11 +1217,4 @@ function completeUnitOfWork(workInProgress) {
 function completeWork(workInProgress) {
   // log("work completed for ", workInProgress);
   return null;
-}
-
-function log(message, node) {
-  // let node = document.createElement("div");
-  // node.textContent = message;
-  // document.body.appendChild(node);
-  console.log(message, node);
 }
