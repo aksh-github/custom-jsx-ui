@@ -856,6 +856,11 @@ const microframe = (() => {
         }
       }
     } else if (newNode?.type) {
+      doMain(newNode, oldNode);
+  }
+  }
+
+  function doMain(newNode, oldNode) {
       if (newNode?.type !== "df") {
         // genNode = genObj.next();
         CTR += 1;
@@ -913,9 +918,6 @@ const microframe = (() => {
         optiPossible = false;
         gdf = null;
       }
-    }
-
-    // log(patches);
   }
 
   function applyPatches(patches) {
