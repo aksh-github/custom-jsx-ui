@@ -712,14 +712,15 @@ const microframe = (() => {
     // genNode = genObj.next();
     // log(genObj.next());
 
-    // log(performance.now());
+    log(performance.now());
 
     // 2. calculate diff
     patches = [];
 
-    updateElement(rootNode, current, old);
+    // updateElement(rootNode, current, old);
+    wrapper(rootNode, current, old);
 
-    // log(performance.now());
+    log(performance.now());
 
     // log("===================");
 
@@ -766,101 +767,106 @@ const microframe = (() => {
   // 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
   // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
 
-  let last = null;
-  let optiPossible = false;
-  let gdf = null;
+  function wrapper($parent, newNode, oldNode, index = 0) {
+    let last = null;
+    let optiPossible = false;
+    let gdf = null;
 
-  function updateElement($parent, newNode, oldNode, index = 0) {
-    if (!isValid(oldNode)) {
-      // if (oldNode?.type) {
-      log("append: ");
-      // $parent.appendChild(createElement(newNode));
-      patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
-    } else if (!isValid(newNode)) {
-      // $parent.removeChild($parent.childNodes[index]);
-
-      patches.push({ p: $parent, op: "REMOVE", c: $parent.childNodes[index] });
-    } else if (changed(newNode, oldNode)) {
-      if ($parent?.childNodes[index]) {
-        // $parent?.replaceChild(
-        //   createElement(newNode),
-        //   $parent.childNodes[index]
-        // );
+    function updateElement($parent, newNode, oldNode, index = 0) {
+      if (!isValid(oldNode)) {
+        // if (oldNode?.type) {
+        log("append: ");
+        // $parent.appendChild(createElement(newNode));
+        patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
+      } else if (!isValid(newNode)) {
+        // $parent.removeChild($parent.childNodes[index]);
 
         patches.push({
           p: $parent,
-          op: "REPLACE",
-          c: [createElement(newNode), $parent.childNodes[index]],
+          op: "REMOVE",
+          c: $parent.childNodes[index],
         });
+      } else if (changed(newNode, oldNode)) {
+        if ($parent?.childNodes[index]) {
+          // $parent?.replaceChild(
+          //   createElement(newNode),
+          //   $parent.childNodes[index]
+          // );
 
-        // additoinal logic for frag modify. This changed on 2-sep
-        const fragChildLen = oldNode?.props?.fragChildLen;
-        // for frag case remove additional as well
-        if (oldNode?.type === "df" && fragChildLen) {
-          // for (let i = 1; i < fragChildLen; ++i) {
-          for (let i = fragChildLen - 1; i >= 1; --i) {
-            // log("remove: ", $parent.childNodes[index + i]);
-            // $parent?.removeChild($parent.childNodes[index + i]);
-            patches.push({
-              p: $parent,
-              op: "REMOVE",
-              c: $parent.childNodes[index + i],
-            });
-          }
-        }
-      } else {
-        //special case Compo with Array manipulation or no type (parent) for updating
-        if ($parent?.appendChild) {
-          // log("changed append: ");
-          const newEl = createElement(newNode);
-          if (newEl?.nodeName) {
-            // its dom node
-            // log("use df");
-            if (optiPossible) {
-              // gdf.appendChild(newEl);
+          patches.push({
+            p: $parent,
+            op: "REPLACE",
+            c: [createElement(newNode), $parent.childNodes[index]],
+          });
 
-              patches.push({
-                p: gdf,
-                op: "APPEND",
-                c: newEl,
-              });
-            } else {
-              // $parent.appendChild(newEl);
-
+          // additoinal logic for frag modify. This changed on 2-sep
+          const fragChildLen = oldNode?.props?.fragChildLen;
+          // for frag case remove additional as well
+          if (oldNode?.type === "df" && fragChildLen) {
+            // for (let i = 1; i < fragChildLen; ++i) {
+            for (let i = fragChildLen - 1; i >= 1; --i) {
+              // log("remove: ", $parent.childNodes[index + i]);
+              // $parent?.removeChild($parent.childNodes[index + i]);
               patches.push({
                 p: $parent,
-                op: "APPEND",
-                c: newEl,
+                op: "REMOVE",
+                c: $parent.childNodes[index + i],
               });
             }
           }
+        } else {
+          //special case Compo with Array manipulation or no type (parent) for updating
+          if ($parent?.appendChild) {
+            // log("changed append: ");
+            const newEl = createElement(newNode);
+            if (newEl?.nodeName) {
+              // its dom node
+              // log("use df");
+              if (optiPossible) {
+                // gdf.appendChild(newEl);
 
-          // its text
-          else {
-            // $parent.textContent = newEl?.textContent;
+                patches.push({
+                  p: gdf,
+                  op: "APPEND",
+                  c: newEl,
+                });
+              } else {
+                // $parent.appendChild(newEl);
+
+                patches.push({
+                  p: $parent,
+                  op: "APPEND",
+                  c: newEl,
+                });
+              }
+            }
+
+            // its text
+            else {
+              // $parent.textContent = newEl?.textContent;
+
+              patches.push({
+                p: $parent,
+                op: "CONTENT",
+                c: newEl?.textContent,
+              });
+            }
+          } else {
+            // $parent?.parentNode?.appendChild(createElement(newNode));
 
             patches.push({
-              p: $parent,
-              op: "CONTENT",
-              c: newEl?.textContent,
+              p: $parent?.parentNode,
+              op: "APPEND",
+              c: createElement(newNode),
             });
           }
-        } else {
-          // $parent?.parentNode?.appendChild(createElement(newNode));
-
-          patches.push({
-            p: $parent?.parentNode,
-            op: "APPEND",
-            c: createElement(newNode),
-          });
         }
+      } else if (newNode?.type) {
+        doMain(newNode, oldNode);
       }
-    } else if (newNode?.type) {
-      doMain(newNode, oldNode);
-  }
-  }
+    }
 
-  function doMain(newNode, oldNode) {
+    function doMain(newNode, oldNode) {
       if (newNode?.type !== "df") {
         // genNode = genObj.next();
         CTR += 1;
@@ -876,9 +882,6 @@ const microframe = (() => {
         }
       }
       const domNode = stk[CTR];
-      // const temp = genObj.next();
-      // log(domNode, genNode?.value);
-      // updateProps($parent.childNodes[index], newNode.props, oldNode.props);
       if (last !== domNode) {
         updateProps(domNode, newNode.props, oldNode.props);
         last = domNode;
@@ -895,14 +898,7 @@ const microframe = (() => {
       }
 
       for (let i = 0; i < newLength || i < oldLength; i++) {
-        updateElement(
-          // $parent.childNodes[index],
-          domNode,
-          // genNode?.value,
-          newNode.children[i],
-          oldNode.children[i],
-          i
-        );
+        updateElement(domNode, newNode.children[i], oldNode.children[i], i);
       }
 
       if (optiPossible) {
@@ -918,6 +914,9 @@ const microframe = (() => {
         optiPossible = false;
         gdf = null;
       }
+    }
+
+    updateElement($parent, newNode, oldNode, index);
   }
 
   function applyPatches(patches) {
@@ -931,7 +930,7 @@ const microframe = (() => {
           patch.p.removeChild(patch.c);
           break;
         case "REPLACE":
-          log(patch);
+          // log(patch);
           patch.p.replaceChild(patch.c[0], patch.c[1]);
           break;
         case "CONTENT":
