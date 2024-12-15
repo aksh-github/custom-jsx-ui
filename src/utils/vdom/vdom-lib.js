@@ -78,8 +78,7 @@ const microframe = (() => {
   let old = null;
 
   let parent;
-  let stk = [],
-    CTR = 0;
+
   let genObj, genNode;
 
   // let set = new Set();
@@ -209,7 +208,7 @@ const microframe = (() => {
               type.name == exisng2?.curr?.fname &&
               curParent == exisng2?.curr?.p
             ) {
-              iter.reset(exisng2.idx); //next search should start from here
+              iter.reset(exisng2.idx + 1); //next search should start from here
               found = true;
 
               _fn = exisng2.curr.fn;
@@ -672,7 +671,8 @@ const microframe = (() => {
     // callMountAll();
   }
 
-  let patches = [];
+  let patches = [],
+    propsPatches = [];
 
   // all delta updates
   function forceUpdate() {
@@ -704,10 +704,10 @@ const microframe = (() => {
 
     // 1. call unmount before dom update
     callUnmountAll();
-    CTR = 0;
-    stk = [];
+    // CTR = 0;
+    // stk = [];
     // stk = walkDom(rootNode);
-    stk = domListIterator(rootNode);
+    // stk = domListIterator(rootNode);
     // genObj = traverseTree(rootNode);
     // genNode = genObj.next();
     // log(genObj.next());
@@ -716,6 +716,7 @@ const microframe = (() => {
 
     // 2. calculate diff
     patches = [];
+    propsPatches = [];
 
     // updateElement(rootNode, current, old);
     wrapper(rootNode, current, old);
@@ -727,7 +728,9 @@ const microframe = (() => {
     let tout = setTimeout(() => {
       clearTimeout(tout);
       // 3. update dom
-      log(patches);
+      log(patches, propsPatches);
+      // console.log(patches);
+      if (propsPatches) applyPropsPatches(propsPatches);
       if (patches) applyPatches(patches);
       // patches = [];
       // 3. trigger lifecycle
@@ -768,9 +771,13 @@ const microframe = (() => {
   // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
 
   function wrapper($parent, newNode, oldNode, index = 0) {
+    let stk = domListIterator(rootNode);
+    let CTR = 0;
     let last = null;
     let optiPossible = false;
     let gdf = null;
+
+    let chunk = [];
 
     function updateElement($parent, newNode, oldNode, index = 0) {
       if (!isValid(oldNode)) {
@@ -780,24 +787,56 @@ const microframe = (() => {
         patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
       } else if (!isValid(newNode)) {
         // $parent.removeChild($parent.childNodes[index]);
+        const el = $parent.childNodes[index];
 
         patches.push({
           p: $parent,
           op: "REMOVE",
-          c: $parent.childNodes[index],
+          c: el,
         });
+
+        if (el?.nodeType === 1) {
+          while (CTR < stk.length) {
+            CTR++;
+
+            if (stk[CTR] === el) {
+              const allChildLen = el.querySelectorAll("*").length;
+              // log(CTR, " CTR BEFORE", stk[CTR]);
+              // CTR += allChildLen;
+              stk.splice(CTR, allChildLen);
+              // log(CTR, " CTR AFTER", stk[CTR]);
+
+              break;
+            }
+            // console.log(CTR, stk[CTR]);
+          }
+        }
       } else if (changed(newNode, oldNode)) {
         if ($parent?.childNodes[index]) {
-          // $parent?.replaceChild(
-          //   createElement(newNode),
-          //   $parent.childNodes[index]
-          // );
+          const el = $parent.childNodes[index];
 
           patches.push({
             p: $parent,
             op: "REPLACE",
-            c: [createElement(newNode), $parent.childNodes[index]],
+            c: [createElement(newNode), el],
           });
+
+          if (el?.nodeType === 1) {
+            while (CTR < stk.length) {
+              CTR++;
+
+              if (stk[CTR] === el) {
+                const allChildLen = el.querySelectorAll("*").length;
+                // log(CTR, " CTR BEFORE", stk[CTR]);
+                // CTR += allChildLen;
+                stk.splice(CTR, allChildLen);
+                // log(CTR, " CTR AFTER", stk[CTR]);
+
+                break;
+              }
+              // console.log(CTR, stk[CTR]);
+            }
+          }
 
           // additoinal logic for frag modify. This changed on 2-sep
           const fragChildLen = oldNode?.props?.fragChildLen;
@@ -812,6 +851,8 @@ const microframe = (() => {
                 op: "REMOVE",
                 c: $parent.childNodes[index + i],
               });
+              // need to increment CTR as well 13-Dec
+              CTR += 1;
             }
           }
         } else {
@@ -869,24 +910,42 @@ const microframe = (() => {
     function doMain(newNode, oldNode) {
       if (newNode?.type !== "df") {
         // genNode = genObj.next();
+
         CTR += 1;
-        if (rootNode.contains(stk[CTR])) {
-        } else {
-          while (CTR < stk.length) {
-            CTR += 1;
-            if (rootNode.contains(stk[CTR])) break;
-            else {
-              stk[CTR] = null;
-            }
-          }
-        }
+        // if (rootNode.contains(stk[CTR])) {
+        // } else {
+        //   while (CTR < stk.length) {
+        //     CTR += 1;
+        //     if (rootNode.contains(stk[CTR])) break;
+        //     else {
+        //       stk[CTR] = null;
+        //     }
+        //   }
+        // }
       }
       const domNode = stk[CTR];
       if (last !== domNode) {
-        updateProps(domNode, newNode.props, oldNode.props);
+        // updateProps(domNode, newNode.props, oldNode.props);
+        // if (domNode?.nodeName?.toLowerCase() === newNode?.type)
+        if (
+          Object.keys(newNode.props).length !== 0 &&
+          Object.keys(oldNode.props).length !== 0
+        ) {
+          propsPatches.push({
+            $target: domNode,
+            newProps: newNode.props,
+            oldProps: oldNode.props,
+          });
+        }
+
+        // chunk.push({
+        //   $target: domNode,
+        //   newProps: newNode.props,
+        //   oldProps: oldNode.props,
+        //   t: "p",
+        // });
         last = domNode;
       }
-      // updateProps(domNode, newNode.props, oldNode.props);
 
       const newLength = newNode.children.length;
       const oldLength = oldNode.children.length;
@@ -917,6 +976,12 @@ const microframe = (() => {
     }
 
     updateElement($parent, newNode, oldNode, index);
+  }
+
+  function applyPropsPatches(patches) {
+    patches.forEach((patch) => {
+      updateProps(patch.$target, patch.newProps, patch.oldProps);
+    });
   }
 
   function applyPatches(patches) {
@@ -1134,15 +1199,15 @@ function domListIterator(rootNode) {
 // possible alternate 2 for walkDom
 // actually this doesn't work correctly further investigation reqd
 
-function* traverseTree(node) {
-  yield node;
+// function* traverseTree(node) {
+//   yield node;
 
-  for (let child of node?.childNodes) {
-    if (child.nodeType == 1 && rootNode.contains(child)) {
-      yield* traverseTree(child);
-    }
-  }
-}
+//   for (let child of node?.childNodes) {
+//     if (child.nodeType == 1 && rootNode.contains(child)) {
+//       yield* traverseTree(child);
+//     }
+//   }
+// }
 
 ///////////////
 // possible alternate 3 (complex) for walkDom
