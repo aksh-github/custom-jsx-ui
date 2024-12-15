@@ -1,5 +1,5 @@
 import { createSignal, batch, createEffect } from "../utils/signal-complex";
-import { h, onMount, onCleanup, Suspense, df } from "../utils/vdom/vdom-lib";
+import { h, onMount, onCleanup, Suspense } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
@@ -14,7 +14,7 @@ let routeHandler = Router();
 
 // Type 1: Lazy import
 
-const LoadModule = (path) => import(path);
+// const LoadModule = (path) => import(path);
 
 // let ArrayWithFragments = null,
 //   resolved = false;
@@ -45,7 +45,7 @@ const ArrayWithFragmentsPromise = () => {
     return Promise.resolve(ArrayWithFragments);
   }
 
-  return LoadModule("../compos/ComponentPatterns?" + _i++).then((mod) => {
+  return import("../compos/ComponentPatterns").then((mod) => {
     ArrayWithFragments = mod.ArrayWithFragments;
     // return ArrayWithFragments;
     return ArrayWithFragments;
@@ -62,14 +62,11 @@ const getMyAwesomePic = () => {
   });
 };
 
-let _j = 0;
 const DynCompoPromise = () => {
   // await new Promise((resolve, reject) => {
   //   setTimeout(() => resolve(10), 3000);
   // });
-  return LoadModule("../compos/ComponentPatterns?" + _j++).then(
-    (mod) => mod?.PropsDriven
-  );
+  return import("../compos/ComponentPatterns?").then((mod) => mod?.PropsDriven);
 };
 
 const Topic =
@@ -149,6 +146,7 @@ const Ctr = ({ v, __spl }) => {
 
   return (props) => {
     // console.log(props);
+    // return <p>Json Value: {st("version")}</p>;
     return (
       <div
         style={{
@@ -157,7 +155,7 @@ const Ctr = ({ v, __spl }) => {
           padding: "2em",
         }}
       >
-        <h3>Child</h3>
+        <h3>Child {props.key}</h3>
         <p>
           Parent ctr: {props.v} {props.v % 2 === 0 ? "Even" : null}
         </p>
@@ -242,13 +240,17 @@ function ComplexRoute(props) {
     onCleanup(() => {
       // console.log("unmounting number");
     });
-    return ({ n }) => <li>{n}</li>;
+    return ({ n }) => (
+      <li>
+        <span>{n}</span>
+      </li>
+    );
   };
 
   const Master = () => () =>
     (
       <div>
-        <Ctr v={c()} />
+        <Ctr v={c()} key={"k2"} />
         <Input />
       </div>
     );
@@ -574,6 +576,7 @@ export function App(props) {
               return <SimpleRoute />;
             case "/":
               return <ComplexRoute />;
+            // return <Ctr v={10} />;
             case "/frag":
               console.log("frag");
               const t = Date.now();

@@ -1,7 +1,7 @@
 import { createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
 import { atom, state } from "../utils/simple-state";
-import { h, onMount, onCleanup, df } from "../utils/vdom/vdom-lib";
+import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const DoesNotWork = (props) => {
   console.log("This does NOT work");
