@@ -926,17 +926,12 @@ const microframe = (() => {
       const domNode = stk[CTR];
       if (last !== domNode) {
         // updateProps(domNode, newNode.props, oldNode.props);
-        // if (domNode?.nodeName?.toLowerCase() === newNode?.type)
-        if (
-          Object.keys(newNode.props).length !== 0 &&
-          Object.keys(oldNode.props).length !== 0
-        ) {
-          propsPatches.push({
-            $target: domNode,
-            newProps: newNode.props,
-            oldProps: oldNode.props,
-          });
-        }
+
+        propsPatches.push({
+          $target: domNode,
+          newProps: newNode.props,
+          oldProps: oldNode.props,
+        });
 
         // chunk.push({
         //   $target: domNode,
@@ -1068,8 +1063,15 @@ const suspenseCache = {};
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 export function Suspense(props, child) {
   // if already in cache then return
-  if (suspenseCache[`${props?.cacheKey}`]) {
-    return suspenseCache[`${props?.cacheKey}`](child?.props);
+  const cached = suspenseCache[`${props?.cacheKey}`];
+  if (cached) {
+    if (cached.returnFn) {
+      cached.compo(child?.props);
+      return cached.returnFn(child?.props);
+    } else {
+      // return suspenseCache[`${props?.cacheKey}`](child?.props);
+      return cached.callbackFn(cached.returnVal);
+    }
   }
 
   // log(props);
@@ -1106,20 +1108,34 @@ export function Suspense(props, child) {
     if (resolved()) {
       if (props?.fetch?.then) {
         // case when child is render props
+
+        suspenseCache[`${props?.cacheKey}`] = {
+          callbackFn: props.children[0],
+          returnVal,
+        };
+
         return props.children[0](returnVal);
       } else {
         // case when child is normal component
         if (returnVal) {
           //cache the resolved compo
 
-          suspenseCache[`${props?.cacheKey}`] = returnVal(
-            props?.children?.[0]?.props || {}
-          );
+          const returnFn = returnVal(props?.children?.[0]?.props || {});
+
+          suspenseCache[`${props?.cacheKey}`] = {
+            compo: returnVal, // this is compo
+            returnFn: returnFn,
+          };
+          // suspenseCache[`${props?.cacheKey}`] = returnVal(
+          //   props?.children?.[0]?.props
+          // );
+
           log(suspenseCache[`${props?.cacheKey}`]);
 
-          return suspenseCache[`${props?.cacheKey}`](
-            props?.children?.[0]?.props || {}
-          );
+          // return suspenseCache[`${props?.cacheKey}`](
+          //   props?.children?.[0]?.props
+          // );
+          return returnFn(props?.children?.[0]?.props || {});
         } else {
           if (props?.errorFallback) return props?.errorFallback;
           else return h("div", {}, [null]);
