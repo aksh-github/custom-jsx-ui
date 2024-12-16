@@ -703,14 +703,7 @@ const microframe = (() => {
     // end new diff from yt
 
     // 1. call unmount before dom update
-    callUnmountAll();
-    // CTR = 0;
-    // stk = [];
-    // stk = walkDom(rootNode);
-    // stk = domListIterator(rootNode);
-    // genObj = traverseTree(rootNode);
-    // genNode = genObj.next();
-    // log(genObj.next());
+    // callUnmountAll();  // moved to setTimeout
 
     log(performance.now());
 
@@ -727,6 +720,9 @@ const microframe = (() => {
 
     let tout = setTimeout(() => {
       clearTimeout(tout);
+
+      callUnmountAll();
+
       // 3. update dom
       log(patches, propsPatches);
       // console.log(patches);
@@ -1067,7 +1063,7 @@ export function Suspense(props, child) {
   if (cached) {
     if (cached.returnFn) {
       cached.compo(child?.props);
-      return cached.returnFn(child?.props);
+      return () => cached.returnFn(child?.props);
     } else {
       // return suspenseCache[`${props?.cacheKey}`](child?.props);
       return cached.callbackFn(cached.returnVal);
@@ -1126,16 +1122,11 @@ export function Suspense(props, child) {
             compo: returnVal, // this is compo
             returnFn: returnFn,
           };
-          // suspenseCache[`${props?.cacheKey}`] = returnVal(
-          //   props?.children?.[0]?.props
-          // );
 
           log(suspenseCache[`${props?.cacheKey}`]);
 
-          // return suspenseCache[`${props?.cacheKey}`](
-          //   props?.children?.[0]?.props
-          // );
           return returnFn(props?.children?.[0]?.props || {});
+          // return h(returnVal({ ...props?.children?.[0]?.props }));
         } else {
           if (props?.errorFallback) return props?.errorFallback;
           else return h("div", {}, [null]);
