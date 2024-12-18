@@ -69,6 +69,8 @@ import { atom } from "../simple-state";
 
 const microframe = (() => {
   let callStack = [];
+  let funcCache = {},
+    altFuncCache = {};
   let counter = 0;
 
   let stack = [];
@@ -80,28 +82,6 @@ const microframe = (() => {
   let parent;
 
   let genObj, genNode;
-
-  // let set = new Set();
-  // let __k = undefined;
-  let oldCallStack = []; // copy of callStack to see cached results
-  const ArrIterator = (_from) => {
-    let from = _from || 0;
-
-    return {
-      get: () => {
-        // log(from);
-        const rv = { curr: oldCallStack[from], idx: from };
-        from++;
-        return rv;
-      },
-      reset: (_from) => {
-        from = _from || 0;
-      },
-    };
-  };
-  let iter;
-
-  // lazy array iterator
 
   function* stepGen(steps) {
     while (true) yield* steps;
@@ -123,38 +103,51 @@ const microframe = (() => {
   }
 
   function callUnmountAll() {
-    let len = oldCallStack.length;
-    let clen = callStack.length;
+    // let len = oldCallStack.length;
+    // let clen = callStack.length;
 
-    for (let i = 0; i < len; ++i) {
-      let found = false;
-      for (let j = 0; j < clen; ++j) {
-        if (
-          oldCallStack[i].fname === callStack[j].fname &&
-          oldCallStack[i].p === callStack[j].p
-        ) {
-          found = true;
-          break;
-        } else {
-        }
-      }
+    // for (let i = 0; i < len; ++i) {
+    //   let found = false;
+    //   for (let j = 0; j < clen; ++j) {
+    //     if (
+    //       oldCallStack[i].fname === callStack[j].fname &&
+    //       oldCallStack[i].p === callStack[j].p
+    //     ) {
+    //       found = true;
+    //       break;
+    //     } else {
+    //     }
+    //   }
 
-      if (!found) {
-        // log("call unmount for ", oldCallStack[i].fname);
-        oldCallStack[i]?.unMount?.();
-        oldCallStack[i].unMount = null;
+    //   if (!found) {
+    //     // log("call unmount for ", oldCallStack[i].fname);
+    //     oldCallStack[i]?.unMount?.();
+    //     oldCallStack[i].unMount = null;
+    //   }
+    // }
+
+    Object.keys(altFuncCache).forEach((key) => {
+      if (!funcCache[key]) {
+        altFuncCache[key].unMount?.();
+        altFuncCache[key].unMount = null;
       }
-    }
+    });
   }
 
   function callMountAll() {
-    let len = callStack.length;
-    for (let i = 0; i < len; ++i) {
-      // log(callStack[i]);
-      callStack[i]?.mount?.();
-      // need to check carefully
-      callStack[i].mount = null;
-    }
+    // let len = callStack.length;
+    // for (let i = 0; i < len; ++i) {
+    //   // log(callStack[i]);
+    //   callStack[i]?.mount?.();
+    //   // need to check carefully
+    //   callStack[i].mount = null;
+    // }
+    Object.keys(funcCache).forEach((key) => {
+      if (funcCache[key]?.mount) {
+        funcCache[key].mount();
+        funcCache[key].mount = null;
+      }
+    });
   }
 
   // vdom
@@ -173,92 +166,33 @@ const microframe = (() => {
       curParent = stack[stack.length - 1]?.n;
       // log("curr parent is", curParent, type.name);
       stack.push({ n: type?.name });
-      if (oldCallStack.length) {
-        const exisng = iter.get();
-        // log(type.name, exisng?.curr?.fname);
-        // log(
-        //   type.name,
-        //   exisng?.curr?.fname,
-        //   type.name == exisng?.curr?.fname ?? "matched"
-        // );
 
-        if (
-          type.name == exisng?.curr?.fname &&
-          curParent == exisng?.curr?.p &&
-          props?.key === exisng?.curr?.key
-        ) {
-          // log("matched for ", exisng);
-          // iter.reset(exisng.idx);
-          _fn = exisng.curr.fn;
-          currMount = exisng.curr.mount;
-          currUnmount = exisng.curr.unMount;
+      const cacheKey = `${type.name}:${curParent}:${props?.key}`;
+
+      if (altFuncCache) {
+        const exisng = altFuncCache[cacheKey];
+        // altFuncCache[cacheKey] = null;
+        if (exisng) {
+          _fn = exisng.fn;
+          currMount = exisng.mount;
+          currUnmount = exisng.unMount;
         } else {
-          let j = exisng.idx + 1;
-          let found = false;
-          iter.reset(j);
-          for (; j < oldCallStack.length; ++j) {
-            const exisng2 = iter.get();
-            // if (exisng2?.curr == null) break;
-            // log(
-            //   type.name,
-            //   exisng2?.curr?.fname,
-            //   type.name == exisng2?.curr?.fname ?? "matched"
-            // );
-            if (
-              type.name == exisng2?.curr?.fname &&
-              curParent == exisng2?.curr?.p
-            ) {
-              iter.reset(exisng2.idx + 1); //next search should start from here
-              found = true;
-
-              _fn = exisng2.curr.fn;
-              currMount = exisng2.curr.mount;
-              currUnmount = exisng2.curr.unMount;
-              break;
-            }
-          }
-          if (!found) {
-            // reset to whatever last found idx
-            iter.reset(exisng.idx);
-            _fn = type(props, ...children);
-          }
-
-          // cache this func
-
-          // callStack[counter] = {
-          //   fname: type.name,
-          //   fn: _fn,
-          //   mount: currMount,
-          //   unMount: currUnmount,
-          //   // p: curParent,
-          // };
+          _fn = type(props, ...children);
         }
       } else {
-        // const key = set.has(type.name) ? "k" + counter : undefined;
-        // props = { ...props, __k: key };
-
         _fn = type(props, ...children);
-        // callStack[counter] = {
-        //   fname: type.name,
-        //   key: key,
-        //   fn: _fn,
-        //   mount: currMount,
-        //   unMount: currUnmount,
-        // };
-
-        // stack.push(type.name);
-        // set.add(type.name);
       }
 
-      callStack[counter] = {
+      funcCache[cacheKey] = {
         fname: type.name,
         fn: _fn,
         mount: currMount,
         unMount: currUnmount,
         p: curParent,
+        key: props?.key,
       };
 
-      if (props?.key !== undefined) callStack[counter].key = props.key;
+      // if (props?.key !== undefined) callStack[counter].key = props.key;
 
       currMount = currUnmount = null;
 
@@ -635,22 +569,23 @@ const microframe = (() => {
   function mount($root, initCompo) {
     rootNode = $root;
     // 0. for route change clean existing things
-    if (rootNode?.firstChild) {
-      log(">>> this is route change");
-      while (callStack?.length) {
-        const fn = callStack.splice(callStack.length - 1, 1)?.[0];
-        // log(fn);
-        fn?.unMount?.();
+    // if (rootNode?.firstChild) {
+    //   log(">>> this is route change");
+    //   while (callStack?.length) {
+    //     const fn = callStack.splice(callStack.length - 1, 1)?.[0];
+    //     // log(fn);
+    //     fn?.unMount?.();
 
-        counter--;
-      }
-    }
+    //     counter--;
+    //   }
+    // }
     curr = initCompo;
     // log(curr);
     // log(performance.now());
     old = curr(); // create latest vdom
     // log(performance.now());
-    log(callStack, old);
+    // log(callStack, old);
+    log(funcCache);
     // updateElement(rootNode, old);
     // 1. set dom
     // rootNode.appendChild(createElement(old));
@@ -661,14 +596,8 @@ const microframe = (() => {
     // log(callStack);
     callMountAll();
 
-    iter = ArrIterator();
-    oldCallStack = [...callStack];
-    callStack = [];
-    // oldCallStack = [];
-    // oldCallStack.push(callStack[0]);
-
-    // 2. trigger lifecycle
-    // callMountAll();
+    altFuncCache = { ...funcCache };
+    funcCache = {};
   }
 
   let patches = [],
@@ -677,9 +606,6 @@ const microframe = (() => {
   // all delta updates
   function forceUpdate() {
     counter = 0; // v imp
-
-    // callStack = [];
-    iter = ArrIterator();
 
     log(performance.now());
 
@@ -693,14 +619,6 @@ const microframe = (() => {
     // log(oldCallStack, callStack);
 
     // log(performance.now());
-
-    // new diff from yt
-
-    // const patches = diff(current, old);
-    // log(patches);
-    // patch(rootNode, patches);
-
-    // end new diff from yt
 
     // 1. call unmount before dom update
     // callUnmountAll();  // moved to setTimeout
@@ -735,10 +653,10 @@ const microframe = (() => {
       callMountAll();
       // log(callStack, oldStack);
 
-      // backup for future comparison
-      oldCallStack = [...callStack];
-      callStack = [];
       old = current;
+
+      altFuncCache = { ...funcCache };
+      funcCache = {};
     }, 0);
     // requestAnimationFrame(() => {
     //   // 3. update dom
@@ -923,11 +841,17 @@ const microframe = (() => {
       if (last !== domNode) {
         // updateProps(domNode, newNode.props, oldNode.props);
 
-        propsPatches.push({
-          $target: domNode,
-          newProps: newNode.props,
-          oldProps: oldNode.props,
-        });
+        const nl = Object.keys(newNode.props).length;
+        const ol = Object.keys(oldNode.props).length;
+
+        if (nl === ol && nl === 0) {
+        } else {
+          propsPatches.push({
+            $target: domNode,
+            newProps: newNode.props,
+            oldProps: oldNode.props,
+          });
+        }
 
         // chunk.push({
         //   $target: domNode,
