@@ -470,33 +470,28 @@ export const SimpleRoute = () => {
 };
 
 export const TextArea = () => {
-  const [txt, settxt] = createSignal("");
-  const [t, set] = signal("");
+  const [t, set] = atom("");
+  // const [txt, settxt] = createSignal("");
+  // const [t, set] = signal("");
   let txtRef;
 
   console.log("came here");
 
   const clear = () => {
     set("");
-    settxt("");
+    // settxt("");
   };
-
-  // createEffect(() => {
-  //   t();
-  //   // below code doesn't work properly
-  //   if (txtRef) updateSingle(txtRef);
-  // });
 
   return () => (
     <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
       {/* <br />
-      <span>{txt()}</span>
-      <textarea
-        value={txt()}
-        onInput={(e) => settxt(e.target.value)}
-      ></textarea>
-      <br /> */}
+        <span>{txt()}</span>
+        <textarea
+          value={txt()}
+          onInput={(e) => settxt(e.target.value)}
+        ></textarea>
+        <br /> */}
       <span>{t()}</span>
       <input value={t()} onInput={(e) => set(e.target.value)} />
     </div>
