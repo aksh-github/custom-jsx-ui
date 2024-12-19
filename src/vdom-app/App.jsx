@@ -280,7 +280,7 @@ function ComplexRoute(props) {
       {c() % 2 !== 0 ? (
         <ul style={{ minHeight: "5000px", contentVisibility2: "auto" }}>
           {arr.map((n) => (
-            <Number n={n} />
+            <Number key={n} n={n} />
           ))}
         </ul>
       ) : // <Number n={10} />
@@ -421,6 +421,7 @@ export const SimpleRoute = () => {
         <TextArea />
 
         <Suspense
+          key="picurl"
           fallback={
             <div className="lds-roller">
               <div></div>
@@ -446,6 +447,7 @@ export const SimpleRoute = () => {
           }}
         </Suspense>
         <Suspense
+          key="dyncompo"
           cacheKey="dyncompo"
           fallback={"Loading..."}
           errorFallback={<div>Something went wrong</div>}
@@ -555,16 +557,24 @@ export function App(props) {
       <div>
         <ul>
           <li>
-            <LinkV2 to="/">Complex</LinkV2>
+            <LinkV2 key={"root"} to="/">
+              Complex
+            </LinkV2>
           </li>
           <li>
-            <LinkV2 to="/route2">Simple</LinkV2>
+            <LinkV2 key={"simple"} to="/route2">
+              Simple
+            </LinkV2>
           </li>
           <li>
-            <LinkV2 to="/topics">Topics</LinkV2>
+            <LinkV2 key={"topics"} to="/topics">
+              Topics
+            </LinkV2>
           </li>
           <li>
-            <LinkV2 to="/frag">Fragments</LinkV2>
+            <LinkV2 key={"frag"} to="/frag">
+              Fragments
+            </LinkV2>
           </li>
         </ul>
         <hr />
