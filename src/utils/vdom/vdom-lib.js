@@ -68,7 +68,7 @@ import { atom } from "../simple-state";
 // import { diff, patch } from "./vdom-yt";
 
 const microframe = (() => {
-  let callStack = [];
+  let mountFns = [];
   let funcCache = {},
     altFuncCache = {};
   let counter = 0;
@@ -135,19 +135,10 @@ const microframe = (() => {
   }
 
   function callMountAll() {
-    // let len = callStack.length;
-    // for (let i = 0; i < len; ++i) {
-    //   // log(callStack[i]);
-    //   callStack[i]?.mount?.();
-    //   // need to check carefully
-    //   callStack[i].mount = null;
-    // }
-    Object.keys(funcCache).forEach((key) => {
-      if (funcCache[key]?.mount) {
-        funcCache[key].mount();
-        funcCache[key].mount = null;
-      }
-    });
+    while (mountFns?.length) {
+      // log(mountFns.pop());
+      mountFns.pop()();
+    }
   }
 
   // vdom
@@ -177,10 +168,10 @@ const microframe = (() => {
           currMount = exisng.mount;
           currUnmount = exisng.unMount;
         } else {
+          // to maintain order
           _fn = type(props, ...children);
+          if (currMount) mountFns.push(currMount);
         }
-      } else {
-        _fn = type(props, ...children);
       }
 
       funcCache[cacheKey] = {
@@ -617,6 +608,7 @@ const microframe = (() => {
     // log(CompoIterator().get(old, "TextArea"));
 
     // log(oldCallStack, callStack);
+    log(funcCache);
 
     // log(performance.now());
 

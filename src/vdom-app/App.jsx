@@ -234,12 +234,12 @@ function ComplexRoute(props) {
   for (let i = 0; i < 1000; ++i) arr.push(i);
 
   const Number = () => {
-    onMount(() => {
-      // console.log("mounting number");
-    });
-    onCleanup(() => {
-      // console.log("unmounting number");
-    });
+    // onMount(() => {
+    //   console.log("mounting number");
+    // });
+    // onCleanup(() => {
+    //   console.log("unmounting number");
+    // });
     return ({ n }) => (
       <li>
         <span>{n}</span>
@@ -280,7 +280,7 @@ function ComplexRoute(props) {
       {c() % 2 !== 0 ? (
         <ul style={{ minHeight: "5000px", contentVisibility2: "auto" }}>
           {arr.map((n) => (
-            <Number key={n} n={n} />
+            <Number n={n} />
           ))}
         </ul>
       ) : // <Number n={10} />
