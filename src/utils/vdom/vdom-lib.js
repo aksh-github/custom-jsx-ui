@@ -931,7 +931,7 @@ const microframe = (() => {
           patch.p.textContent = patch.c;
           break;
       } // switch
-      }
+    }
   }
 
   // let patchIndex = 0;
@@ -1270,11 +1270,26 @@ function completeWork(workInProgress) {
   };
 })();
 
-const removeAllEventListeners = function (node) {
+function yieldToMain() {
+  if (globalThis.scheduler?.yield) {
+    return scheduler.yield();
+  }
+
+  // Fall back to yielding with setTimeout.
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+const removeAllEventListeners = async (node) => {
   const domList = domListIterator(node);
 
   for (let i = 0; i < domList.length; i++) {
     domList[i].removeEventListener();
     domList[i] = null;
+
+    if (i % 100 === 0) {
+      await yieldToMain();
+    }
   }
 };
