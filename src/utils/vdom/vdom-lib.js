@@ -886,30 +886,52 @@ const microframe = (() => {
   }
 
   function applyPropsPatches(patches) {
-    patches.forEach((patch) => {
+    while (patches.length) {
+      const patch = patches.shift();
+
       updateProps(patch.$target, patch.newProps, patch.oldProps);
-    });
+    }
   }
 
   function applyPatches(patches) {
     // log(patches);
-    patches.forEach((patch) => {
+    while (patches.length) {
+      const patch = patches.shift();
+
       switch (patch.op) {
         case "APPEND":
           patch.p.appendChild(patch.c);
           break;
         case "REMOVE":
           patch.p.removeChild(patch.c);
+
+          if (patch.c?.nodeType === 1) {
+            requestIdleCallback(() => {
+              removeAllEventListeners(patch.c);
+
+              patch.c = null;
+            });
+          }
+
           break;
         case "REPLACE":
           // log(patch);
           patch.p.replaceChild(patch.c[0], patch.c[1]);
+
+          if (patch.c[1]?.nodeType === 1) {
+            requestIdleCallback(() => {
+              removeAllEventListeners(patch.c[1]);
+
+              patch.c[1] = null;
+            });
+          }
+
           break;
         case "CONTENT":
           patch.p.textContent = patch.c;
           break;
+      } // switch
       }
-    });
   }
 
   // let patchIndex = 0;
@@ -1122,15 +1144,16 @@ function domListIterator(rootNode) {
 // possible alternate 2 for walkDom
 // actually this doesn't work correctly further investigation reqd
 
-// function* traverseTree(node) {
-//   yield node;
-
-//   for (let child of node?.childNodes) {
-//     if (child.nodeType == 1 && rootNode.contains(child)) {
-//       yield* traverseTree(child);
-//     }
-//   }
-// }
+function* lazyDOMIterator(root, skip) {
+  let current = root;
+  while (current) {
+    yield current;
+    if (!skip(current) && current.children.length > 0) {
+      yield* lazyDOMIterator(current.children[0], skip);
+    }
+    current = current.nextElementSibling;
+  }
+}
 
 ///////////////
 // possible alternate 3 (complex) for walkDom
@@ -1207,3 +1230,51 @@ function completeWork(workInProgress) {
   // log("work completed for ", workInProgress);
   return null;
 }
+
+(function () {
+  const eventListeners = new WeakMap();
+
+  const originalAddEventListener = EventTarget.prototype.addEventListener;
+  const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+
+  EventTarget.prototype.addEventListener = function (type, listener, options) {
+    if (!eventListeners.has(this)) {
+      // log(this);
+      eventListeners.set(this, []);
+    }
+    eventListeners.get(this).push({ type, listener, options });
+    originalAddEventListener.call(this, type, listener, options);
+    // log(eventListeners);
+  };
+
+  EventTarget.prototype.removeEventListener = function (
+    type,
+    listener,
+    options
+  ) {
+    // log("removeEventListener");
+    if (eventListeners.has(this)) {
+      const listeners = eventListeners.get(this);
+      for (let i = 0; i < listeners.length; i++) {
+        if (listeners[i].type === type && listeners[i].listener === listener) {
+          listeners.splice(i, 1);
+          break;
+        }
+      }
+    }
+    originalRemoveEventListener.call(this, type, listener, options);
+  };
+
+  window.getEventListeners = function (node) {
+    return eventListeners.get(node) || [];
+  };
+})();
+
+const removeAllEventListeners = function (node) {
+  const domList = domListIterator(node);
+
+  for (let i = 0; i < domList.length; i++) {
+    domList[i].removeEventListener();
+    domList[i] = null;
+  }
+};
