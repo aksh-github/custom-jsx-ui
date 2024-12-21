@@ -1,6 +1,7 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-const log = console.log;
+// const log = console.log;
+const log = console.log; // () => {};
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
@@ -79,9 +80,41 @@ const microframe = (() => {
   let curr = null;
   let old = null;
 
-  let parent;
+  function EventListner() {
+    const eventListeners = new WeakMap();
 
-  let genObj, genNode;
+    return {
+      registerEventListener: (node, type, listener, options) => {
+        if (!eventListeners.has(node)) eventListeners.set(node, []);
+
+        eventListeners.get(node).push({ type, listener, options });
+      },
+      unregisterEventListener: (node) => {
+        if (eventListeners.has(node)) {
+          const listeners = eventListeners.get(node);
+          while (listeners.length) {
+            const { type, listener, options } = listeners.pop();
+            node.removeEventListener(type, listener, options);
+          }
+        }
+      },
+      getEventListeners: (node) => eventListeners.get(node) || [],
+      unRegisterAllEventListeners: async (node) => {
+        const domList = domListIterator(node);
+
+        for (let i = 0; i < domList.length; i++) {
+          eventListenerInst.unregisterEventListener(domList[i]);
+          domList[i] = null;
+
+          if (i % 50 === 0) {
+            await yieldToMain();
+          }
+        }
+      },
+    };
+  }
+
+  const eventListenerInst = new EventListner();
 
   function* stepGen(steps) {
     while (true) yield* steps;
@@ -393,7 +426,13 @@ const microframe = (() => {
   function addEventListeners($target, props) {
     Object.keys(props).forEach((name) => {
       if (isEventProp(name)) {
-        $target.addEventListener(extractEventName(name), props[name]);
+        const extratedName = extractEventName(name);
+        eventListenerInst.registerEventListener(
+          $target,
+          extratedName,
+          props[name]
+        );
+        $target.addEventListener(extratedName, props[name]);
       }
     });
   }
@@ -907,7 +946,8 @@ const microframe = (() => {
 
           if (patch.c?.nodeType === 1) {
             requestIdleCallback(() => {
-              removeAllEventListeners(patch.c);
+              // removeAllEventListeners(patch.c);
+              eventListenerInst.unRegisterAllEventListeners(patch.c);
 
               patch.c = null;
             });
@@ -920,7 +960,9 @@ const microframe = (() => {
 
           if (patch.c[1]?.nodeType === 1) {
             requestIdleCallback(() => {
-              removeAllEventListeners(patch.c[1]);
+              // removeAllEventListeners(patch.c[1]);
+
+              eventListenerInst.unRegisterAllEventListeners(patch.c[1]);
 
               patch.c[1] = null;
             });
@@ -1231,45 +1273,6 @@ function completeWork(workInProgress) {
   return null;
 }
 
-(function () {
-  const eventListeners = new WeakMap();
-
-  const originalAddEventListener = EventTarget.prototype.addEventListener;
-  const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
-
-  EventTarget.prototype.addEventListener = function (type, listener, options) {
-    if (!eventListeners.has(this)) {
-      // log(this);
-      eventListeners.set(this, []);
-    }
-    eventListeners.get(this).push({ type, listener, options });
-    originalAddEventListener.call(this, type, listener, options);
-    // log(eventListeners);
-  };
-
-  EventTarget.prototype.removeEventListener = function (
-    type,
-    listener,
-    options
-  ) {
-    // log("removeEventListener");
-    if (eventListeners.has(this)) {
-      const listeners = eventListeners.get(this);
-      for (let i = 0; i < listeners.length; i++) {
-        if (listeners[i].type === type && listeners[i].listener === listener) {
-          listeners.splice(i, 1);
-          break;
-        }
-      }
-    }
-    originalRemoveEventListener.call(this, type, listener, options);
-  };
-
-  window.getEventListeners = function (node) {
-    return eventListeners.get(node) || [];
-  };
-})();
-
 function yieldToMain() {
   if (globalThis.scheduler?.yield) {
     return scheduler.yield();
@@ -1280,16 +1283,3 @@ function yieldToMain() {
     setTimeout(resolve, 0);
   });
 }
-
-const removeAllEventListeners = async (node) => {
-  const domList = domListIterator(node);
-
-  for (let i = 0; i < domList.length; i++) {
-    domList[i].removeEventListener();
-    domList[i] = null;
-
-    if (i % 100 === 0) {
-      await yieldToMain();
-    }
-  }
-};
