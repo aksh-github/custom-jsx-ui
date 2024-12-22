@@ -1,85 +1,17 @@
 import { App, SimpleRoute, TextArea } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
-import { registerCallback } from "../utils/simple-state";
-import { h, mount, forceUpdate, onMount, df } from "../utils/vdom/vdom-lib";
+import { registerCallback, state, atom } from "../utils/simple-state";
+import {
+  h,
+  mount,
+  forceUpdate,
+  onMount,
+  // div,
+  Suspense,
+} from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
-
-// v basic test 23may
-// let count = 0;
-
-// const log = () => {};
-
-// const Somec = (props) => {
-//   console.log(props);
-//   return () => {
-//     return (
-//       <div>
-//         akshay{props.hello}
-//         <input />
-//       </div>
-//     );
-//   };
-// };
-
-// const Comp = () => {
-//   console.log("exeted");
-
-//   return () => (
-//     <div>
-//       <ul style="list-style: none;">
-//         <li className="item" onClick={() => alert("hi!")}>
-//           item {String(count)}
-//         </li>
-//         <li className="item">
-//           <input
-//             type="checkbox"
-//             checked={true}
-//             onChange={(e) => console.log(e)}
-//           />
-//           <input type="text" onInput={log} />
-//         </li>
-
-//         <li forceUpdate={false}>text</li>
-//       </ul>
-//       <Somec hello="world is beautiful" />
-//     </div>
-//   );
-// };
-
-// const $root = document.getElementById("root");
-
-// const Odd =
-//   () =>
-//   ({ v }) =>
-//     v + "odd22";
-
-// const Even =
-//   () =>
-//   ({ v }) =>
-//     v + "even";
-
-// const Tp = () => {
-//   return () => (
-//     <div>
-//       <Even v="this is " />
-//       <div>sim div</div>
-//       <Odd v="this is " />
-//     </div>
-//   );
-// };
-
-// mount($root, () => <Tp />);
-
-// const __t = setInterval(() => {
-//   count++;
-
-//   if (count > 2) clearInterval(__t);
-
-//   forceUpdate();
-// }, 2000);
-// end v basic test 23may
 
 // =======================
 
@@ -90,85 +22,15 @@ const root = document.getElementById("root-vdom");
 // mount(root, () => <App some={2} />);
 
 // for signal
-registerRenderCallback(forceUpdate);
+// registerRenderCallback(forceUpdate);
 
 // for signal v2
-registerRenderCallbackV2(forceUpdate);
+// registerRenderCallbackV2(forceUpdate);
 
 // for my state
 registerCallback(forceUpdate);
 
-// mount(root, () => <App />);
-
-// router with switch try
-
-// const A = () => "Route A";
-// const B = () => "Route B";
-
-// const Index = () => {
-//   const rs = state({ path: "" });
-
-//   const setupRoute = () =>
-//     navigoRouter.set(
-//       {
-//         // errorComponent: Error,
-//         // basePath: window.location.pathname,
-//         routes: [
-//           {
-//             path: "/chat",
-//             // component: A,
-//           },
-//           {
-//             path: "/",
-//             // component: B,
-//           },
-//           {
-//             path: "*",
-//             // component: () => <div>Wrong url</div>,
-//           },
-//         ],
-//       },
-//       (Compo, match) => {
-//         console.log(Compo, match);
-//         rs.set({ path: match?.url });
-//       }
-//     );
-
-//   onMount(() => {
-//     console.log("index mounted");
-//     setupRoute();
-//   });
-//   return () => (
-//     <SimpleSwitch cond={rs.get("path")}>
-//       <SimpleSwitch.Case when={"chat"} render={<A />} />
-//       <SimpleSwitch.Case when={""} render={<B />} />
-//       <SimpleSwitch.Case render={"Loadin.."} />
-//     </SimpleSwitch>
-//   );
-// };
-
 mount(root, () => <App />);
-
-// mount(root, () => (
-//   <>
-//     <Captcha />
-//     <Svg />
-//   </>
-// ));
-
-export function generateCaptcha() {
-  let uniquechar = "";
-
-  const randomchar =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  // Generate captcha for length of 5 with random character
-  for (let i = 1; i < 6; i++) {
-    uniquechar += randomchar.charAt(Math.random() * randomchar.length);
-  }
-
-  return uniquechar;
-}
 
 function Svg() {
   return () => (
@@ -212,4 +74,28 @@ function Captcha() {
   });
 
   return () => <canvas id="myCanvas" height="50"></canvas>;
+}
+
+{
+  /* <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+      <symbol id="icon-back" viewBox="0 0 24 24">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+      </symbol>
+
+      <symbol id="icon-download" viewBox="0 0 24 24">
+        <path d="M5 18h14v2H5v-2zm4.6-6.6l2.2 2.2 4.8-4.8L14.4 8 10.2 4.8 7.8 7z" />
+        <path d="M19.7 8.3l-4.8 4.8L14.4 16 10.2 19.2 7.8 16l2.2-2.2L10.2 8.3 7.8 5.7 4.6 8.3z" />
+      </symbol>
+
+      <symbol id="icon-upload" viewBox="0 0 24 24">
+        <path d="M5 18h14v2H5v-2zm4.6-6.6l2.2 2.2 4.8-4.8L14.4 8 10.2 4.8 7.8 7z" />
+        <path
+          d="M19.7 8.3l-4.8 4.8L14.4 16 10.2 19.2 7.8 16l2.2-2.2L10.2 8.3 7.8 5.7 4.6 8.3z"
+          transform="rotate(180 12 12)"
+        />
+      </symbol>
+    </svg>
+    <svg width="24" height="24">
+      <use xlink:href="#icon-download"></use>
+    </svg> */
 }

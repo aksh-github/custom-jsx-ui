@@ -1,7 +1,7 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
 // const log = console.log;
-const log = console.log; // () => {};
+const log = () => {};
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
@@ -417,6 +417,9 @@ const microframe = (() => {
   }
 
   function updateProps($target, newProps, oldProps = {}) {
+    // if (newProps.ignoreNode || newProps.ignoreLater) {
+    //   console.log($target, newProps);
+    // }
     const props = Object.assign({}, newProps, oldProps);
     Object.keys(props).forEach((name) => {
       updateProp($target, name, newProps[name], oldProps[name]);
@@ -512,9 +515,8 @@ const microframe = (() => {
     }
 
     const $el = document.createElement(node.type);
-    if (node?.$c) {
-      $el.dataset["cp"] = node.$c + ":" + node?.$p;
-    } else {
+
+    if (!node?.$c) {
       setProps($el, node.props);
       addEventListeners($el, node.props);
     }
@@ -717,6 +719,7 @@ const microframe = (() => {
 
   function wrapper($parent, newNode, oldNode, index = 0) {
     let stk = domListIterator(rootNode);
+
     let CTR = 0;
     let last = null;
     let optiPossible = false;
@@ -857,17 +860,8 @@ const microframe = (() => {
         // genNode = genObj.next();
 
         CTR += 1;
-        // if (rootNode.contains(stk[CTR])) {
-        // } else {
-        //   while (CTR < stk.length) {
-        //     CTR += 1;
-        //     if (rootNode.contains(stk[CTR])) break;
-        //     else {
-        //       stk[CTR] = null;
-        //     }
-        //   }
-        // }
       }
+
       const domNode = stk[CTR];
       if (last !== domNode) {
         // updateProps(domNode, newNode.props, oldNode.props);
@@ -876,6 +870,8 @@ const microframe = (() => {
         const ol = Object.keys(oldNode.props).length;
 
         if (nl === ol && nl === 0) {
+        } else if (newNode.props.ignoreNode || newNode.props.ignoreLater) {
+          return;
         } else {
           propsPatches.push({
             $target: domNode,
@@ -975,47 +971,6 @@ const microframe = (() => {
       } // switch
     }
   }
-
-  // let patchIndex = 0;
-  // function applyPatches(patches) {
-  //   log(patches);
-  //   window.requestAnimationFrame(() => {
-  //     applyPatchBatch(patches);
-  //   });
-  // }
-
-  // function applyPatchBatch(patches) {
-  //   const batchSize = 50; // Adjust batch size based on performance needs
-  //   const batchEnd = Math.min(patchIndex + batchSize, patches.length);
-
-  //   for (let i = patchIndex; i < batchEnd; i++) {
-  //     const patch = patches[i];
-  //     switch (patch.op) {
-  //       case "APPEND":
-  //         patch.p.appendChild(patch.c);
-  //         break;
-  //       case "REMOVE":
-  //         patch.p.removeChild(patch.c);
-  //         break;
-  //       case "REPLACE":
-  //         patch.p.replaceChild(patch.c[0], patch.c[1]);
-  //         break;
-  //       case "CONTENT":
-  //         patch.p.textContent = patch.c;
-  //         break;
-  //     }
-  //   }
-
-  //   patchIndex = batchEnd;
-  //   if (patchIndex < patches.length) {
-  //     window.requestAnimationFrame(() => {
-  //       applyPatchBatch(patches);
-  //     });
-  //   } else {
-  //     patchIndex = 0;
-  //     patches = [];
-  //   }
-  // }
 
   return {
     mount,
@@ -1150,7 +1105,8 @@ function domListIterator(rootNode) {
     while (next) {
       // log(next);
       // arr.push(next);
-      if (next.firstElementChild && !next.ignoreNode) {
+      const notToSkip = !next.getAttribute("ignorenode");
+      if (next.firstElementChild && notToSkip) {
         next = next.firstElementChild;
         // log(next);
         arr.push(next);

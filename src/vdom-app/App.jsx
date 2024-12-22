@@ -1,14 +1,15 @@
-import { createSignal, batch, createEffect } from "../utils/signal-complex";
+import { createSignal, createEffect } from "../utils/signal-complex";
 import { h, onMount, onCleanup, Suspense } from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { state, atom, skipUpdate } from "../utils/simple-state";
+import { state, atom, batch, skipUpdate } from "../utils/simple-state";
 import { LinkV2, Router, Route } from "../utils/router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
+import { Sans } from "./sans/sans";
 
 let routeHandler = Router();
 
@@ -218,20 +219,22 @@ const Input = () => {
 
 function ComplexRoute(props) {
   console.log("rendered App", props);
-  const [c, setc] = createSignal(0);
-  const [s, sets] = createSignal("akshay");
+  // const [c, setc] = createSignal(0);
+  // const [s, sets] = createSignal("akshay");
+  const [c, setc] = atom(0);
+  const [s, sets] = atom("akshay");
   let ref = null;
 
-  createEffect(() => {
-    console.log(c());
-  });
+  // createEffect(() => {
+  //   console.log(c());
+  // });
 
   onMount(() => {
     console.log("mount app", ref);
   });
 
   const arr = [];
-  for (let i = 0; i < 1000; ++i) arr.push(i);
+  for (let i = 0; i < 10000; ++i) arr.push(i);
 
   const Number = () => {
     // onMount(() => {
@@ -278,7 +281,7 @@ function ComplexRoute(props) {
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
       {c() % 2 !== 0 ? (
-        <ul style={{ minHeight: "5000px", contentVisibility2: "auto" }}>
+        <ul style={{ minHeight: "8000px", contentVisibility2: "auto" }}>
           {arr.map((n) => (
             <Number n={n} />
           ))}
@@ -524,8 +527,10 @@ export function App(props) {
 
       timer = setInterval(() => {
         // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with state but skips ui comparison
+        // setFooterTp((_tp) => _tp + 1);
         // p.textContent = footerTp();
-        p.textContent = "This footer demoes ignoreNode ignoreLater " + ++ct; // without using state
+        ct++;
+        p.textContent = "This footer demoes ignoreNode ignoreLater " + ct; // without using state
       }, 1000);
     }
   });
@@ -571,6 +576,11 @@ export function App(props) {
               Fragments
             </LinkV2>
           </li>
+          <li>
+            <LinkV2 key={"frag"} to="/sans">
+              Sanskrit
+            </LinkV2>
+          </li>
         </ul>
         <hr />
 
@@ -595,13 +605,20 @@ export function App(props) {
                 <div>
                   <div>before text</div>
                   {/* <ArrayWithFragments some={200} /> */}
-                  <Suspense cacheKey={"awfp"} fallback={<div>Loading...</div>}>
+                  <Suspense
+                    delay={3000}
+                    cacheKey={"awfp"}
+                    fallback={<div>Loading...</div>}
+                  >
                     <ArrayWithFragmentsPromise some={t} />
                   </Suspense>
 
                   <div>after text</div>
                 </div>
               );
+
+            case "/sans":
+              return <Sans />;
             default:
               if (curPath()?.url?.startsWith("/topics"))
                 return <Topics basepath="/topics" match={curPath()} />;
@@ -614,7 +631,7 @@ export function App(props) {
           ignoreLater={true}
           style={{ backgroundColor: "bisque" }}
         >
-          <p>{footerTp()}</p>
+          <p></p>
         </footer>
       </div>
     );
