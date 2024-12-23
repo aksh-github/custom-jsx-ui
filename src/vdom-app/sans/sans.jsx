@@ -14,6 +14,113 @@ const [globalState, setGlobalState] = state({
 // const [filtered, setFiltered] = atom([]);
 const [search, setSearch] = atom("");
 
+const VerbRow = () => {
+  return ({ row: verb }) => (
+    <li>
+      <h3>{verb?.ev}</h3>
+      <p> {verb?.sv?.join(", ")}</p>
+      <p>{verb?.gana?.join(", ")}</p>
+      <p>{verb?.lyut?.join(", ")}</p>
+      <p>{verb?.kta?.join(", ")}</p>
+      <p>{verb?.mv?.join(", ")}</p>
+      {/* {row?.ev}, {row?.sv?.join(", ")}, {row?.mv?.join(", ")} */}
+      <hr />
+    </li>
+  );
+};
+
+const verbFilter = (w) => {
+  return (
+    w?.ev?.includes(search()) ||
+    w?.sv?.forEach((s) => s.includes(search())) ||
+    w?.mv?.forEach((m) => m.includes(search()))
+  );
+};
+
+const WordRow = () => {
+  return ({ row: word }) => (
+    <li>
+      {word?.ew}, {word?.sw?.join(", ")}, {word?.mw?.join(", ")}
+    </li>
+  );
+};
+
+const wordFilter = (w) => {
+  return (
+    w?.ew?.includes(search()) ||
+    w?.sw?.forEach((s) => s.includes(search())) ||
+    w?.mw?.forEach((m) => m.includes(search()))
+  );
+};
+
+const UIObj = {
+  [TABS.VERBS]: {
+    title: "Verbs",
+    dkey: "verbs",
+    jsonFile: "verbs-v2",
+    filterFunc: verbFilter,
+    RowComponent: VerbRow,
+  },
+  [TABS.WORDS]: {
+    title: "Words",
+    dkey: "words",
+    jsonFile: "words",
+    filterFunc: wordFilter,
+    setDatacb: (data) => data["Everyday words"].concat(data["home"]),
+    RowComponent: WordRow,
+  },
+};
+
+const fetchData = (jsonFile) =>
+  fetch(`/data/${jsonFile}.json`).then((res) => res.json());
+
+function GenericTab({ dkey, jsonFile, setDatacb, filterFunc }) {
+  let lsearch = null;
+  const [data, setData] = atom(globalState()[`${dkey}`]);
+  const [filtered, setFiltered] = atom([]);
+
+  onMount(() => {
+    if (globalState()[`${dkey}`].length === 0) {
+      // fetch(`/data/${jsonFile}.json`)
+      //   .then((res) => res.json())
+      fetchData(jsonFile).then((_data) => {
+        setDatacb ? setData(setDatacb(_data)) : setData(_data);
+        setGlobalState((prev) => ({ ...prev, [`${dkey}`]: data() }));
+
+        if (search()) {
+          lsearch = search();
+          filter();
+        }
+      });
+    }
+  });
+
+  const filter = () => {
+    setFiltered(data().filter(filterFunc));
+  };
+
+  return ({ title, RowComponent }) => {
+    if (lsearch !== search()) {
+      filter();
+      lsearch = search();
+    }
+
+    return (
+      <div>
+        <h1>{title}</h1>
+        <p style={{ color: "red" }}>
+          {filtered().length === 0 && search() ? "No results" : ""}
+        </p>
+        <ul>
+          {(filtered().length > 0 ? filtered() : data()).map((d) => (
+            <RowComponent row={d} />
+          ))}
+        </ul>
+      </div>
+    );
+  };
+}
+
 function VerbTab() {
   const [data, setData] = atom(globalState().verbs);
   const [filtered, setFiltered] = atom([]);
@@ -30,14 +137,6 @@ function VerbTab() {
         });
     }
   });
-
-  const verbFilter = (w) => {
-    return (
-      w?.ev?.includes(search()) ||
-      w?.sv?.forEach((s) => s.includes(search())) ||
-      w?.mv?.forEach((m) => m.includes(search()))
-    );
-  };
 
   const filter = () => {
     setFiltered(data().filter(verbFilter));
@@ -86,14 +185,6 @@ function WordTab() {
     }
   });
 
-  const wordFilter = (w) => {
-    return (
-      w?.ew?.includes(search()) ||
-      w?.sw?.forEach((s) => s.includes(search())) ||
-      w?.mw?.forEach((m) => m.includes(search()))
-    );
-  };
-
   const filter = () => {
     setFiltered(data().filter(wordFilter));
   };
@@ -126,9 +217,17 @@ function WordTab() {
 function Tabs() {
   return ({ currTab }) => {
     return (
-      <div>
-        {currTab === TABS.VERBS ? <VerbTab /> : null}
-        {currTab === TABS.WORDS ? <WordTab /> : null}
+      <div style={{ minHeight: "220px" }}>
+        <GenericTab key={UIObj[currTab].dkey} {...UIObj[currTab]} />
+        {/*
+        {currTab === TABS.WORDS ? (
+          <GenericTab
+            key={UIObj[TABS.WORDS].dkey}
+            {...UIObj[TABS.WORDS]}
+            RowComponent={WordRow}
+            setDatacb={(_data) => _data["Everyday words"].concat(_data["home"])}
+          />
+        ) : null} */}
       </div>
     );
   };
@@ -136,22 +235,6 @@ function Tabs() {
 
 export function Sans() {
   const [currTab, setCurrTab] = atom(0);
-
-  // const verbFilter = (w) => {
-  //   return (
-  //     w?.ev?.includes(search()) ||
-  //     w?.sv?.forEach((s) => s.includes(search())) ||
-  //     w?.mv?.forEach((m) => m.includes(search()))
-  //   );
-  // };
-
-  // const filter = (e) => {
-  //   batch(() => {
-  //     setSearch(e.target.value);
-  //     // setFiltered(data().filter(wordFilter));
-  //     setFiltered(data().filter(verbFilter));
-  //   });
-  // };
 
   onCleanup(() => {
     console.log("unmount for Sans");
@@ -168,7 +251,14 @@ export function Sans() {
       </div>
       <p>
         <button onClick={() => setCurrTab(TABS.VERBS)}>Verbs</button>
-        <button onClick={() => setCurrTab(TABS.WORDS)}>Words</button>
+        <button
+          onClick={() => setCurrTab(TABS.WORDS)}
+          // onMouseOver={() => {
+          //   fetchData(UIObj[TABS.WORDS].jsonFile);
+          // }}
+        >
+          Words
+        </button>
       </p>
 
       <Tabs currTab={currTab()} />
