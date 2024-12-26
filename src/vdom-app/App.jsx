@@ -1,5 +1,11 @@
 import { createSignal, createEffect } from "../utils/signal-complex";
-import { h, onMount, onCleanup, Suspense } from "../utils/vdom/vdom-lib";
+import {
+  h,
+  onMount,
+  onCleanup,
+  Suspense,
+  SuspenseV2,
+} from "../utils/vdom/vdom-lib";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
@@ -9,7 +15,7 @@ import { LinkV2, Router, Route } from "../utils/router-v2";
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
-import { Sans } from "./sans/sans";
+// import { Sans } from "./sans/sans";
 
 let routeHandler = Router();
 
@@ -68,6 +74,13 @@ const DynCompoPromise = () => {
   //   setTimeout(() => resolve(10), 3000);
   // });
   return import("../compos/ComponentPatterns?").then((mod) => mod?.PropsDriven);
+};
+
+const SansCompoPromise = () => {
+  // await new Promise((resolve, reject) => {
+  //   setTimeout(() => resolve(10), 3000);
+  // });
+  return import("./sans/sans").then((mod) => mod?.Sans);
 };
 
 const Topic =
@@ -362,22 +375,6 @@ export const SimpleRoute = () => {
 
   onMount(() => {
     console.log("Ref available in onMount for SimpleRoute", ref);
-
-    fetch("http://192.168.2.15:8080/verbs-v2.json")
-      .then((res) => {
-        return res.json();
-      })
-      .then((res) => {
-        // console.log(res);
-        setData(res);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-
-    setTimeout(() => {
-      setData(null);
-    }, 7000);
   });
 
   onCleanup(() => {
@@ -423,17 +420,10 @@ export const SimpleRoute = () => {
 
         <TextArea />
 
-        <Suspense
+        <SuspenseV2
           key="picurl"
           fallback={
             <div className="lds-roller">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
               <div></div>
             </div>
           }
@@ -448,15 +438,16 @@ export const SimpleRoute = () => {
               </div>
             );
           }}
-        </Suspense>
-        <Suspense
+        </SuspenseV2>
+        <SuspenseV2
           key="dyncompo"
           cacheKey="dyncompo"
-          fallback={"Loading..."}
-          errorFallback={<div>Something went wrong</div>}
+          fallback={<div>Loading...</div>}
+          // fallback="Loading..."
+          // errorFallback={<div>Something went wrong</div>}
         >
           <DynCompoPromise n="This will be loaded dynamically" />
-        </Suspense>
+        </SuspenseV2>
 
         {data() ? (
           <div>
@@ -618,7 +609,16 @@ export function App(props) {
               );
 
             case "/sans":
-              return <Sans />;
+              // return <Sans />;
+              return (
+                <SuspenseV2
+                  key={"sans"}
+                  cacheKey={"sans"}
+                  fallback={<p>Loading Sanskrit...</p>}
+                >
+                  <SansCompoPromise />
+                </SuspenseV2>
+              );
             default:
               if (curPath()?.url?.startsWith("/topics"))
                 return <Topics basepath="/topics" match={curPath()} />;
