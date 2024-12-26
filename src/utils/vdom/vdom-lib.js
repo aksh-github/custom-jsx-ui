@@ -1,7 +1,7 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-// const log = console.log;
-const log = () => {};
+const log = console.log;
+// const log = () => {};
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
@@ -159,10 +159,13 @@ const microframe = (() => {
     //   }
     // }
 
+    log(suspenseCache);
+
     Object.keys(altFuncCache).forEach((key) => {
       if (!funcCache[key]) {
         altFuncCache[key].unMount?.();
         altFuncCache[key].unMount = null;
+        if (suspenseCache[key]) delete suspenseCache[key];
       }
     });
   }
@@ -879,27 +882,32 @@ const microframe = (() => {
             oldProps: oldNode.props,
           });
         }
-
-        // chunk.push({
-        //   $target: domNode,
-        //   newProps: newNode.props,
-        //   oldProps: oldNode.props,
-        //   t: "p",
-        // });
         last = domNode;
       }
 
-      const newLength = newNode.children.length;
-      const oldLength = oldNode.children.length;
+      if (newNode?.props?.cacheKey) {
+        //&& !newNode.children[0]?.props?.__cached
+        // doMain(newNode.children[0], oldNode.children[0]);
+        const old = newNode.children[0]?.props?.__cached
+          ? oldNode.children[0]
+          : null;
+        updateElement(stk[++CTR], newNode.children[0], old, 0);
+        // return;
+      } else {
+        const newLength = newNode.children.length;
+        const oldLength = oldNode.children.length;
 
-      if (newLength > 100) {
-        optiPossible = true;
-        gdf = document.createDocumentFragment();
-        log("have for loop custom component or see how this can be optimized");
-      }
+        if (newLength > 100) {
+          optiPossible = true;
+          gdf = document.createDocumentFragment();
+          log(
+            "have for loop custom component or see how this can be optimized"
+          );
+        }
 
-      for (let i = 0; i < newLength || i < oldLength; i++) {
-        updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+        for (let i = 0; i < newLength || i < oldLength; i++) {
+          updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+        }
       }
 
       if (optiPossible) {
@@ -1068,7 +1076,112 @@ export function Suspense(props, child) {
         }
       }
     } else {
-      return props?.fallback;
+      if (props?.fallback) {
+        // if (typeof props.fallback === "string") {
+        //   return h("div", {}, [props.fallback]);
+        //   // return {
+        //   //   type: "div",
+        //   //   children: [props.fallback],
+        //   // };
+        // } else {
+        //   return props.fallback;
+        // }
+        return h("div", {}, [props.fallback]);
+      } else return h("div", {}, [null]);
+      // return props?.fallback;
+    }
+  };
+}
+
+export function SuspenseV2(props, child) {
+  // log(props);
+  let returnVal;
+  const [resolved, setResolved] = atom(false);
+
+  // log("promise NOT resolved");
+
+  if (props?.fetch?.then) {
+    // case 1. if fetch prop is provided (it can be any promise)
+    props.fetch.then((res) => {
+      // log("promise resolved", res);
+      // Suspense({ ...props, fetchCompleted: true }, res);
+      returnVal = res;
+      setResolved(true); // need so render is triggered
+    });
+  } else {
+    // case 2. if child is a promise module
+    child?.value
+      ?.then((res) => {
+        returnVal = res;
+        // update suspense cache
+        // suspenseCache[`${props?.cacheKey}`] = res;
+
+        setResolved(true); // need so render is triggered
+      })
+      .catch((e) => {
+        // log(e);
+        setResolved(true); // need so render is triggered
+      });
+  }
+
+  return (props) => {
+    // if already in cache then return
+    const ch = props.children[0];
+    const cached =
+      suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] ||
+      suspenseCache[`${props?.cacheKey}`];
+    if (cached) {
+      if (cached.compo) {
+        // cached.compo(child?.props);
+        // return () => cached.returnFn(child?.props);
+        return h(cached.compo, { ...child?.props, __cached: true });
+      } else {
+        // return suspenseCache[`${props?.cacheKey}`](child?.props);
+        if (cached.callbackFn) return cached.callbackFn(cached.returnVal);
+      }
+    }
+
+    if (resolved()) {
+      if (props?.fetch?.then) {
+        // case when child is render props
+
+        suspenseCache[`${props?.cacheKey}`] = {
+          callbackFn: props.children[0],
+          returnVal,
+        };
+
+        return props.children[0](returnVal);
+      } else {
+        // case when child is normal component
+        if (returnVal) {
+          //cache the resolved compo
+
+          suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] = {
+            compo: returnVal, // this is compo
+          };
+
+          return h(returnVal, {
+            ...props?.children?.[0]?.props,
+          });
+        } else {
+          if (props?.errorFallback) return props?.errorFallback;
+          else return h("div", {}, [null]);
+        }
+      }
+    } else {
+      if (props?.fallback) {
+        // if (typeof props.fallback === "string") {
+        //   return h("div", {}, [props.fallback]);
+        //   // return {
+        //   //   type: "div",
+        //   //   children: [props.fallback],
+        //   // };
+        // } else {
+        //   return props.fallback;
+        // }
+        return h("div", {}, [props.fallback]);
+      } else return h("div", {}, [null]);
+      // return props?.fallback;
     }
   };
 }
