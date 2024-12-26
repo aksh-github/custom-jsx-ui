@@ -108,7 +108,7 @@ export const ArrayWithFragments = (props) => {
   const arr = [1000, 2000];
   // return () => <p>10</p>;
   return (props) => (
-    <div>
+    <df>
       {/* <p>10</p>
       <p>20</p> */}
       {st()}
@@ -116,7 +116,7 @@ export const ArrayWithFragments = (props) => {
       {arr.map((el, idx) => {
         return <Row key={idx} n={el} />;
       })}
-    </div>
+    </df>
   );
 };
 
