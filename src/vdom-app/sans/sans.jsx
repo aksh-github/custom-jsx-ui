@@ -47,7 +47,8 @@ const VerbRow = () => {
       style={{
         padding: "10px",
         margin: "10px",
-        minWidth: "300px",
+        width: "300px",
+        background: "linear-gradient(130deg, #ede9e8, #dfd2db)",
         boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
       }}
     >
