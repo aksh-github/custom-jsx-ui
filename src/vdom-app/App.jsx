@@ -596,13 +596,13 @@ export function App(props) {
                 <div>
                   <div>before text</div>
                   {/* <ArrayWithFragments some={200} /> */}
-                  <Suspense
+                  <SuspenseV2
                     delay={3000}
                     cacheKey={"awfp"}
                     fallback={<div>Loading...</div>}
                   >
                     <ArrayWithFragmentsPromise some={t} />
-                  </Suspense>
+                  </SuspenseV2>
 
                   <div>after text</div>
                 </div>
