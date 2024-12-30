@@ -1,6 +1,8 @@
 import { atom, batch, skipUpdate, state } from "../../utils/simple-state";
 import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
 
+import "./sans-style.css";
+
 const localStore = () => {
   // let lastUpdated = localStorage.getItem("lastUpdated");
   // if (lastUpdated) {
@@ -43,15 +45,7 @@ const [search, setSearch] = atom("");
 
 const VerbRow = () => {
   return ({ row: verb }) => (
-    <div
-      style={{
-        padding: "10px",
-        margin: "10px",
-        width: "300px",
-        background: "linear-gradient(130deg, #ede9e8, #dfd2db)",
-        boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.25)",
-      }}
-    >
+    <div className="divrow">
       <h3>{verb?.ev}</h3>
       <p> {verb?.sv?.join(", ")}</p>
       <p>{verb?.gana?.join(", ")}</p>
@@ -378,7 +372,7 @@ export function Sans() {
   });
 
   return (props) => (
-    <div>
+    <div className="sans">
       <h1>Sanskrit</h1>
       <div>
         <input
@@ -389,7 +383,6 @@ export function Sans() {
       </div>
 
       <p>{search()}</p>
-      <p>{props?.t}</p>
 
       <p>
         <button onClick={() => setCurrTab(TABS.VERBS)}>Verbs</button>
