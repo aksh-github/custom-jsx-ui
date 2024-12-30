@@ -193,20 +193,26 @@ const loadData = () => {
 const fetchData = (jsonFile) =>
   fetch(`/data/${jsonFile}.json`).then((res) => res.json());
 
-function GenericTab({ dkey, jsonFile, setDatacb, filterFunc }) {
-  let lsearch = null;
+function GenericTab({ dkey }) {
+  let lsearch = null,
+    filtered = () => [];
+
   const [data, setData] = atom(globalState[`${dkey}`]);
-  const [filtered, setFiltered] = atom([]);
+  // const [filtered, setFiltered] = atom([]);
 
-  const filter = () => {
-    setFiltered(data().filter(filterFunc));
-  };
+  // const filter = () => {
+  //   setFiltered(data().filter(filterFunc));
+  //   lsearch = search();
+  // };
 
-  return ({ title, RowComponent, asList }) => {
+  return ({ title, RowComponent, asList, filterFunc }) => {
     if (lsearch !== search()) {
-      filter();
+      // filter();
       lsearch = search();
+      if (lsearch) filtered = () => data().filter(filterFunc);
     }
+
+    console.log("exec");
 
     return (
       <div>
@@ -214,9 +220,7 @@ function GenericTab({ dkey, jsonFile, setDatacb, filterFunc }) {
 
         {filtered().length === 0 && search() ? (
           <p style={{ color: "red" }}>No results</p>
-        ) : (
-          ""
-        )}
+        ) : null}
 
         {asList ? (
           <ul>
