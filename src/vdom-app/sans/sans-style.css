@@ -1,4 +1,17 @@
 .sans {
+  button {
+    margin: 0.2em;
+    background: #dfd2db;
+    font-size: large;
+    border: none;
+    padding: 0.5em 1em;
+
+    &:hover {
+      cursor: pointer;
+      background: #ede9e8;
+    }
+  }
+
   .divrow {
     padding: 10px;
     margin: 10px;
