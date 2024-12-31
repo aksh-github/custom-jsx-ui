@@ -64,7 +64,7 @@ function findMatchingObjects(json, key, value) {
 
 // end meta
 
-import { atom } from "../simple-state";
+import { atom, setCurrComp } from "../simple-state";
 // publish as lib: https://www.youtube.com/watch?v=FITxnIDsMnw
 // import { diff, patch } from "./vdom-yt";
 
@@ -204,6 +204,7 @@ const microframe = (() => {
           currMount = exisng.mount;
           currUnmount = exisng.unMount;
         } else {
+          setCurrComp(cacheKey);
           // to maintain order
           _fn = type(props, ...children);
           if (currMount) mountFns.push(currMount);
@@ -863,6 +864,8 @@ const microframe = (() => {
         // genNode = genObj.next();
 
         CTR += 1;
+      } else {
+        // log(newNode.props, oldNode.props);
       }
 
       const domNode = stk[CTR];

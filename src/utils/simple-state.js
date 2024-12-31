@@ -13,6 +13,14 @@ function debounce(func, duration) {
 }
 
 const SimState = (() => {
+  const globalState = {};
+
+  let currComp = null;
+
+  const setCurrComp = (comp) => {
+    currComp = comp;
+  };
+
   const batch = (cb) => {
     console.warn("untested code");
     batchOp = true;
@@ -39,15 +47,22 @@ const SimState = (() => {
   };
 
   const state = (iv) => {
+    // if (!globalState[currComp]) globalState[currComp] = [];
+
+    // globalState[currComp].push(iv);
+
     let st = {
       ...iv,
     };
+
+    let lcurrComp = currComp;
 
     const get = (key) => {
       return key ? st[key] : st;
     };
 
     const set = (valueOrFn) => {
+      console.log("update in state", lcurrComp);
       if (typeof valueOrFn === "function") {
         st = valueOrFn(st);
       } else {
@@ -67,13 +82,20 @@ const SimState = (() => {
   };
 
   const atom = (iv) => {
+    // if (!globalState[currComp]) globalState[currComp] = [];
+
+    // globalState[currComp].push(iv);
+
     let st = iv;
+
+    let lcurrComp = currComp;
 
     const get = () => {
       return st;
     };
 
     const set = (valueOrFn) => {
+      console.log("update in state", lcurrComp);
       if (typeof valueOrFn === "function") {
         st = valueOrFn(st);
       } else {
@@ -98,6 +120,7 @@ const SimState = (() => {
     state,
     atom,
     skipUpdate,
+    setCurrComp,
   };
 })();
 
@@ -106,3 +129,4 @@ export const batch = SimState.batch;
 export const state = SimState.state;
 export const atom = SimState.atom;
 export const skipUpdate = SimState.skipUpdate;
+export const setCurrComp = SimState.setCurrComp;
