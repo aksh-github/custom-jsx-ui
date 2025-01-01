@@ -314,7 +314,6 @@ function ComplexRoute(props) {
       </p>
       <Ctr v={c()} key={"k1"} />
       {c() % 2 === 0 ? <Master /> : "NA"}
-      {/* {c() % 2 === 0 ? <Master /> : "NA"} */}
     </div>
   );
 }
@@ -418,7 +417,9 @@ export const SimpleRoute = () => {
           <button onClick={() => setPst((_pst) => _pst + 1)}>Change</button>
         </div> */}
 
+        <p>before</p>
         <TextArea />
+        <p>after</p>
 
         <SuspenseV2
           key="picurl"

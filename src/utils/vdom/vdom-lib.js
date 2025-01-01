@@ -64,7 +64,7 @@ function findMatchingObjects(json, key, value) {
 
 // end meta
 
-import { atom, setCurrComp } from "../simple-state";
+import { atom, setCurrComp, updateComps } from "../simple-state";
 // publish as lib: https://www.youtube.com/watch?v=FITxnIDsMnw
 // import { diff, patch } from "./vdom-yt";
 
@@ -136,30 +136,7 @@ const microframe = (() => {
   }
 
   function callUnmountAll() {
-    // let len = oldCallStack.length;
-    // let clen = callStack.length;
-
-    // for (let i = 0; i < len; ++i) {
-    //   let found = false;
-    //   for (let j = 0; j < clen; ++j) {
-    //     if (
-    //       oldCallStack[i].fname === callStack[j].fname &&
-    //       oldCallStack[i].p === callStack[j].p
-    //     ) {
-    //       found = true;
-    //       break;
-    //     } else {
-    //     }
-    //   }
-
-    //   if (!found) {
-    //     // log("call unmount for ", oldCallStack[i].fname);
-    //     oldCallStack[i]?.unMount?.();
-    //     oldCallStack[i].unMount = null;
-    //   }
-    // }
-
-    log(suspenseCache);
+    // log(suspenseCache);
 
     Object.keys(altFuncCache).forEach((key) => {
       if (!funcCache[key]) {
@@ -208,6 +185,7 @@ const microframe = (() => {
           // to maintain order
           _fn = type(props, ...children);
           if (currMount) mountFns.push(currMount);
+          setCurrComp(null);
         }
       }
 
@@ -643,7 +621,7 @@ const microframe = (() => {
   function forceUpdate() {
     counter = 0; // v imp
 
-    log(performance.now());
+    // log(performance.now());
 
     let current = curr(); // create latest vdom
     log(old, current);
@@ -653,14 +631,14 @@ const microframe = (() => {
     // log(CompoIterator().get(old, "TextArea"));
 
     // log(oldCallStack, callStack);
-    log(funcCache);
+    // log(funcCache);
 
     // log(performance.now());
 
     // 1. call unmount before dom update
     // callUnmountAll();  // moved to setTimeout
 
-    log(performance.now());
+    // log(performance.now());
 
     // 2. calculate diff
     patches = [];
@@ -669,7 +647,7 @@ const microframe = (() => {
     // updateElement(rootNode, current, old);
     wrapper(rootNode, current, old);
 
-    log(performance.now());
+    // log(performance.now());
 
     // log("===================");
 
@@ -679,7 +657,7 @@ const microframe = (() => {
       callUnmountAll();
 
       // 3. update dom
-      log(patches, propsPatches);
+      // log(patches, propsPatches);
       // console.log(patches);
       if (propsPatches) applyPropsPatches(propsPatches);
       if (patches) applyPatches(patches);
@@ -721,6 +699,18 @@ const microframe = (() => {
   // 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
   // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
 
+  let _C = 0;
+
+  const navigate = {
+    routeChange: false,
+    set: (flag) => {
+      navigate.routeChange = flag;
+    },
+  };
+
+  window.addEventListener("popstate", () => navigate.set(true));
+  window.addEventListener("navigate", () => navigate.set(true));
+
   function wrapper($parent, newNode, oldNode, index = 0) {
     let stk = domListIterator(rootNode);
 
@@ -729,9 +719,23 @@ const microframe = (() => {
     let optiPossible = false;
     let gdf = null;
 
-    let chunk = [];
+    if (navigate.routeChange) {
+      updateComps.clear();
+      navigate.set(false);
+    }
+
+    let updateCompsSize = updateComps.size;
+    let updateComp = updateComps.values().next().value;
+    let actualComparison = false;
 
     function updateElement($parent, newNode, oldNode, index = 0) {
+      if (updateCompsSize) {
+        if (!actualComparison && newNode?.type && oldNode?.type)
+          return doMain(newNode, oldNode);
+      }
+
+      _C++;
+
       if (!isValid(oldNode)) {
         // if (oldNode?.type) {
         log("append: ");
@@ -866,6 +870,16 @@ const microframe = (() => {
         CTR += 1;
       } else {
         // log(newNode.props, oldNode.props);
+
+        let currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
+        let c = currComp.split(":")[0];
+
+        // log(newNode, currComp, updateComp);
+        if (currComp === updateComp || newNode.$p === c) {
+          actualComparison = true;
+        } else {
+          actualComparison = false;
+        }
       }
 
       const domNode = stk[CTR];
@@ -879,6 +893,7 @@ const microframe = (() => {
         } else if (newNode.props.ignoreNode || newNode.props.ignoreLater) {
           return;
         } else {
+          // if (actualComparison)
           propsPatches.push({
             $target: domNode,
             newProps: newNode.props,
@@ -894,8 +909,15 @@ const microframe = (() => {
         const old = newNode.children[0]?.props?.__cached
           ? oldNode.children[0]
           : null;
+
+        // if (actualComparison) {
+        //   updateElement(stk[++CTR], newNode.children[0], old, 0);
+        // } else {
+        //   doMain(newNode, oldNode);
+        // }
+
         updateElement(stk[++CTR], newNode.children[0], old, 0);
-        // return;
+        return;
       } else {
         const newLength = newNode.children.length;
         const oldLength = oldNode.children.length;
@@ -909,6 +931,11 @@ const microframe = (() => {
         }
 
         for (let i = 0; i < newLength || i < oldLength; i++) {
+          // if (actualComparison) {
+          //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+          // } else {
+          //   doMain(newNode.children[i], oldNode.children[i]);
+          // }
           updateElement(domNode, newNode.children[i], oldNode.children[i], i);
         }
       }
@@ -929,6 +956,11 @@ const microframe = (() => {
     }
 
     updateElement($parent, newNode, oldNode, index);
+
+    updateComps.clear();
+
+    log(_C);
+    _C = 0;
   }
 
   function applyPropsPatches(patches) {

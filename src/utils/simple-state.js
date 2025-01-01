@@ -12,6 +12,8 @@ function debounce(func, duration) {
   };
 }
 
+export const updateComps = new Set();
+
 const SimState = (() => {
   const globalState = {};
 
@@ -72,8 +74,12 @@ const SimState = (() => {
         st = { ...valueOrFn };
       }
 
-      if (batchOp || isSkipping) {
+      if (batchOp) {
+        if (lcurrComp) updateComps.add(lcurrComp);
+      } else if (isSkipping) {
       } else {
+        // updateComps.push(lcurrComp);
+        if (lcurrComp) updateComps.add(lcurrComp);
         throtUpdate();
       }
     };
@@ -95,7 +101,7 @@ const SimState = (() => {
     };
 
     const set = (valueOrFn) => {
-      console.log("update in state", lcurrComp);
+      console.log("update in atom", lcurrComp);
       if (typeof valueOrFn === "function") {
         st = valueOrFn(st);
       } else {
@@ -105,8 +111,12 @@ const SimState = (() => {
         st = valueOrFn;
       }
 
-      if (batchOp || isSkipping) {
+      if (batchOp) {
+        if (lcurrComp) updateComps.add(lcurrComp);
+      } else if (isSkipping) {
       } else {
+        // updateComps.push(lcurrComp);
+        if (lcurrComp) updateComps.add(lcurrComp);
         throtUpdate();
       }
     };
