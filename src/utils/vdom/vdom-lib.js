@@ -631,9 +631,9 @@ const microframe = (() => {
     // log(CompoIterator().get(old, "TextArea"));
 
     // log(oldCallStack, callStack);
-    // log(funcCache);
+    log(funcCache);
 
-    // log(performance.now());
+    log(performance.now());
 
     // 1. call unmount before dom update
     // callUnmountAll();  // moved to setTimeout
@@ -647,7 +647,7 @@ const microframe = (() => {
     // updateElement(rootNode, current, old);
     wrapper(rootNode, current, old);
 
-    // log(performance.now());
+    log(performance.now());
 
     // log("===================");
 
