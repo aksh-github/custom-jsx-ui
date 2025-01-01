@@ -874,8 +874,13 @@ const microframe = (() => {
         let currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
         let c = currComp.split(":")[0];
 
-        // log(newNode, currComp, updateComp);
-        if (currComp === updateComp || newNode.$p === c) {
+        // log(newNode.props, oldNode.props);
+        // this is for
+        if (
+          currComp === updateComp ||
+          newNode.$p === c ||
+          newNode.key !== oldNode.key
+        ) {
           actualComparison = true;
         } else {
           actualComparison = false;

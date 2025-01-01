@@ -59,11 +59,12 @@ const VerbRow = () => {
 };
 
 const verbFilter = (w) => {
-  let flag = w?.ev?.includes(search());
+  let srch = search();
+  let flag = w?.ev?.includes(srch);
 
   if (!flag) {
     for (let i = 0; i < w?.sv?.length; i++) {
-      if (w?.sv[i].indexOf(search()) > -1) {
+      if (w?.sv[i].indexOf(srch) > -1) {
         flag = true;
         break;
       }
@@ -72,7 +73,7 @@ const verbFilter = (w) => {
 
   if (!flag) {
     for (let i = 0; i < w?.mv?.length; i++) {
-      if (w?.mv[i].indexOf(search()) > -1) {
+      if (w?.mv[i].indexOf(srch) > -1) {
         flag = true;
         break;
       }
@@ -91,11 +92,12 @@ const WordRow = () => {
 };
 
 const wordFilter = (w) => {
-  let flag = w?.ew?.includes(search());
+  let srch = search();
+  let flag = w?.ew?.includes(srch);
 
   if (!flag) {
     for (let i = 0; i < w?.sw?.length; i++) {
-      if (w?.sw[i].indexOf(search()) > -1) {
+      if (w?.sw[i].indexOf(srch) > -1) {
         flag = true;
         break;
       }
@@ -104,7 +106,7 @@ const wordFilter = (w) => {
 
   if (!flag) {
     for (let i = 0; i < w?.mw?.length; i++) {
-      if (w?.mw[i].indexOf(search()) > -1) {
+      if (w?.mw[i].indexOf(srch) > -1) {
         flag = true;
         break;
       }
@@ -200,9 +202,10 @@ function GenericTab({ dkey }) {
   // };
 
   return ({ title, RowComponent, asList, filterFunc }) => {
-    if (lsearch !== search()) {
+    let srch = search();
+    if (lsearch !== srch) {
       // filter();
-      lsearch = search();
+      lsearch = srch;
       if (lsearch) filtered = () => data().filter(filterFunc);
     }
 
@@ -212,7 +215,7 @@ function GenericTab({ dkey }) {
       <div>
         <h2>{title}</h2>
 
-        {filtered().length === 0 && search() ? (
+        {filtered().length === 0 && srch ? (
           <p style={{ color: "red" }}>No results</p>
         ) : null}
 
@@ -367,8 +370,8 @@ export function Sans() {
 
   onCleanup(() => {
     console.log("unmount for Sans");
-    // skipUpdate(() => setSearch(""));
-    setSearch("");
+    skipUpdate(() => setSearch(""));
+    // setSearch("");
   });
 
   return (props) => (
