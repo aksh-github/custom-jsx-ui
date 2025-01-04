@@ -41,7 +41,7 @@ const globalState = {
 };
 
 // const [filtered, setFiltered] = atom([]);
-const [search, setSearch] = atom("");
+let gsearchPair = null;
 
 const VerbRow = () => {
   return ({ row: verb }) => (
@@ -59,7 +59,8 @@ const VerbRow = () => {
 };
 
 const verbFilter = (w) => {
-  let srch = search();
+  // let srch = search();
+  let srch = gsearchPair[0]();
   let flag = w?.ev?.includes(srch);
 
   if (!flag) {
@@ -92,7 +93,8 @@ const WordRow = () => {
 };
 
 const wordFilter = (w) => {
-  let srch = search();
+  // let srch = search();
+  let srch = gsearchPair[0]();
   let flag = w?.ew?.includes(srch);
 
   if (!flag) {
@@ -202,7 +204,8 @@ function GenericTab({ dkey }) {
   // };
 
   return ({ title, RowComponent, asList, filterFunc }) => {
-    let srch = search();
+    // let srch = search();
+    let srch = gsearchPair[0];
     if (lsearch !== srch) {
       // filter();
       lsearch = srch;
@@ -353,9 +356,13 @@ function Tabs() {
 export function Sans() {
   const [currTab, setCurrTab] = atom(0);
   const [isLoaded, setIsLoaded] = atom(false);
+  // gsearchPair = atom("");
+
+  const [search, setSearch] = (gsearchPair = atom(""));
 
   onMount(() => {
     console.log("mount for Sans");
+
     // setSearch("");
     loadData()
       .then(() => {
