@@ -49,6 +49,7 @@ const VerbRow = () => {
       <h3>{verb?.ev}</h3>
       <p> {verb?.sv?.join(", ")}</p>
       <p>{verb?.gana?.join(", ")}</p>
+      <p>{verb?.roop?.join(", ")}</p>
       <p>{verb?.lyut?.join(", ")}</p>
       <p>{verb?.kta?.join(", ")}</p>
       <p>{verb?.mv?.join(", ")}</p>
@@ -60,7 +61,7 @@ const VerbRow = () => {
 
 const verbFilter = (w) => {
   // let srch = search();
-  let srch = gsearchPair[0]();
+  let srch = gsearchPair[0]()?.trim();
   let flag = w?.ev?.includes(srch);
 
   if (!flag) {
@@ -94,7 +95,7 @@ const WordRow = () => {
 
 const wordFilter = (w) => {
   // let srch = search();
-  let srch = gsearchPair[0]();
+  let srch = gsearchPair[0]()?.trim();
   let flag = w?.ew?.includes(srch);
 
   if (!flag) {
@@ -223,7 +224,7 @@ function GenericTab({ dkey }) {
         ) : null}
 
         {asList ? (
-          <ul>
+          <ul className="list">
             {(filtered().length > 0 ? filtered() : data()).map((d) => (
               <RowComponent row={d} />
             ))}
@@ -337,7 +338,7 @@ function GenericTab({ dkey }) {
 function Tabs() {
   return ({ currTab }) => {
     return (
-      <div style={{ minHeight: "220px" }}>
+      <div className="container">
         <GenericTab key={UIObj[currTab].dkey} {...UIObj[currTab]} />
         {/*
         {currTab === TABS.WORDS ? (
@@ -384,13 +385,12 @@ export function Sans() {
   return (props) => (
     <div className="sans">
       <h1>Sanskrit</h1>
-      <div>
-        <input
-          value={search()}
-          type="text"
-          onInput={(e) => setSearch(e.target.value)}
-        />
-      </div>
+
+      <input
+        value={search()}
+        type="text"
+        onInput={(e) => setSearch(e.target.value)}
+      />
 
       <p>{search()}</p>
 

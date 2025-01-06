@@ -1,4 +1,12 @@
 .sans {
+  padding: 1em;
+
+  input {
+    font-size: large;
+    padding: 0.5em;
+    width: 100%;
+  }
+
   button {
     margin: 0.2em;
     background: #dfd2db;
@@ -12,11 +20,24 @@
     }
   }
 
-  .divrow {
-    padding: 10px;
-    margin: 10px;
-    width: 300px;
-    background: linear-gradient(130deg, #ede9e8, #dfd2db);
-    box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.25);
+  .container {
+    min-height: 220px;
+    .divrow {
+      padding: 10px;
+      margin: 10px;
+      width: 300px;
+      background: linear-gradient(130deg, #ede9e8, #dfd2db);
+      box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.25);
+      text-align: center;
+    }
+    .list {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+
+      li {
+        padding: 1em 0;
+      }
+    }
   }
 }
