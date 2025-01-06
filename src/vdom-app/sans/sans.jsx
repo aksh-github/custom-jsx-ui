@@ -25,7 +25,8 @@ const localStore = () => {
     get: (_key) => {
       // const key = keyFormat + _key;
       // console.log(localStorage.getItem(keyFormat + _key));
-      return JSON.parse(localStorage.getItem(keyFormat + _key))?.d;
+      // return JSON.parse(localStorage.getItem(keyFormat + _key))?.d;
+      return JSON.parse(localStorage.getItem(keyFormat + _key));
     },
   };
 };
@@ -36,8 +37,8 @@ const TABS = {
 };
 
 const globalState = {
-  words: [],
-  verbs: [],
+  words: { d: [], ts: 0 },
+  verbs: { d: [], ts: 0 },
 };
 
 // const [filtered, setFiltered] = atom([]);
@@ -142,51 +143,62 @@ const UIObj = {
 const loadData = () => {
   const { updateData, get } = localStore();
 
-  if (get()) {
-    // console.log("")
-    // updateData();
-  } else {
-    // updateData();
+  const promises = [],
+    updateReqd = [],
+    lazyUpdateReqd = [];
 
-    console.log("first time");
+  Object.keys(UIObj).forEach((key) => {
+    const data = get(`${UIObj[key].dkey}`);
 
-    const promises = [],
-      updateReqd = [];
+    if (!data) {
+      // data unavailable
+      promises.push(fetchData(UIObj[key].jsonFile));
+      updateReqd.push(UIObj[key].dkey);
+    } else {
+      // data available
+      const { ts, d } = data;
+      promises.push(Promise.resolve({ ts, d: d || [] }));
 
+      //   let remoteDataTs = null;
+
+      //   // check if its latest data
+      //   // load remote data ts
+      // fetch("/api/tsdata")
+      //   .then((res) => res.json())
+      //   .then((res) => {
+      //     console.log(res);
+      //     remoteDataTs = res
+      //   });
+    }
+  });
+
+  return Promise.all(promises).then((res) => {
     Object.keys(UIObj).forEach((key) => {
-      const data = get(`${UIObj[key].dkey}`);
+      // let data = await res[key].json();
+      let data = res[key]?.d || res[key]; // d is when local data is available
 
-      if (!data) {
-        // promises.push(fetch(`/data/${UIObj[key].jsonFile}.json`));
-        promises.push(fetchData(UIObj[key].jsonFile));
-        updateReqd.push(UIObj[key].dkey);
-      } else promises.push(Promise.resolve(data));
+      // transform data
+      data =
+        UIObj[key].setDatacb && !data?.length
+          ? UIObj[key].setDatacb(data)
+          : data;
+
+      if (updateReqd.includes(UIObj[key].dkey))
+        // update local storage whenever possible
+        requestIdleCallback(() => {
+          updateData(`${UIObj[key].dkey}`, data);
+
+          updateReqd.splice(updateReqd.indexOf(UIObj[key].dkey), 1);
+        });
+      // console.log(data);
+
+      // console.log(data);
+      globalState[`${UIObj[key].dkey}`].d = data;
+      globalState[`${UIObj[key].dkey}`].ts = res[key]?.ts || 0;
+      // console.log(`${UIObj[key].dkey}`, globalState[`${UIObj[key].dkey}`]);
+      console.log(globalState);
     });
-
-    return Promise.all(promises).then((res) => {
-      Object.keys(UIObj).forEach((key) => {
-        // let data = await res[key].json();
-        let data = res[key];
-
-        data =
-          UIObj[key].setDatacb && !data?.length
-            ? UIObj[key].setDatacb(data)
-            : data;
-
-        if (updateReqd.includes(UIObj[key].dkey))
-          requestIdleCallback(() => {
-            updateData(`${UIObj[key].dkey}`, data);
-
-            updateReqd.splice(updateReqd.indexOf(UIObj[key].dkey), 1);
-          });
-        // console.log(data);
-
-        // console.log(data);
-        globalState[`${UIObj[key].dkey}`] = data;
-        // console.log(`${UIObj[key].dkey}`, globalState[`${UIObj[key].dkey}`]);
-      });
-    });
-  }
+  });
 };
 
 const fetchData = (jsonFile) =>
@@ -196,7 +208,7 @@ function GenericTab({ dkey }) {
   let lsearch = null,
     filtered = () => [];
 
-  const [data, setData] = atom(globalState[`${dkey}`]);
+  const [data, setData] = atom(globalState[`${dkey}`].d);
   // const [filtered, setFiltered] = atom([]);
 
   // const filter = () => {
@@ -280,53 +292,6 @@ function GenericTab({ dkey }) {
 //           {(filtered().length > 0 ? filtered() : data()).map((w) => (
 //             <li>
 //               {w?.ev}, {w?.sv?.join(", ")}, {w?.mv?.join(", ")}
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//     );
-//   };
-// }
-
-// function WordTab() {
-//   let lsearch = null;
-//   const [data, setData] = atom(globalState.words);
-//   const [filtered, setFiltered] = atom([]);
-
-//   onMount(() => {
-//     if (globalState.words.length === 0) {
-//       fetch("/data/words.json")
-//         .then((res) => res.json())
-//         .then((_data) => {
-//           // console.log(data, data["home"]);
-//           setData(_data["Everyday words"].concat(_data["home"]));
-//           // setGlobalState((prev) => ({ ...prev, words: data() }));
-//           globalState.words = _data["Everyday words"].concat(_data["home"]);
-//         });
-//     }
-//   });
-
-//   const filter = () => {
-//     setFiltered(data().filter(wordFilter));
-//   };
-
-//   return () => {
-//     if (lsearch !== search()) {
-//       filter();
-//       lsearch = search();
-//     }
-
-//     return (
-//       <div>
-//         <h1>Words</h1>
-
-//         <p style={{ color: "red" }}>
-//           {filtered().length === 0 ? "No results" : ""}
-//         </p>
-//         <ul>
-//           {(filtered().length > 0 ? filtered() : data()).map((w) => (
-//             <li>
-//               {w?.ew}, {w?.sw?.join(", ")}, {w?.mw}
 //             </li>
 //           ))}
 //         </ul>
