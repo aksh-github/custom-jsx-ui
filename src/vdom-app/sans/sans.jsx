@@ -200,7 +200,7 @@ function GenericTab({ dkey }) {
   let lsearch = null,
     filtered = () => [];
 
-  const [data, setData] = atom(globalState[`${dkey}`].d);
+  const [data, setData] = atom(globalState[`${dkey}`].d.slice(0, 20));
   // const [filtered, setFiltered] = atom([]);
 
   // const filter = () => {
@@ -210,18 +210,20 @@ function GenericTab({ dkey }) {
 
   return ({ title, RowComponent, asList, filterFunc }) => {
     // let srch = search();
-    let srch = gsearchPair[0];
+    let srch = gsearchPair[0]();
     if (lsearch !== srch) {
       // filter();
       lsearch = srch;
-      if (lsearch) filtered = () => data().filter(filterFunc);
+      if (lsearch) {
+        filtered = () => globalState[`${dkey}`].d.filter(filterFunc);
+      } else filtered = () => [];
     }
 
     console.log("exec");
 
     return (
       <div>
-        <h2>{title}</h2>
+        <h2 className="title">{title}</h2>
 
         {filtered().length === 0 && srch ? (
           <p style={{ color: "red" }}>No results</p>
@@ -295,7 +297,7 @@ function GenericTab({ dkey }) {
 function Tabs() {
   return ({ currTab }) => {
     return (
-      <div className="container">
+      <div className="search-wrapper">
         <GenericTab key={UIObj[currTab].dkey} {...UIObj[currTab]} />
         {/*
         {currTab === TABS.WORDS ? (
