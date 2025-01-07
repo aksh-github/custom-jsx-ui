@@ -15,11 +15,35 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
-        "/api/data-ts": {
-          target: `${env.VITE_API_URL}data-ts.json`,
+        [`${env.VITE_BASEPATH}${env.VITE_TS}`]: {
+          target: `${env.VITE_API_HOST}`,
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api\/data-ts/, ""),
+          rewrite: (path) => {
+            // console.log(path);
+            return path.replace(/^\/${env.VITE_BASEPATH}${env.VITE_TS}/, "");
+            // return path;
+          },
+          //   configure: (proxy, _options) => {
+          //     proxy.on("error", (err, _req, _res) => {
+          //       console.log("proxy error", err);
+          //     });
+          //     proxy.on("proxyReq", (proxyReq, req, _res) => {
+          //       console.log(
+          //         "Sending Request to the Target:",
+          //         req.method,
+          //         req.url,
+          //         proxyReq
+          //       );
+          //     });
+          //     proxy.on("proxyRes", (proxyRes, req, _res) => {
+          //       console.log(
+          //         "Received Response from the Target:",
+          //         proxyRes.statusCode,
+          //         req.url
+          //       );
+          //     });
+          //   },
         },
         "/api/data": {
           target:
@@ -28,10 +52,30 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           rewrite: (path) => {
-            console.log(path);
+            // console.log(path);
             // const urlparts = path.split("/");
             // console.log(urlparts);
             return path.replace(/^\/api\/data/, "");
+          },
+        },
+        [`${env.VITE_BASEPATH}${env.VITE_WORDS}`]: {
+          target: `${env.VITE_API_HOST}`,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            // console.log(path);
+            return path.replace(/^\/${env.VITE_BASEPATH}${env.VITE_WORDS}/, "");
+            // return path;
+          },
+        },
+        [`${env.VITE_BASEPATH}${env.VITE_VERBS}`]: {
+          target: `${env.VITE_API_HOST}`,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            // console.log(path);
+            return path.replace(/^\/${env.VITE_BASEPATH}${env.VITE_VERBS}/, "");
+            // return path;
           },
         },
       },

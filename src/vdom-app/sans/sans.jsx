@@ -3,6 +3,8 @@ import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
 
+const env = import.meta.env;
+
 const localStore = () => {
   // let lastUpdated = localStorage.getItem("lastUpdated");
   // if (lastUpdated) {
@@ -62,7 +64,7 @@ const VerbRow = () => {
 
 const verbFilter = (w) => {
   // let srch = search();
-  let srch = gsearchPair[0]()?.trim();
+  let srch = gsearchPair[0]()?.trim()?.toLowerCase();
   let flag = w?.ev?.includes(srch);
 
   if (!flag) {
@@ -96,7 +98,7 @@ const WordRow = () => {
 
 const wordFilter = (w) => {
   // let srch = search();
-  let srch = gsearchPair[0]()?.trim();
+  let srch = gsearchPair[0]()?.trim()?.toLowerCase();
   let flag = w?.ew?.includes(srch);
 
   if (!flag) {
@@ -124,14 +126,14 @@ const UIObj = {
   [TABS.VERBS]: {
     title: "Verbs",
     dkey: "verbs",
-    jsonFile: "verbs.json", //" "verbs-v2",
+    jsonFile: env.VITE_VERBS, //" "verbs-v2",
     filterFunc: verbFilter,
     RowComponent: VerbRow,
   },
   [TABS.WORDS]: {
     title: "Words",
     dkey: "words",
-    jsonFile: "words.json",
+    jsonFile: env.VITE_WORDS, //"words.json",
     filterFunc: wordFilter,
     setDatacb: (data) =>
       data["Everyday words"].concat(data["home"]).concat(data["eng other"]),
@@ -140,7 +142,7 @@ const UIObj = {
   },
 };
 
-const loadData = () => {
+const loadData = (updateAvailable = false) => {
   const { updateData, get } = localStore();
 
   const promises = [],
@@ -150,7 +152,7 @@ const loadData = () => {
   Object.keys(UIObj).forEach((key) => {
     const data = get(`${UIObj[key].dkey}`);
 
-    if (!data) {
+    if (!data || updateAvailable) {
       // data unavailable
       promises.push(fetchData(UIObj[key].jsonFile));
       updateReqd.push(UIObj[key].dkey);
@@ -158,17 +160,6 @@ const loadData = () => {
       // data available
       const { ts, d } = data;
       promises.push(Promise.resolve({ ts, d: d || [] }));
-
-      //   let remoteDataTs = null;
-
-      //   // check if its latest data
-      //   // load remote data ts
-      // fetch("/api/tsdata")
-      //   .then((res) => res.json())
-      //   .then((res) => {
-      //     console.log(res);
-      //     remoteDataTs = res
-      //   });
     }
   });
 
@@ -196,14 +187,14 @@ const loadData = () => {
       globalState[`${UIObj[key].dkey}`].d = data;
       globalState[`${UIObj[key].dkey}`].ts = res[key]?.ts || 0;
       // console.log(`${UIObj[key].dkey}`, globalState[`${UIObj[key].dkey}`]);
-      console.log(globalState);
+      // console.log(globalState);
     });
   });
 };
 
 const fetchData = (jsonFile) =>
   // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
-  fetch(`/api/data/${jsonFile}`).then((res) => res.json());
+  fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => res.json());
 
 function GenericTab({ dkey }) {
   let lsearch = null,
@@ -331,10 +322,31 @@ export function Sans() {
     console.log("mount for Sans");
 
     // setSearch("");
+    //
     loadData()
       .then(() => {
-        console.log("data loaded");
+        // console.log(globalState);
         setIsLoaded(true);
+
+        // check if its latest data
+        // load remote data ts
+        fetch(`${env.VITE_BASEPATH}${env.VITE_TS}?ts=${Date.now()}`)
+          .then((res) => res.json())
+          .then((res) => {
+            // console.log(res);
+            // remoteDataTs = res
+            let updateCount = 0;
+            Object.keys(globalState).forEach((key) => {
+              if (globalState[key].ts < res[key]) {
+                console.log("update for", key);
+                updateCount += 1;
+              }
+            });
+
+            if (updateCount > 0) {
+              loadData(true);
+            }
+          });
       })
       .catch((err) => {
         console.log(err);
