@@ -124,14 +124,14 @@ const UIObj = {
   [TABS.VERBS]: {
     title: "Verbs",
     dkey: "verbs",
-    jsonFile: "verbs-v2",
+    jsonFile: "verbs.json", //" "verbs-v2",
     filterFunc: verbFilter,
     RowComponent: VerbRow,
   },
   [TABS.WORDS]: {
     title: "Words",
     dkey: "words",
-    jsonFile: "words",
+    jsonFile: "words.json",
     filterFunc: wordFilter,
     setDatacb: (data) =>
       data["Everyday words"].concat(data["home"]).concat(data["eng other"]),
@@ -202,7 +202,8 @@ const loadData = () => {
 };
 
 const fetchData = (jsonFile) =>
-  fetch(`/data/${jsonFile}.json`).then((res) => res.json());
+  // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
+  fetch(`/api/data/${jsonFile}`).then((res) => res.json());
 
 function GenericTab({ dkey }) {
   let lsearch = null,

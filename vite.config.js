@@ -9,12 +9,25 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api/tsdata": {
+      "/api/data-ts": {
         target:
           "https://raw.githubusercontent.com/aksh-github/pages/refs/heads/content/data/sanskrit/db/data-ts.json",
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api\/tsdata/, ""),
+        rewrite: (path) => path.replace(/^\/api\/data-ts/, ""),
+      },
+      "/api/data": {
+        target:
+          // "https://raw.githubusercontent.com/aksh-github/pages/refs/heads/content/data/sanskrit/db/data-ts.json",
+          "https://raw.githubusercontent.com/aksh-github/pages/refs/heads/content/data/sanskrit/db/",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => {
+          console.log(path);
+          // const urlparts = path.split("/");
+          // console.log(urlparts);
+          return path.replace(/^\/api\/data/, "");
+        },
       },
     },
   },
