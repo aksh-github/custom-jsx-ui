@@ -91,7 +91,8 @@ const verbFilter = (w) => {
 const WordRow = () => {
   return ({ row: word }) => (
     <li>
-      {word?.ew}, {word?.sw?.join(", ")}, {word?.mw?.join(", ")}
+      <h3>{word?.ew}</h3>
+      {word?.sw?.join(", ")}, {word?.mw?.join(", ")}
     </li>
   );
 };
@@ -221,6 +222,10 @@ function GenericTab({ dkey }) {
 
     console.log("exec");
 
+    const RR = (filtered().length > 0 ? filtered() : data()).map((d) => (
+      <RowComponent row={d} />
+    ));
+
     return (
       <div>
         <h2 className="title">{title}</h2>
@@ -231,15 +236,20 @@ function GenericTab({ dkey }) {
 
         {asList ? (
           <ul className="list">
-            {(filtered().length > 0 ? filtered() : data()).map((d) => (
+            {/* {(filtered().length > 0 ? filtered() : data()).map((d) => (
               <RowComponent row={d} />
-            ))}
+            ))} */}
+            {RR}
           </ul>
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {(filtered().length > 0 ? filtered() : data()).map((d) => (
+          <div
+            className="search"
+            // style2={{ display: "flex", flexWrap: "wrap" }}
+          >
+            {/* {(filtered().length > 0 ? filtered() : data()).map((d) => (
               <RowComponent row={d} />
-            ))}
+            ))} */}
+            {RR}
           </div>
         )}
       </div>
@@ -364,20 +374,24 @@ export function Sans() {
 
   return (props) => (
     <div className="sans">
-      <h1>Sanskrit</h1>
+      <header className="sticky-header">
+        <h2>संस्कृतकोष:</h2>
 
-      <input
-        value={search()}
-        type="text"
-        onInput={(e) => setSearch(e.target.value)}
-      />
+        <div style={{ textAlign: "center" }}>
+          <input
+            value={search()}
+            type="text"
+            onInput={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-      <p>{search()}</p>
+        {/* <p>{search()}</p> */}
 
-      <p>
-        <button onClick={() => setCurrTab(TABS.VERBS)}>Verbs</button>
-        <button onClick={() => setCurrTab(TABS.WORDS)}>Words</button>
-      </p>
+        <p className="tabs">
+          <button onClick={() => setCurrTab(TABS.VERBS)}>Verbs</button>
+          <button onClick={() => setCurrTab(TABS.WORDS)}>Words</button>
+        </p>
+      </header>
       {isLoaded() ? <Tabs currTab={currTab()} /> : <p>Loading...</p>}
 
       {/* <Suspense
