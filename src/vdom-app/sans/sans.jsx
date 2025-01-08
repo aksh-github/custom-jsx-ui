@@ -175,6 +175,9 @@ const loadData = (updateAvailable = false) => {
           ? UIObj[key].setDatacb(data)
           : data;
 
+      data?.shift?.();
+      data?.shift?.();
+
       if (updateReqd.includes(UIObj[key].dkey))
         // update local storage whenever possible
         requestIdleCallback(() => {
