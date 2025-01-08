@@ -231,7 +231,7 @@ function GenericTab({ dkey }) {
         <h2 className="title">{title}</h2>
 
         {filtered().length === 0 && srch ? (
-          <p style={{ color: "red" }}>No results</p>
+          <p className="info">No results for your search: "{srch}"</p>
         ) : null}
 
         {asList ? (
