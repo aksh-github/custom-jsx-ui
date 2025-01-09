@@ -378,12 +378,13 @@ export function Sans() {
   return (props) => (
     <div className="sans">
       <header className="sticky-header">
-        <h2>संस्कृतकोष:</h2>
+        <h1 className="main-head">संस्कृतकोष:</h1>
 
         <div style={{ textAlign: "center" }}>
           <input
             value={search()}
             type="text"
+            placeholder="Search in English or Sanskrit..."
             onInput={(e) => setSearch(e.target.value)}
           />
         </div>

@@ -1,6 +1,15 @@
 .sans {
-  padding: 1em;
+  /* padding: 0 1em; */
   color: brown;
+
+  h1.main-head {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    padding: 2em 0;
+    background-color: burlywood;
+  }
 
   .title {
     text-align: center;
@@ -14,7 +23,7 @@
     font-size: large;
     padding: 0.5em;
     box-sizing: border-box;
-    width: 80vw;
+    width: 80%;
   }
 
   button {
