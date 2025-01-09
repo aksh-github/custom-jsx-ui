@@ -85,3 +85,11 @@
     }
   }
 }
+
+@media (width < 768px) {
+  .sans {
+    h1.main-head {
+      padding: 0.5em 0;
+    }
+  }
+}
