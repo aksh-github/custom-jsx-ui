@@ -699,8 +699,6 @@ const microframe = (() => {
   // 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
   // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
 
-  let _C = 0;
-
   const navigate = {
     routeChange: false,
     set: (flag) => {
@@ -718,6 +716,8 @@ const microframe = (() => {
     let last = null;
     let optiPossible = false;
     let gdf = null;
+
+    let _C = 0;
 
     if (navigate.routeChange) {
       updateComps.clear();
