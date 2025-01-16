@@ -600,7 +600,6 @@ const microframe = (() => {
     // log(performance.now());
     // log(callStack, old);
     log(funcCache);
-    // updateElement(rootNode, old);
     // 1. set dom
     // rootNode.appendChild(createElement(old));
     if (rootNode.firstChild)
@@ -725,16 +724,23 @@ const microframe = (() => {
     }
 
     let updateCompsSize = updateComps.size;
-    let updateComp = updateComps.values().next().value;
+    let currComp = null;
     let actualComparison = false;
 
     function updateElement($parent, newNode, oldNode, index = 0) {
-      if (updateCompsSize) {
-        if (!actualComparison && newNode?.type && oldNode?.type)
+      // if (!actualComparison && newNode?.type && oldNode?.type)
+      //   return doMain(newNode, oldNode);
+      if (!actualComparison && updateCompsSize) {
+        if (newNode?.type && oldNode?.type) {
           return doMain(newNode, oldNode);
+        } else {
+          return;
+        }
       }
 
       _C++;
+
+      // log("compare: ", newNode);
 
       if (!isValid(oldNode)) {
         // if (oldNode?.type) {
@@ -871,19 +877,33 @@ const microframe = (() => {
       } else {
         // log(newNode.props, oldNode.props);
 
-        let currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
+        currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
         let c = currComp.split(":")[0];
 
-        // log(newNode.props, oldNode.props);
-        // this is for
         if (
-          currComp === updateComp ||
+          // currComp === updateComp ||
+          updateComps.has(currComp) ||
           newNode.$p === c ||
           newNode.key !== oldNode.key
         ) {
           actualComparison = true;
         } else {
-          actualComparison = false;
+          let diff = false;
+          // if (newNode.$c === "GenericTab")
+          // log("compare: ", newNode.props, oldNode.props);
+          Object.keys(newNode.props).forEach((key) => {
+            if (newNode.props[key] !== oldNode.props[key]) {
+              diff = true;
+            }
+          });
+
+          // if (!diff) {
+          //   const newLength = newNode.children.length;
+          //   const oldLength = oldNode.children.length;
+          //   diff = newLength === oldLength;
+          // }
+
+          // actualComparison = diff;
         }
       }
 
@@ -915,11 +935,7 @@ const microframe = (() => {
           ? oldNode.children[0]
           : null;
 
-        // if (actualComparison) {
-        //   updateElement(stk[++CTR], newNode.children[0], old, 0);
-        // } else {
-        //   doMain(newNode, oldNode);
-        // }
+        actualComparison = true;
 
         updateElement(stk[++CTR], newNode.children[0], old, 0);
         return;
@@ -936,11 +952,6 @@ const microframe = (() => {
         }
 
         for (let i = 0; i < newLength || i < oldLength; i++) {
-          // if (actualComparison) {
-          //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
-          // } else {
-          //   doMain(newNode.children[i], oldNode.children[i]);
-          // }
           updateElement(domNode, newNode.children[i], oldNode.children[i], i);
         }
       }
