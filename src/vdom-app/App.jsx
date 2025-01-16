@@ -514,7 +514,9 @@ export function App(props) {
       // p.textContent = footerTp();
 
       // footRef.appendChild(p);
-      const p = footRef.querySelector("p");
+      const p =
+        footRef.querySelector("p") ||
+        footRef.appendChild(document.createElement("p"));
       let ct = 0;
 
       timer = setInterval(() => {
@@ -626,10 +628,11 @@ export function App(props) {
               else return "Wrong path 404";
           }
         })()}
+
         <footer
           ref={(_ref) => (footRef = _ref)}
-          // ignoreNode
-          ignoreLater={true}
+          ignoreNode
+          // ignoreLater={true}
           style={{ backgroundColor: "bisque" }}
         >
           <p></p>
