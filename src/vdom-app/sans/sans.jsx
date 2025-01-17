@@ -1,5 +1,11 @@
 import { atom, batch, skipUpdate, state } from "../../utils/simple-state";
-import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
+import {
+  h,
+  onMount,
+  onCleanup,
+  Suspense,
+  Skip,
+} from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
 
@@ -212,9 +218,10 @@ function GenericTab({ dkey }) {
   //   lsearch = search();
   // };
 
-  return ({ title, RowComponent, asList, filterFunc }) => {
+  return ({ prop, search: srch, dkey }) => {
+    const { title, filterFunc, RowComponent, asList } = UIObj[prop];
     // let srch = search();
-    let srch = gsearchPair[0]();
+    // let srch = gsearchPair[0]();
     if (lsearch !== srch) {
       // filter();
       lsearch = srch;
@@ -225,9 +232,9 @@ function GenericTab({ dkey }) {
 
     console.log("exec");
 
-    const RR = (filtered().length > 0 ? filtered() : data()).map((d) => (
-      <RowComponent row={d} />
-    ));
+    // const RR = (filtered().length > 0 ? filtered() : data()).map((d) => (
+    //   <RowComponent row={d} />
+    // ));
 
     return (
       <div>
@@ -239,20 +246,20 @@ function GenericTab({ dkey }) {
 
         {asList ? (
           <ul className="list">
-            {/* {(filtered().length > 0 ? filtered() : data()).map((d) => (
+            {(filtered().length > 0 ? filtered() : data()).map((d) => (
               <RowComponent row={d} />
-            ))} */}
-            {RR}
+            ))}
+            {/* {RR} */}
           </ul>
         ) : (
           <div
             className="search"
             // style2={{ display: "flex", flexWrap: "wrap" }}
           >
-            {/* {(filtered().length > 0 ? filtered() : data()).map((d) => (
+            {(filtered().length > 0 ? filtered() : data()).map((d) => (
               <RowComponent row={d} />
-            ))} */}
-            {RR}
+            ))}
+            {/* {RR} */}
           </div>
         )}
       </div>
@@ -308,10 +315,16 @@ function GenericTab({ dkey }) {
 // }
 
 function Tabs() {
-  return ({ currTab }) => {
+  return ({ currTab, search }) => {
     return (
       <div className="search-wrapper">
-        <GenericTab key={UIObj[currTab].dkey} {...UIObj[currTab]} />
+        <GenericTab
+          key={UIObj[currTab].dkey}
+          dkey={UIObj[currTab].dkey}
+          prop={currTab}
+          search={search}
+          // {...UIObj[currTab]}
+        />
         {/*
         {currTab === TABS.WORDS ? (
           <GenericTab
@@ -396,7 +409,17 @@ export function Sans() {
           <button onClick={() => setCurrTab(TABS.WORDS)}>Words</button>
         </p>
       </header>
-      {isLoaded() ? <Tabs currTab={currTab()} /> : <p>Loading...</p>}
+      {/* <Skip
+        onMount={() => console.log("skip onMount")}
+        onCleanup={() => console.log("skip cleanup")}
+      >
+        <header style={{ backgroundColor: "bisque" }}>footer with skip</header>
+      </Skip> */}
+      {isLoaded() ? (
+        <Tabs currTab={currTab()} search={search()} />
+      ) : (
+        <p>Loading...</p>
+      )}
 
       {/* <Suspense
         key={"tabs"}
