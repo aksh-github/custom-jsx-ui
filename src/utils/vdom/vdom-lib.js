@@ -908,7 +908,7 @@ const microframe = (() => {
       }
 
       const domNode = stk[CTR];
-      if (last !== domNode) {
+      if (last !== domNode && actualComparison) {
         // updateProps(domNode, newNode.props, oldNode.props);
 
         const nl = Object.keys(newNode.props).length;
