@@ -314,31 +314,6 @@ function GenericTab({ dkey }) {
 //   };
 // }
 
-function Tabs() {
-  return ({ currTab, search }) => {
-    return (
-      <div className="search-wrapper">
-        <GenericTab
-          key={UIObj[currTab].dkey}
-          dkey={UIObj[currTab].dkey}
-          prop={currTab}
-          search={search}
-          // {...UIObj[currTab]}
-        />
-        {/*
-        {currTab === TABS.WORDS ? (
-          <GenericTab
-            key={UIObj[TABS.WORDS].dkey}
-            {...UIObj[TABS.WORDS]}
-            RowComponent={WordRow}
-            setDatacb={(_data) => _data["Everyday words"].concat(_data["home"])}
-          />
-        ) : null} */}
-      </div>
-    );
-  };
-}
-
 export function Sans() {
   const [currTab, setCurrTab] = atom(0);
   const [isLoaded, setIsLoaded] = atom(false);
@@ -416,7 +391,14 @@ export function Sans() {
         <header style={{ backgroundColor: "bisque" }}>footer with skip</header>
       </Skip> */}
       {isLoaded() ? (
-        <Tabs currTab={currTab()} search={search()} />
+        <div className="search-wrapper">
+          <GenericTab
+            key={UIObj[currTab()].dkey}
+            dkey={UIObj[currTab()].dkey}
+            prop={currTab()}
+            search={search()}
+          />
+        </div>
       ) : (
         <p>Loading...</p>
       )}
