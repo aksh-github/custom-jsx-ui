@@ -723,21 +723,20 @@ const microframe = (() => {
       navigate.set(false);
     }
 
-    let updateCompsSize = updateComps.size;
+    const updateCompsSize = updateComps.size;
     let currComp = null;
     let actualComparison = false;
+    let comparisonsReqd = 0;
+    let compareTill = 0;
 
     function updateElement($parent, newNode, oldNode, index = 0) {
       // if (!actualComparison && newNode?.type && oldNode?.type)
       //   return doMain(newNode, oldNode);
       if (!actualComparison && updateCompsSize) {
-        if (newNode?.type && oldNode?.type) {
-          return doMain(newNode, oldNode);
-        } else {
-          return;
+        if (newNode?.type && oldNode?.type) return doMain(newNode, oldNode);
+        // if (newNode?.type === oldNode?.type) return;
+        if (newNode === oldNode) return;
         }
-      }
-
       _C++;
 
       // log("compare: ", newNode);
@@ -884,19 +883,18 @@ const microframe = (() => {
           // currComp === updateComp ||
           updateComps.has(currComp) ||
           newNode.$p === c ||
-          newNode.key !== oldNode.key
+          newNode.key !== oldNode?.key
         ) {
           actualComparison = true;
         } else {
-          let diff = false;
-          // if (newNode.$c === "GenericTab")
-          // log("compare: ", newNode.props, oldNode.props);
-          Object.keys(newNode.props).forEach((key) => {
-            if (newNode.props[key] !== oldNode.props[key]) {
-              diff = true;
-            }
-          });
-
+          // let diff = false;
+          // // if (newNode.$c === "GenericTab")
+          // // log("compare: ", newNode.props, oldNode.props);
+          // Object.keys(newNode.props).forEach((key) => {
+          //   if (newNode.props[key] !== oldNode.props[key]) {
+          //     diff = true;
+          //   }
+          // });
           // if (!diff) {
           //   const newLength = newNode.children.length;
           //   const oldLength = oldNode.children.length;
@@ -904,11 +902,48 @@ const microframe = (() => {
           // }
 
           // actualComparison = diff;
+          // actualComparison = false;
+        }
+      }
+
+      if (actualComparison && comparisonsReqd === 0) {
+        log(newNode.props);
+        // log(CTR, stk, newNode);
+        const { fragChildLen } = newNode.props;
+        if (fragChildLen) {
+          let qc = CTR + 1;
+
+          for (let i = 0; i < fragChildLen; ++i) {
+            let addThisMuch = 0;
+            log("qc: ", qc);
+            const el = stk[qc];
+            log(el);
+            addThisMuch = el.querySelectorAll("*").length;
+            comparisonsReqd += addThisMuch;
+            qc += 1 + addThisMuch;
+          }
+          // log(
+          //   "comparisonsReqd till: ",
+          //   comparisonsReqd,
+          //   stk[CTR + fragChildLen + comparisonsReqd]
+          // );
+          compareTill = CTR + fragChildLen + comparisonsReqd + 1;
+        } else {
+          comparisonsReqd += stk[CTR + 1].querySelectorAll("*").length;
+          log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
+          compareTill = CTR + comparisonsReqd + 1;
         }
       }
 
       const domNode = stk[CTR];
-      if (last !== domNode && actualComparison) {
+
+      if (CTR === compareTill) {
+        actualComparison = false;
+        comparisonsReqd = 0;
+        compareTill = 0;
+      }
+
+      if (last !== domNode) {
         // updateProps(domNode, newNode.props, oldNode.props);
 
         const nl = Object.keys(newNode.props).length;
@@ -931,11 +966,10 @@ const microframe = (() => {
       if (newNode?.props?.cacheKey) {
         //&& !newNode.children[0]?.props?.__cached
         // doMain(newNode.children[0], oldNode.children[0]);
-        const old = newNode.children[0]?.props?.__cached
-          ? oldNode.children[0]
-          : null;
+        const isCached = newNode.children[0]?.props?.__cached;
+        const old = isCached ? oldNode.children[0] : null;
 
-        actualComparison = true;
+        if (updateCompsSize && !isCached) actualComparison = true;
 
         updateElement(stk[++CTR], newNode.children[0], old, 0);
         return;
