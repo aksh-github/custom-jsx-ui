@@ -98,7 +98,8 @@ const WordRow = () => {
   return ({ row: word }) => (
     <li>
       <h3>{word?.ew}</h3>
-      {word?.sw?.join(", ")}, {word?.mw?.join(", ")}
+      <p>{word?.sw?.join(", ")}</p>
+      <p>{word?.mw?.join(", ")}</p>
     </li>
   );
 };
@@ -244,10 +245,14 @@ function GenericTab({ dkey }) {
           <p className="info">No results for your search: "{srch}"</p>
         ) : null}
 
+        {filtered().length > 0 && srch ? (
+          <p className="info">Showing {filtered().length} results</p>
+        ) : null}
+
         {asList ? (
           <ul className="list">
-            {(filtered().length > 0 ? filtered() : data()).map((d) => (
-              <RowComponent row={d} />
+            {(filtered().length > 0 ? filtered() : data()).map((d, i) => (
+              <RowComponent key={"k" + i} search={srch} row={d} />
             ))}
             {/* {RR} */}
           </ul>
@@ -256,8 +261,8 @@ function GenericTab({ dkey }) {
             className="search"
             // style2={{ display: "flex", flexWrap: "wrap" }}
           >
-            {(filtered().length > 0 ? filtered() : data()).map((d) => (
-              <RowComponent row={d} />
+            {(filtered().length > 0 ? filtered() : data()).map((d, i) => (
+              <RowComponent key={"k" + i} search={srch} row={d} />
             ))}
             {/* {RR} */}
           </div>
