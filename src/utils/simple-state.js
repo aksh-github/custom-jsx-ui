@@ -13,6 +13,7 @@ function debounce(func, duration) {
 }
 
 export const updateComps = new Set();
+export const updateCtx = new Set();
 
 const SimState = (() => {
   const globalState = {};
@@ -124,11 +125,28 @@ const SimState = (() => {
     return [get, set];
   };
 
+  const context = (iv) => {
+    const [get, set] = atom(iv);
+
+    return {
+      get: () => get(),
+      set: (valueOrFn) => {
+        const old = get();
+        skipUpdate(() => set(valueOrFn));
+        if (old !== get()) {
+          updateCtx.add(get());
+          throtUpdate();
+        }
+      },
+    };
+  };
+
   return {
     batch,
     registerCallback,
     state,
     atom,
+    context,
     skipUpdate,
     setCurrComp,
   };
@@ -140,3 +158,4 @@ export const state = SimState.state;
 export const atom = SimState.atom;
 export const skipUpdate = SimState.skipUpdate;
 export const setCurrComp = SimState.setCurrComp;
+export const context = SimState.context;

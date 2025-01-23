@@ -64,7 +64,7 @@ function findMatchingObjects(json, key, value) {
 
 // end meta
 
-import { atom, setCurrComp, updateComps } from "../simple-state";
+import { atom, setCurrComp, updateComps, updateCtx } from "../simple-state";
 // publish as lib: https://www.youtube.com/watch?v=FITxnIDsMnw
 // import { diff, patch } from "./vdom-yt";
 
@@ -879,30 +879,38 @@ const microframe = (() => {
         currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
         let c = currComp.split(":")[0];
 
-        if (
-          // currComp === updateComp ||
-          updateComps.has(currComp) ||
-          newNode.$p === c ||
-          newNode.key !== oldNode?.key
-        ) {
+        if (updateCompsSize) {
+          if (updateComps.has(currComp)) {
           actualComparison = true;
         } else {
           // let diff = false;
-          // // if (newNode.$c === "GenericTab")
-          // // log("compare: ", newNode.props, oldNode.props);
+            // // // if (newNode.$c === "GenericTab")
+            // // // log("compare: ", newNode.props, oldNode.props);
           // Object.keys(newNode.props).forEach((key) => {
           //   if (newNode.props[key] !== oldNode.props[key]) {
           //     diff = true;
           //   }
           // });
-          // if (!diff) {
-          //   const newLength = newNode.children.length;
-          //   const oldLength = oldNode.children.length;
-          //   diff = newLength === oldLength;
-          // }
+            // // if (!diff) {
+            // //   const newLength = newNode.children.length;
+            // //   const oldLength = oldNode.children.length;
+            // //   diff = newLength !== oldLength;
+            // // }
+            // // actualComparison = diff;
+            // // actualComparison = false;
+            // log("compare: ", currComp, diff);
+          }
+        } else {
+          // actualComparison = true;
+          if (!actualComparison) {
+            // log("this must be due to context change");
 
-          // actualComparison = diff;
-          // actualComparison = false;
+            // if (newNode?.props?.context !== oldNode?.props?.context) {
+            if (updateCtx.has(newNode?.props?.context)) {
+              // log("context changed");
+              actualComparison = true;
+            }
+          }
         }
       }
 
@@ -1008,6 +1016,7 @@ const microframe = (() => {
     updateElement($parent, newNode, oldNode, index);
 
     updateComps.clear();
+    updateCtx.clear();
 
     log(_C);
     _C = 0;
