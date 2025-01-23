@@ -10,8 +10,9 @@ import {
   Suspense,
 } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
-import { navigoRouter } from "../utils/navigo-router";
+// import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
+import { Sans } from "./sans/sans";
 
 // =======================
 
@@ -31,6 +32,7 @@ const root = document.getElementById("root-vdom");
 registerCallback(forceUpdate);
 
 mount(root, () => <App />);
+// mount(root, () => <Sans />);
 
 function Svg() {
   return () => (
