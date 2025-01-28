@@ -15,6 +15,7 @@ import { LinkV2, Router, Route } from "../utils/router-v2";
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
+import Heavy from "../compos/Heavy";
 // import { Sans } from "./sans/sans";
 
 let routeHandler = Router();
@@ -622,6 +623,8 @@ export function App(props) {
                   <SansCompoPromise />
                 </SuspenseV2>
               );
+            case "/heavy":
+              return <Heavy />;
             default:
               if (curPath()?.url?.startsWith("/topics"))
                 return <Topics basepath="/topics" match={curPath()} />;
