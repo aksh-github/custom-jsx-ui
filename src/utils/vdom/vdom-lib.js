@@ -1027,6 +1027,11 @@ const microframe = (() => {
       const patch = patches.shift();
 
       updateProps(patch.$target, patch.newProps, patch.oldProps);
+
+      patch.$target = null;
+      patch.newProps = null;
+      patch.oldProps = null;
+      // patch = null;
     }
   }
 
@@ -1038,6 +1043,9 @@ const microframe = (() => {
       switch (patch.op) {
         case "APPEND":
           patch.p.appendChild(patch.c);
+          patch.c = null;
+          patch.p = null;
+          patch.op = null;
           break;
         case "REMOVE":
           patch.p.removeChild(patch.c);
@@ -1048,6 +1056,8 @@ const microframe = (() => {
               eventListenerInst.unRegisterAllEventListeners(patch.c);
 
               patch.c = null;
+              patch.p = null;
+              patch.op = null;
             });
           }
 
@@ -1062,13 +1072,19 @@ const microframe = (() => {
 
               eventListenerInst.unRegisterAllEventListeners(patch.c[1]);
 
-              patch.c[1] = null;
+              // patch.c[1] = null;
+              patch.c = null;
+              patch.p = null;
+              patch.op = null;
             });
           }
 
           break;
         case "CONTENT":
           patch.p.textContent = patch.c;
+          patch.c = null;
+          patch.p = null;
+          patch.op = null;
           break;
       } // switch
     }
