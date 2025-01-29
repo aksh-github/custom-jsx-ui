@@ -74,7 +74,7 @@ const DynCompoPromise = () => {
   // await new Promise((resolve, reject) => {
   //   setTimeout(() => resolve(10), 3000);
   // });
-  return import("../compos/ComponentPatterns?").then((mod) => mod?.PropsDriven);
+  return import("../compos/ComponentPatterns").then((mod) => mod?.PropsDriven);
 };
 
 const SansCompoPromise = () => {
