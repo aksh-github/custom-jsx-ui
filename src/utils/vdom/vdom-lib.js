@@ -736,7 +736,7 @@ const microframe = (() => {
         if (newNode?.type && oldNode?.type) return doMain(newNode, oldNode);
         // if (newNode?.type === oldNode?.type) return;
         if (newNode === oldNode) return;
-        }
+      }
       _C++;
 
       // log("compare: ", newNode);
@@ -881,16 +881,16 @@ const microframe = (() => {
 
         if (updateCompsSize) {
           if (updateComps.has(currComp)) {
-          actualComparison = true;
-        } else {
-          // let diff = false;
+            actualComparison = true;
+          } else {
+            // let diff = false;
             // // // if (newNode.$c === "GenericTab")
             // // // log("compare: ", newNode.props, oldNode.props);
-          // Object.keys(newNode.props).forEach((key) => {
-          //   if (newNode.props[key] !== oldNode.props[key]) {
-          //     diff = true;
-          //   }
-          // });
+            // Object.keys(newNode.props).forEach((key) => {
+            //   if (newNode.props[key] !== oldNode.props[key]) {
+            //     diff = true;
+            //   }
+            // });
             // // if (!diff) {
             // //   const newLength = newNode.children.length;
             // //   const oldLength = oldNode.children.length;
@@ -1280,15 +1280,6 @@ export function SuspenseV2(props, child) {
       }
     } else {
       if (props?.fallback) {
-        // if (typeof props.fallback === "string") {
-        //   return h("div", {}, [props.fallback]);
-        //   // return {
-        //   //   type: "div",
-        //   //   children: [props.fallback],
-        //   // };
-        // } else {
-        //   return props.fallback;
-        // }
         return h("div", {}, [props.fallback]);
       } else return h("div", {}, [null]);
       // return props?.fallback;
