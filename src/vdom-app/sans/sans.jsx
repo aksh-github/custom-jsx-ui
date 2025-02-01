@@ -1,11 +1,11 @@
-import { atom, batch, skipUpdate, state } from "../../utils/simple-state";
 import {
-  h,
-  onMount,
-  onCleanup,
-  Suspense,
-  Skip,
-} from "../../utils/vdom/vdom-lib";
+  atom,
+  batch,
+  skipUpdate,
+  state,
+  context,
+} from "../../utils/simple-state";
+import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
 
@@ -52,6 +52,8 @@ const globalState = {
 // const [filtered, setFiltered] = atom([]);
 let gsearchPair = null;
 
+const searchCtx = context("");
+
 const VerbRow = () => {
   return ({ row: verb }) => (
     <div className="divrow">
@@ -69,8 +71,8 @@ const VerbRow = () => {
 };
 
 const verbFilter = (w) => {
-  // let srch = search();
   let srch = gsearchPair[0]()?.trim()?.toLowerCase();
+  // let srch = searchCtx.get()?.trim()?.toLowerCase();
   let flag = w?.ev?.includes(srch);
 
   if (!flag) {
@@ -211,18 +213,15 @@ function GenericTab({ dkey }) {
   let lsearch = null,
     filtered = () => [];
 
-  const [data, setData] = atom(globalState[`${dkey}`].d.slice(0, 20));
-  // const [filtered, setFiltered] = atom([]);
+  // const getSearchCtx = searchCtx.get;
+  const TOP = -1;
 
-  // const filter = () => {
-  //   setFiltered(data().filter(filterFunc));
-  //   lsearch = search();
-  // };
+  const [data, setData] = atom(globalState[`${dkey}`].d.slice(0, TOP));
 
   return ({ prop, search: srch, dkey }) => {
     const { title, filterFunc, RowComponent, asList } = UIObj[prop];
-    // let srch = search();
-    // let srch = gsearchPair[0]();
+    // let srch = searchCtx.get()?.trim()?.toLowerCase();
+
     if (lsearch !== srch) {
       // filter();
       lsearch = srch;
@@ -231,41 +230,26 @@ function GenericTab({ dkey }) {
       } else filtered = () => [];
     }
 
-    console.log("exec");
+    console.log("exec", searchCtx.get());
 
-    // const RR = (filtered().length > 0 ? filtered() : data()).map((d) => (
-    //   <RowComponent row={d} />
-    // ));
+    const RR = (filtered().length > 0 ? filtered() : data()).map((d) => (
+      <RowComponent row={d} />
+    ));
 
     return (
       <div>
         <h2 className="title">{title}</h2>
-
         {filtered().length === 0 && srch ? (
           <p className="info">No results for your search: "{srch}"</p>
         ) : null}
-
+        {/* Ctxt Value: {searchCtx.get()} */}
         {filtered().length > 0 && srch ? (
-          <p className="info">Showing {filtered().length} results</p>
+          <p className="info">Matching results: {filtered().length}</p>
         ) : null}
-
         {asList ? (
-          <ul className="list">
-            {(filtered().length > 0 ? filtered() : data()).map((d, i) => (
-              <RowComponent key={"k" + i} search={srch} row={d} />
-            ))}
-            {/* {RR} */}
-          </ul>
+          <ul className="list">{RR}</ul>
         ) : (
-          <div
-            className="search"
-            // style2={{ display: "flex", flexWrap: "wrap" }}
-          >
-            {(filtered().length > 0 ? filtered() : data()).map((d, i) => (
-              <RowComponent key={"k" + i} search={srch} row={d} />
-            ))}
-            {/* {RR} */}
-          </div>
+          <div className="search">{RR}</div>
         )}
       </div>
     );
@@ -373,12 +357,22 @@ export function Sans() {
       <header className="sticky-header">
         <h1 className="main-head">संस्कृतकोष:</h1>
 
+        {/* <div class="radar">
+          <div class="inner-circle">
+            <div class="sweeper"></div>
+          </div>
+        </div> */}
+
         <div style={{ textAlign: "center" }}>
           <input
             value={search()}
+            // value={searchCtx.get()}
             type="text"
             placeholder="Search in English or Sanskrit..."
-            onInput={(e) => setSearch(e.target.value)}
+            onInput={(e) => {
+              setSearch(e.target.value);
+              // searchCtx.set(e.target.value);
+            }}
           />
         </div>
 
@@ -397,12 +391,14 @@ export function Sans() {
       </Skip> */}
       {isLoaded() ? (
         <div className="search-wrapper">
-          <GenericTab
-            key={UIObj[currTab()].dkey}
-            dkey={UIObj[currTab()].dkey}
-            prop={currTab()}
-            search={search()}
-          />
+          <Provider contextdf={searchCtx.get()}>
+            <GenericTab
+              key={UIObj[currTab()].dkey}
+              dkey={UIObj[currTab()].dkey}
+              prop={currTab()}
+              search={search()}
+            />
+          </Provider>
         </div>
       ) : (
         <p>Loading...</p>
@@ -420,3 +416,8 @@ export function Sans() {
     </div>
   );
 }
+
+const Provider =
+  () =>
+  ({ children }) =>
+    <div>{children}</div>;
