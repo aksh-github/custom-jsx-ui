@@ -313,6 +313,8 @@ export function Sans() {
   onMount(() => {
     console.log("mount for Sans");
 
+    alert("https://www.youtube.com/watch?v=b6iVByCOx8A");
+
     // setSearch("");
     //
     loadData()
