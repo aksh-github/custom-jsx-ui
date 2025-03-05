@@ -1,3 +1,6 @@
+// const log = console.log;
+const log = () => {};
+
 function debounce(func, duration) {
   let timeout;
 
@@ -65,7 +68,7 @@ const SimState = (() => {
     };
 
     const set = (valueOrFn) => {
-      console.log("update in state", lcurrComp);
+      log("update in state", lcurrComp);
       if (typeof valueOrFn === "function") {
         st = valueOrFn(st);
       } else {
@@ -102,7 +105,7 @@ const SimState = (() => {
     };
 
     const set = (valueOrFn) => {
-      console.log("update in atom", lcurrComp);
+      log("update in atom", lcurrComp);
       if (typeof valueOrFn === "function") {
         st = valueOrFn(st);
       } else {
