@@ -27,11 +27,29 @@
       text-align: center;
     }
 
-    input {
-      font-size: large;
-      padding: 0.5em;
-      box-sizing: border-box;
-      width: 80%;
+    .search-box {
+      position: relative;
+      /* width: 200px; */
+
+      input {
+        font-size: large;
+        padding: 0.5em;
+        box-sizing: border-box;
+        width: 80%;
+        max-width: 40em;
+        border: 0;
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      .clear-search {
+        position: relative;
+        border: none;
+        cursor: pointer;
+        margin: 0;
+      }
     }
 
     button {

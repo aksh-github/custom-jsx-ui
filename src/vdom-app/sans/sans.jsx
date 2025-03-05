@@ -307,13 +307,14 @@ export function Sans() {
   const [currTab, setCurrTab] = atom(0);
   const [isLoaded, setIsLoaded] = atom(false);
   // gsearchPair = atom("");
+  let txtEl = null;
 
   const [search, setSearch] = (gsearchPair = atom(""));
 
   onMount(() => {
     console.log("mount for Sans");
 
-    alert("https://www.youtube.com/watch?v=b6iVByCOx8A");
+    // alert("https://www.youtube.com/watch?v=b6iVByCOx8A");
 
     // setSearch("");
     //
@@ -365,10 +366,11 @@ export function Sans() {
           </div>
         </div> */}
 
-        <div style={{ textAlign: "center" }}>
+        <div style={{ textAlign: "center" }} className="search-box">
           <input
             value={search()}
             // value={searchCtx.get()}
+            ref={(el) => (txtEl = el)}
             type="text"
             placeholder="Search in English or Sanskrit..."
             onInput={(e) => {
@@ -376,13 +378,42 @@ export function Sans() {
               // searchCtx.set(e.target.value);
             }}
           />
+          <button
+            className="clear-search"
+            onClick={() => {
+              setSearch("");
+              txtEl?.focus();
+            }}
+          >
+            x
+          </button>
         </div>
 
         {/* <p>{search()}</p> */}
 
         <p className="tabs">
-          <button onClick={() => setCurrTab(TABS.VERBS)}>Verbs</button>
-          <button onClick={() => setCurrTab(TABS.WORDS)}>Words</button>
+          <button
+            onClick={() => {
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+              setCurrTab(TABS.VERBS);
+            }}
+          >
+            Verbs
+          </button>
+          <button
+            onClick={() => {
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+              setCurrTab(TABS.WORDS);
+            }}
+          >
+            Words
+          </button>
         </p>
       </header>
       {/* <Skip
