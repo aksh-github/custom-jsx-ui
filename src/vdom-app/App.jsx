@@ -247,6 +247,10 @@ function ComplexRoute(props) {
     console.log("mount app", ref);
   });
 
+  onCleanup(() => {
+    ref = null;
+  });
+
   const arr = [];
   for (let i = 0; i < 10000; ++i) arr.push(i);
 
@@ -379,6 +383,7 @@ export const SimpleRoute = () => {
 
   onCleanup(() => {
     console.log("unmount for SimpleRoute");
+    ref = null;
   });
 
   const NoParentComp = () => {
@@ -478,6 +483,10 @@ export const TextArea = () => {
     // settxt("");
   };
 
+  onCleanup(() => {
+    txtRef = null;
+  });
+
   return () => (
     <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
@@ -533,6 +542,7 @@ export function App(props) {
   onCleanup(() => {
     routeHandler.cleanup();
     clearInterval(timer);
+    footRef = null;
   });
 
   return () => {
