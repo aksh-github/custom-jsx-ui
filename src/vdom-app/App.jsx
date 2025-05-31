@@ -6,6 +6,7 @@ import {
   Suspense,
   SuspenseV2,
 } from "../utils/vdom/vdom-lib";
+import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
@@ -284,6 +285,8 @@ function ComplexRoute(props) {
       }}
     >
       hello world {c()} {s()}
+      <hole-component message={"Hello from wc"}></hole-component>
+      <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
       <div>
         <button
           onClick={(e) => {
@@ -517,6 +520,8 @@ export function App(props) {
   // moved globally
   // let routeHandler = Router();
 
+  let ct = 0;
+
   onMount(() => {
     routeHandler.init(onRouteChange);
     if (footRef) {
@@ -527,7 +532,8 @@ export function App(props) {
       const p =
         footRef.querySelector("p") ||
         footRef.appendChild(document.createElement("p"));
-      let ct = 0;
+
+      const wcd = footRef.querySelector("web-component div");
 
       timer = setInterval(() => {
         // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with state but skips ui comparison
@@ -535,6 +541,10 @@ export function App(props) {
         // p.textContent = footerTp();
         ct++;
         p.textContent = "This footer demoes ignoreNode ignoreLater " + ct; // without using state
+
+        if (wcd) {
+          wcd.textContent = "Hello from wc " + ct;
+        }
       }, 1000);
     }
   });

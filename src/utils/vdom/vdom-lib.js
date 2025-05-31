@@ -314,7 +314,8 @@ const microframe = (() => {
         // _c,
         type,
         props: props || {},
-        children: props?.ignoreNode ? [] : children,
+        // children: props?.ignoreNode ? [] : children,
+        children: type?.includes("-") || props?.ignoreNode ? [] : children,
       };
   }
 
@@ -1287,6 +1288,11 @@ export function SuspenseV2(props, child) {
   };
 }
 
+function isWebComponent(element) {
+  // Check if the tag name includes a hyphen
+  return element.tagName.includes("-");
+}
+
 // taken from: https://gist.github.com/umidjons/6865350
 
 function walkDom(start_element) {
@@ -1319,7 +1325,9 @@ function domListIterator(rootNode) {
     while (next) {
       // log(next);
       // arr.push(next);
-      const notToSkip = !next.getAttribute("ignorenode");
+      // const notToSkip = !next.getAttribute("ignorenode");
+      const notToSkip =
+        !next.getAttribute("ignorenode") || !isWebComponent(next);
       if (next.firstElementChild && notToSkip) {
         next = next.firstElementChild;
         // log(next);
