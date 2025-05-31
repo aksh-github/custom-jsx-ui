@@ -5,7 +5,7 @@
 
 /dist
 
-/dist2
+/dist*
 
 
 .env*
