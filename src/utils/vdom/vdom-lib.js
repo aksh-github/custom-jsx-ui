@@ -2,6 +2,7 @@
 
 const log = console.log;
 // const log = () => {};
+const $d = document;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
@@ -426,6 +427,9 @@ const microframe = (() => {
   // vdom to dom
 
   // SVG
+
+  const $sns = "http://www.w3.org/2000/svg";
+
   const createAndAppendSVG = (tag, attrs, ...children) => {
     function setPropsNS($target, props) {
       Object.keys(props).forEach((name) => {
@@ -434,19 +438,13 @@ const microframe = (() => {
       });
     }
 
-    const element = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "svg"
-    );
+    const element = $d.createElementNS($sns, "svg");
     // addAttributes(element, attrs);
 
     setPropsNS(element, attrs);
 
     for (const child of children) {
-      const childElement = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        child.type
-      );
+      const childElement = $d.createElementNS($sns, child.type);
 
       setPropsNS(childElement, child.props);
 
@@ -462,12 +460,12 @@ const microframe = (() => {
   function createElement(node) {
     if (!node?.type) {
       if (node?.$c) {
-        // const tnode = document.createTextNode(
+        // const tnode = $d.createTextNode(
         //   node?.value == null || node?.value == undefined ? "" : node?.value
         // );
         // return tnode;
         if (!node.children) {
-          const tnode = document.createTextNode(
+          const tnode = $d.createTextNode(
             node?.value == null || node?.value == undefined ? "" : node?.value
           );
           return tnode;
@@ -475,9 +473,7 @@ const microframe = (() => {
           return createElement(node.children[0]);
         }
       } else
-        return document.createTextNode(
-          node == null || node == undefined ? "" : node
-        );
+        return $d.createTextNode(node == null || node == undefined ? "" : node);
     }
 
     //special case Compo with Array return and no type (parent)
@@ -486,7 +482,7 @@ const microframe = (() => {
       // console.warn(
       //   "fragment support is experimental and nested fragments NOT supported!!!"
       // );
-      const $el2 = document.createDocumentFragment();
+      const $el2 = $d.createDocumentFragment();
 
       node.children.map(createElement).forEach($el2.appendChild.bind($el2));
 
@@ -497,7 +493,7 @@ const microframe = (() => {
       return createAndAppendSVG(node.type, node.props, ...node.children);
     }
 
-    const $el = document.createElement(node.type);
+    const $el = $d.createElement(node.type);
 
     if (!node?.$c) {
       setProps($el, node.props);
@@ -988,7 +984,7 @@ const microframe = (() => {
 
         if (newLength > 100) {
           optiPossible = true;
-          gdf = document.createDocumentFragment();
+          gdf = $d.createDocumentFragment();
           log(
             "have for loop custom component or see how this can be optimized"
           );
@@ -1386,7 +1382,7 @@ let nextUnitOfWork;
 
 // how to use / call
 // setTimeout(() => {
-//   startNode = nextUnitOfWork = document.querySelector("#root-vdom");
+//   startNode = nextUnitOfWork = $d.querySelector("#root-vdom");
 //   log(performance.now());
 //   workLoop();
 //   log(performance.now());
