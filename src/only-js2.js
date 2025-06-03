@@ -1,110 +1,104 @@
-import { createSignal } from "./utils/signal-complex";
-
-let hold = [];
-
-// let firstRun = true;
-let callStack = [];
-let counter = 0;
-
-function unMount(cb) {
-  // hold.pop()?.();
-  //   hold.push(cb);
-  hold[counter] = cb;
+function h(type, props, ...children) {
+  // Mark fragment nodes with a special prop
+  const isFragment =
+    type === "" || type === Symbol.for("vdom.fragment") || type === "fragment";
+  return {
+    type,
+    props: { ...(props || {}), ...(isFragment ? { __isFragment: true } : {}) },
+    __isFragment: isFragment,
+    children: children.flat().map((child) => child),
+  };
 }
 
-const Even = () => {
-  console.log("Even once");
-
-  unMount(() => {
-    console.log("uM() for Even");
-  });
-
-  return (props) => {
-    // console.log(props);
-    return "Even render";
-  };
-};
-
-const Odd = () => {
-  console.log("Odd once");
-
-  unMount(() => {
-    console.log("uM() for Odd");
-  });
-
-  return (props) => {
-    // console.log(props);
-    return "Odd render";
-  };
-};
-
-const App = () => {
-  console.log("App once");
-  const [s, sets] = createSignal(100);
-
-  unMount(() => {
-    console.log("uM() for App");
-  });
-
-  return (props) => {
-    // console.log(props.p);
-    sets(s() + 100);
-    console.log(s());
-    return ["App render " + s(), caller(props.fn, props.param)];
-  };
-};
-
-function reset() {
-  counter = 0;
-}
-
-function caller(fn, rest) {
-  // console.log("here we need which unmount to be called");
-  let _fn = null;
-
-  if (callStack[counter]?.fname !== fn.name) {
-    console.log(fn.name, " not found");
-    const unMountTobeCalledFor = callStack.splice(counter, 1);
-
-    _fn = fn(rest);
-    callStack.push({ fname: fn.name, fn: _fn });
-    console.log(hold[counter]);
-  } else {
-    _fn = callStack[counter].fn;
-    console.log(hold[counter]);
+function createElement(vnode) {
+  // Support function components
+  if (typeof vnode === "function") {
+    return createElement(vnode());
   }
-  counter++;
+  // Support function as type (function component)
+  if (vnode && typeof vnode.type === "function") {
+    return createElement(
+      vnode.type({ ...(vnode.props || {}), children: vnode.children })
+    );
+  }
+  // Support fragments: type === React.Fragment or type === undefined or type === null or type === ""
+  if (
+    vnode &&
+    (vnode.type === "" ||
+      vnode.type === Symbol.for("vdom.fragment") ||
+      vnode.type === "fragment")
+  ) {
+    const frag = document.createDocumentFragment();
+    (vnode.children || []).forEach((child) => {
+      frag.appendChild(createElement(child));
+    });
+    return frag;
+  }
+  if (vnode === null || vnode === undefined || typeof vnode === "boolean") {
+    return document.createTextNode("");
+  }
+  if (typeof vnode === "string" || typeof vnode === "number") {
+    return document.createTextNode(vnode);
+  }
 
-  return _fn(rest);
+  if (typeof vnode.type !== "string") {
+    throw new Error("Invalid node type: " + vnode.type);
+  }
+
+  const el = document.createElement(vnode.type);
+  // Set props/attributes
+  for (const [key, value] of Object.entries(vnode.props || {})) {
+    if (key === "className") {
+      el.className = value;
+    } else {
+      el.setAttribute(key, value);
+    }
+  }
+
+  // Append children
+  (vnode.children || []).forEach((child) => {
+    el.appendChild(createElement(child));
+  });
+  return el;
 }
 
-// for simple
+function Food({ name, price }) {
+  return h(
+    "div",
+    { className: "food-item" },
+    h("h2", null, name),
+    h("p", null, `Price: $${price}`)
+  );
+}
 
-// console.log(caller(App));
+// Example usage:
+const vdom = h(
+  "div",
+  { id: "main" },
 
-// console.log(caller(App, { p: "app props", fn: Even, param: "even props" }));
+  h("h1", { className: "title" }, "Hello World"),
+  h("p", { className: "description" }, "This is a description."),
+  h("span", null, "this is virtual World"),
+  h(Food, { name: "Pizza", price: 9.99 })
+);
 
-// reset();
-// console.log(caller(App, { p: "app props", fn: Even, param: "even props" }));
+console.log(vdom);
 
-// console.log(counter, callStack);
+// Example usage:
+document.body.appendChild(createElement(vdom));
 
-// // hard reset
+const fragVdom = h(
+  "", // or use "fragment"
+  null,
+  h("span", null, "A"),
+  h("h2", null, "B"),
+  h("div", null, 0),
+  h("span", null, undefined),
+  h("span", null, null),
+  h("span", null, true),
+  h("span", null, false)
+  // h("span", null, { a: 10 })
+);
 
-// reset();
-// console.log(caller(App, { p: "app props", fn: Odd, param: "odd props" }));
-
-// console.log(counter, callStack);
-
-// for complex
-
-// for (let i = 0; i < 3; ++i) {
-//   reset();
-//   if (i % 2 !== 0) {
-//     console.log(caller(App, { p: "app props", fn: Even, param: "even props" }));
-//   } else {
-//     console.log(caller(App, { p: "app props", fn: Odd, param: "odd props" }));
-//   }
-// }
-
-// console.log(hold);
+console.log(fragVdom);
+document.body.appendChild(createElement(fragVdom));
