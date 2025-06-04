@@ -876,38 +876,23 @@ const microframe = (() => {
         currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
         let c = currComp.split(":")[0];
 
-        if (updateCompsSize) {
-          if (updateComps.has(currComp)) {
-            actualComparison = true;
-          } else {
-            // let diff = false;
-            // // // if (newNode.$c === "GenericTab")
-            // // // log("compare: ", newNode.props, oldNode.props);
-            // Object.keys(newNode.props).forEach((key) => {
-            //   if (newNode.props[key] !== oldNode.props[key]) {
-            //     diff = true;
-            //   }
-            // });
-            // // if (!diff) {
-            // //   const newLength = newNode.children.length;
-            // //   const oldLength = oldNode.children.length;
-            // //   diff = newLength !== oldLength;
-            // // }
-            // // actualComparison = diff;
-            // // actualComparison = false;
-            // log("compare: ", currComp, diff);
-          }
+        if (
+          // currComp === updateComp ||
+          updateComps.has(currComp) ||
+          newNode.$p === c ||
+          newNode.key !== oldNode?.key
+        ) {
+          actualComparison = true;
         } else {
           // actualComparison = true;
-          if (!actualComparison) {
-            // log("this must be due to context change");
-
-            // if (newNode?.props?.context !== oldNode?.props?.context) {
-            if (updateCtx.has(newNode?.props?.context)) {
-              // log("context changed");
-              actualComparison = true;
-            }
-          }
+          // if (!actualComparison) {
+          //   // log("this must be due to context change");
+          //   // if (newNode?.props?.context !== oldNode?.props?.context) {
+          //   if (updateCtx.has(newNode?.props?.context)) {
+          //     // log("context changed");
+          //     actualComparison = true;
+          //   }
+          // }
         }
       }
 
