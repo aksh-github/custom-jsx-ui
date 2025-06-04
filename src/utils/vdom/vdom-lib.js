@@ -345,7 +345,7 @@ const microframe = (() => {
   }
 
   function isCustomProp(name) {
-    return isEventProp(name) || name === "forceUpdate";
+    return isEventProp(name) || name === "fragChildLen";
   }
 
   function setProp($target, name, value) {
@@ -595,7 +595,7 @@ const microframe = (() => {
     // log(performance.now());
     old = curr(); // create latest vdom
     // log(performance.now());
-    // log(callStack, old);
+    log(old);
     log(funcCache);
     // 1. set dom
     // rootNode.appendChild(createElement(old));
@@ -907,8 +907,8 @@ const microframe = (() => {
             let addThisMuch = 0;
             log("qc: ", qc);
             const el = stk[qc];
-            log(el);
-            addThisMuch = el.querySelectorAll("*").length;
+            // log(el);
+            addThisMuch = el?.querySelectorAll("*").length || 0;
             comparisonsReqd += addThisMuch;
             qc += 1 + addThisMuch;
           }
@@ -919,7 +919,7 @@ const microframe = (() => {
           // );
           compareTill = CTR + fragChildLen + comparisonsReqd + 1;
         } else {
-          comparisonsReqd += stk[CTR + 1].querySelectorAll("*").length;
+          comparisonsReqd += stk[CTR + 1]?.querySelectorAll("*").length || 0;
           log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
           compareTill = CTR + comparisonsReqd + 1;
         }
