@@ -345,7 +345,12 @@ const microframe = (() => {
   }
 
   function isCustomProp(name) {
-    return isEventProp(name) || name === "fragChildLen";
+    return (
+      isEventProp(name) ||
+      name === "fragChildLen" ||
+      name === "ignoreNode" ||
+      name === "fallback"
+    );
   }
 
   function setProp($target, name, value) {
