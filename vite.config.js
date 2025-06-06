@@ -8,10 +8,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     esbuild: {
-      jsxFactory: "h",
-      jsxFragment: "df",
+      // jsxFactory: "h",
+      // jsxFragment: "df",
       // jsxFactory: "domv2",
       // jsxFragment: "domv2",
+      jsxFactory: "MyUILib.createDomElement",
     },
     server: {
       proxy: {
