@@ -1,0 +1,142 @@
+import MyUILib, { applyPatches, render } from "../utils/vdom/vdom-ai"; // Assuming MyUILib.js is in the same directory
+
+// Define a simple functional component
+const GreetMessage = ({ name, showEmoji }) => {
+  return (
+    <p>
+      Hello, {name}! {showEmoji && "👋"}
+    </p>
+  );
+};
+
+const MyButton = ({ onClick, children }) => {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "10px",
+        backgroundColor: "lightblue",
+        border: "none",
+        cursor: "pointer",
+      }}
+    >
+      {children}
+    </button>
+  );
+};
+
+const App = (props) => {
+  // Root component with some state-like behavior for demonstration
+  let counter = 0; // Simulate state
+  let showBox = true; // Simulate state
+  let pref, ulref; // Placeholder for ref, not used in this example
+
+  const handleClick = () => {
+    counter++;
+    console.log("Button clicked!", counter);
+    // Re-render the app to reflect state changes
+    // MyUILib.render(<App />, document.getElementById("root"));
+
+    // pref.textContent = `Counter: ${counter}`;
+    // Apply patches to update the counter display
+    applyPatches([
+      {
+        op: "CONTENT",
+        p: pref,
+        c: `Counter: ${counter}`,
+      },
+    ]);
+  };
+
+  const Box = (
+    <div
+      style={{
+        marginTop: "20px",
+        padding: "15px",
+        border: "1px solid blue",
+        backgroundColor: "#e0e0ff",
+      }}
+    >
+      <p>This box is conditionally rendered.</p>
+      <small>Random number: {Math.random().toFixed(4)}</small>
+    </div>
+  );
+
+  const toggleBox = () => {
+    if (showBox) {
+      // ulref.parentNode.insertBefore(Box, ulref);
+      // Insert the box before the ulref element
+      MyUILib.applyPatches([
+        {
+          op: "INSERT_BEFORE",
+          p: ulref.parentNode,
+          c: Box,
+          ref: ulref,
+        },
+      ]);
+    } else {
+      // Remove the box if it exists
+      const box = ulref.previousSibling;
+      if (box) {
+        MyUILib.applyPatches([
+          {
+            op: "REMOVE",
+            p: ulref.parentNode,
+            c: box,
+          },
+        ]);
+      }
+    }
+    showBox = !showBox; // Toggle the state
+  };
+
+  return (
+    <div
+      className="app-container"
+      style={{ border: "1px solid #ccc", padding: "20px", textAlign: "center" }}
+    >
+      <h1>My Custom UI App with Diffing</h1>
+      <GreetMessage
+        name={props.appName || "Initial User"}
+        showEmoji={counter % 2 === 0}
+      />
+      <p
+        ref={(el) => {
+          console.log("Ref set:", pref);
+          pref = el;
+        }}
+      >
+        Counter: {counter}
+      </p>
+      <MyButton onClick={handleClick}>Increment Counter</MyButton>
+      <br />
+      <br />
+      <MyButton onClick={toggleBox}>Toggle Box</MyButton>
+
+      {/* Conditional rendering example */}
+
+      <ul
+        ref={(el) => {
+          ulref = el;
+        }}
+      >
+        <li>Item 1</li>
+        <li>Item 2</li>
+        {/* Example of adding/removing a child */}
+        {counter > 2 && <li>Item 3 (Added after 2 clicks)</li>}
+        {counter > 4 && <li>Item 4 (Added after 4 clicks)</li>}
+      </ul>
+      {/* Example of prop change */}
+      {counter % 3 === 0 && <p style={{ color: "red" }}>Divisible by 3!</p>}
+      {counter % 3 !== 0 && (
+        <p style={{ color: "green" }}>Not divisible by 3!</p>
+      )}
+    </div>
+  );
+};
+
+// Get the root DOM element
+const rootElement = document.getElementById("root");
+
+// Initial render
+render(<App appName="My App" />, rootElement);
