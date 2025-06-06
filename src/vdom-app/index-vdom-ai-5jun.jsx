@@ -38,11 +38,8 @@ const App = (props) => {
   let pref, ulref; // Placeholder for ref, not used in this example
 
   const handleClick = () => {
-    console.log("Button clicked!", counterInst.set(counter() + 1));
-    // Re-render the app to reflect state changes
-    // MyUILib.render(<App />, document.getElementById("root"));
-
-    // pref.textContent = `Counter: ${counter()}`;
+    console.log("Button clicked!");
+    counterInst.set(counter() + 1); // Increment the counter
     // Apply patches to update the counter() display
     applyPatches([
       {
@@ -110,7 +107,6 @@ const App = (props) => {
       />
       <p
         ref={(el) => {
-          console.log("Ref set:", pref);
           pref = el;
         }}
       >
@@ -147,6 +143,9 @@ const About = () => {
   return (
     <div>
       <h2>About Page</h2>
+      <a href="/" data-router-link>
+        Back
+      </a>
       <p>This is a simple about page for the app.</p>
     </div>
   );
@@ -159,11 +158,10 @@ const rootElement = document.getElementById("root");
 const routes = {
   "/": () => render(<App appName="Home" />, rootElement),
   "/about": () => render(<About />, rootElement),
+  404: () => render(<h2>404 Not Found this...</h2>, rootElement),
 };
 
-const Router = new SimpleRouter(routes, {
-  notFound: () => render(<h2>404 Not Found</h2>, rootElement),
-});
+const Router = new SimpleRouter(routes);
 document.body.addEventListener("click", (e) => Router.linkHandler(e));
 // Initial render (optional, router will handle on mount)
 Router.mount(rootElement);

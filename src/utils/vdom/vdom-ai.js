@@ -286,19 +286,35 @@ export class SimpleRouter {
     this.navigate(window.location.pathname, false);
   }
 
-  navigate(path, pushState = true) {
-    if (pushState) window.history.pushState({}, "", path);
-    if (this.routes[path]) {
+  cleanup() {
+    if (this.root) {
       // Proper cleanup using applyPatches to remove old nodes
       const patches = [];
       Array.from(this.root.childNodes).forEach((child) => {
         patches.push({ op: "REMOVE", p: this.root, c: child });
       });
       MyUILib.applyPatches(patches);
+    }
+  }
+
+  navigate(path, pushState = true) {
+    if (pushState) window.history.pushState({}, "", path);
+    if (this.routes[path]) {
+      // Proper cleanup using applyPatches to remove old nodes
+      this.cleanup();
       const node = this.routes[path]();
       if (node) this.root.appendChild(node);
     } else {
-      this.root.innerHTML = "<h2>404 Not Found</h2>";
+      // this.root.innerHTML = "<h2>404 Not Found</h2>";
+      const notFoundHandler = this.routes["404"];
+      if (notFoundHandler) {
+        // Proper cleanup using applyPatches to remove old nodes
+        this.cleanup();
+        // Call the notFound handler to get the 404 node
+        // and append it to the root
+        const node = notFoundHandler();
+        if (node) this.root.appendChild(node);
+      }
     }
   }
 
