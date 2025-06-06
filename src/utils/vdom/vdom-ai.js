@@ -18,6 +18,10 @@ function removeListeners(el) {
   }
 }
 
+function createFragement(children) {
+  return document.createDocumentFragment().append(children);
+}
+
 const MyUILib = (() => {
   /**
    * Creates a real DOM node from a component or element description.
@@ -37,6 +41,13 @@ const MyUILib = (() => {
     // Set attributes and event listeners
     for (const key in props) {
       if (key === "children") continue;
+      else if (key === "onMount" && typeof props[key] === "function") {
+        // Call mount callback after element is added to DOM
+        setTimeout(() => props[key](el), 0);
+      } else if (key === "onUnmount" && typeof props[key] === "function") {
+        // Store unmount callback for later use (e.g., in removeAllEventListeners)
+        el._unmountCallback = props[key];
+      }
       if (key.startsWith("on") && typeof props[key] === "function") {
         const eventName = key.slice(2).toLowerCase();
         // Remove old listener if exists
@@ -88,6 +99,10 @@ const MyUILib = (() => {
    * @param {HTMLElement} node
    */
   function removeAllEventListeners(node) {
+    // Call unmount callback if present
+    if (typeof node._unmountCallback === "function") {
+      node._unmountCallback(node);
+    }
     removeListeners(node);
     if (node && node.childNodes) {
       node.childNodes.forEach((child) => removeAllEventListeners(child));
@@ -171,6 +186,7 @@ const MyUILib = (() => {
 
   return {
     createDomElement,
+    createFragement,
     render,
     applyPatches,
     applyPropsPatches,
@@ -328,12 +344,3 @@ export class SimpleRouter {
     }
   }
 }
-
-// Usage example:
-// import { SimpleRouter } from "./utils/simple-router";
-// const router = new SimpleRouter({
-//   "/": () => MyUILib.createDomElement("div", {}, "Home Page"),
-//   "/about": () => MyUILib.createDomElement("div", {}, "About Page"),
-// });
-// router.mount(document.getElementById("root"));
-// document.body.addEventListener("click", (e) => router.linkHandler(e));

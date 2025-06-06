@@ -35,7 +35,7 @@ const App = (props) => {
   // let counter() = 0; // Simulate state
   const [counter, counterInst] = createStateManager(0);
   let showBox = true; // Simulate state
-  let pref, ulref; // Placeholder for ref, not used in this example
+  let pref, ulref, inputref; // Placeholder for ref, not used in this example
 
   const handleClick = () => {
     console.log("Button clicked!");
@@ -95,16 +95,56 @@ const App = (props) => {
   return (
     <div
       className="app-container"
-      style={{ border: "1px solid #ccc", padding: "20px", textAlign: "center" }}
+      style={{
+        border: "1px solid #ccc",
+        padding: "20px",
+        textAlign: "center",
+      }}
+      onMount={(el) => {
+        // This will be called when the component is mounted
+        console.log("App component mounted:", el);
+      }}
+      onUnmount={(el) => {
+        // This will be called when the component is unmounted
+        console.log("App component unmounted:", el);
+        pref = ulref = inputref = null; // Clear the reference
+      }}
     >
       <h1>My Custom UI App with Diffing</h1>
       <a href="/about" data-router-link>
         About
       </a>
+      <button
+        onClick={() => {
+          // Navigate to the about page
+          Router.navigate("/about");
+        }}
+      >
+        Go to About
+      </button>
+
       <GreetMessage
         name={props.appName || "Initial User"}
         showEmoji={counter() % 2 === 0}
       />
+      <input
+        ref={(el) => (inputref = el)}
+        type="text"
+        placeholder="Type something..."
+        onInput={(e) => {
+          // Update the input value in the state manager
+          inputref.value = e.target.value;
+          // Apply patches to update the input value display
+          MyUILib.applyPatches([
+            {
+              op: "CONTENT",
+              p: inputref.nextSibling, // Assuming the next sibling is where we want to display the value
+              c: e.target.value,
+            },
+          ]);
+        }}
+      />
+      <p></p>
       <p
         ref={(el) => {
           pref = el;
