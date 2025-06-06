@@ -1,4 +1,9 @@
-import MyUILib, { applyPatches, render } from "../utils/vdom/vdom-ai"; // Assuming MyUILib.js is in the same directory
+import MyUILib, {
+  applyPatches,
+  render,
+  createStateManager,
+  SimpleRouter,
+} from "../utils/vdom/vdom-ai"; // Assuming MyUILib.js is in the same directory
 
 // Define a simple functional component
 const GreetMessage = ({ name, showEmoji }) => {
@@ -27,23 +32,23 @@ const MyButton = ({ onClick, children }) => {
 
 const App = (props) => {
   // Root component with some state-like behavior for demonstration
-  let counter = 0; // Simulate state
+  // let counter() = 0; // Simulate state
+  const [counter, counterInst] = createStateManager(0);
   let showBox = true; // Simulate state
   let pref, ulref; // Placeholder for ref, not used in this example
 
   const handleClick = () => {
-    counter++;
-    console.log("Button clicked!", counter);
+    console.log("Button clicked!", counterInst.set(counter() + 1));
     // Re-render the app to reflect state changes
     // MyUILib.render(<App />, document.getElementById("root"));
 
-    // pref.textContent = `Counter: ${counter}`;
-    // Apply patches to update the counter display
+    // pref.textContent = `Counter: ${counter()}`;
+    // Apply patches to update the counter() display
     applyPatches([
       {
         op: "CONTENT",
         p: pref,
-        c: `Counter: ${counter}`,
+        c: `Counter: ${counter()}`,
       },
     ]);
   };
@@ -96,9 +101,12 @@ const App = (props) => {
       style={{ border: "1px solid #ccc", padding: "20px", textAlign: "center" }}
     >
       <h1>My Custom UI App with Diffing</h1>
+      <a href="/about" data-router-link>
+        About
+      </a>
       <GreetMessage
         name={props.appName || "Initial User"}
-        showEmoji={counter % 2 === 0}
+        showEmoji={counter() % 2 === 0}
       />
       <p
         ref={(el) => {
@@ -106,7 +114,7 @@ const App = (props) => {
           pref = el;
         }}
       >
-        Counter: {counter}
+        Counter: {counter()}
       </p>
       <MyButton onClick={handleClick}>Increment Counter</MyButton>
       <br />
@@ -123,14 +131,23 @@ const App = (props) => {
         <li>Item 1</li>
         <li>Item 2</li>
         {/* Example of adding/removing a child */}
-        {counter > 2 && <li>Item 3 (Added after 2 clicks)</li>}
-        {counter > 4 && <li>Item 4 (Added after 4 clicks)</li>}
+        {counter() > 2 && <li>Item 3 (Added after 2 clicks)</li>}
+        {counter() > 4 && <li>Item 4 (Added after 4 clicks)</li>}
       </ul>
       {/* Example of prop change */}
-      {counter % 3 === 0 && <p style={{ color: "red" }}>Divisible by 3!</p>}
-      {counter % 3 !== 0 && (
+      {counter() % 3 === 0 && <p style={{ color: "red" }}>Divisible by 3!</p>}
+      {counter() % 3 !== 0 && (
         <p style={{ color: "green" }}>Not divisible by 3!</p>
       )}
+    </div>
+  );
+};
+
+const About = () => {
+  return (
+    <div>
+      <h2>About Page</h2>
+      <p>This is a simple about page for the app.</p>
     </div>
   );
 };
@@ -138,5 +155,15 @@ const App = (props) => {
 // Get the root DOM element
 const rootElement = document.getElementById("root");
 
-// Initial render
-render(<App appName="My App" />, rootElement);
+// --- Router integration with render function ---
+const routes = {
+  "/": () => render(<App appName="Home" />, rootElement),
+  "/about": () => render(<About />, rootElement),
+};
+
+const Router = new SimpleRouter(routes, {
+  notFound: () => render(<h2>404 Not Found</h2>, rootElement),
+});
+document.body.addEventListener("click", (e) => Router.linkHandler(e));
+// Initial render (optional, router will handle on mount)
+Router.mount(rootElement);

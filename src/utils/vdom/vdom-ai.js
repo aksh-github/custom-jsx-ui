@@ -181,3 +181,143 @@ const MyUILib = (() => {
 export default MyUILib;
 export const { createDomElement, render, applyPatches, applyPropsPatches } =
   MyUILib;
+
+function createStateManager(initialState = {}) {
+  let state = initialState;
+  const listeners = new Set();
+
+  function get() {
+    return state;
+  }
+
+  function set(newState) {
+    // Accommodate plain values (non-object)
+    if (
+      typeof state !== "object" ||
+      state === null ||
+      typeof newState !== "object" ||
+      newState === null
+    ) {
+      state = newState;
+    } else {
+      state = { ...state, ...newState };
+    }
+    notifyListeners();
+  }
+
+  function subscribe(listener, compareFn = (prev, next) => prev !== next) {
+    const subscription = { listener, compareFn, prevState: state };
+    listeners.add(subscription);
+    return () => unsubscribe(subscription);
+  }
+
+  function unsubscribe(subscription) {
+    listeners.delete(subscription);
+  }
+
+  function notifyListeners() {
+    listeners.forEach((subscription) => {
+      if (subscription.compareFn(subscription.prevState, state)) {
+        subscription.listener(state);
+        subscription.prevState = state;
+      }
+    });
+  }
+
+  function cleanup() {
+    listeners.clear();
+    state =
+      typeof initialState === "object" && initialState !== null
+        ? {}
+        : undefined;
+  }
+
+  const api = {
+    set,
+    subscribe,
+    cleanup,
+  };
+
+  return [get, api];
+}
+
+export { createStateManager };
+
+// Example usage:
+// const stateManager = createStateManager({ name: 'John', age: 30 });
+
+// // Subscribe to state changes
+// const unsubscribe = stateManager.subscribe((state) => {
+//   console.log('State changed:', state);
+// });
+
+// // Update state
+// stateManager.setState({ age: 31 });
+
+// // Unsubscribe
+// unsubscribe();
+
+// // Update state again
+// stateManager.setState({ name: 'Jane' });
+
+// // Cleanup
+// stateManager.cleanup();
+
+// Simple Router
+export class SimpleRouter {
+  constructor(routes) {
+    this.routes = routes; // { "/": () => ..., "/about": () => ... }
+    this.root = null;
+    this.handlePopState = this.handlePopState.bind(this);
+  }
+
+  mount(root) {
+    this.root = root;
+    window.addEventListener("popstate", this.handlePopState);
+    this.navigate(window.location.pathname, false);
+  }
+
+  unmount() {
+    window.removeEventListener("popstate", this.handlePopState);
+    this.root = null;
+  }
+
+  handlePopState() {
+    this.navigate(window.location.pathname, false);
+  }
+
+  navigate(path, pushState = true) {
+    if (pushState) window.history.pushState({}, "", path);
+    if (this.routes[path]) {
+      // Proper cleanup using applyPatches to remove old nodes
+      const patches = [];
+      Array.from(this.root.childNodes).forEach((child) => {
+        patches.push({ op: "REMOVE", p: this.root, c: child });
+      });
+      MyUILib.applyPatches(patches);
+      const node = this.routes[path]();
+      if (node) this.root.appendChild(node);
+    } else {
+      this.root.innerHTML = "<h2>404 Not Found</h2>";
+    }
+  }
+
+  linkHandler(event) {
+    if (
+      event.target.tagName === "A" &&
+      event.target.hasAttribute("data-router-link")
+    ) {
+      event.preventDefault();
+      this.navigate(event.target.getAttribute("href"));
+    }
+  }
+}
+
+// Usage example:
+// import { SimpleRouter } from "./utils/simple-router";
+// const router = new SimpleRouter({
+//   "/": () => MyUILib.createDomElement("div", {}, "Home Page"),
+//   "/about": () => MyUILib.createDomElement("div", {}, "About Page"),
+// });
+// router.mount(document.getElementById("root"));
+// document.body.addEventListener("click", (e) => router.linkHandler(e));
