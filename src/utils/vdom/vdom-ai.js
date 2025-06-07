@@ -18,8 +18,15 @@ function removeListeners(el) {
   }
 }
 
-function createFragement(children) {
-  return document.createDocumentFragment().append(children);
+function createFragement(obj) {
+  // console.log(a, b, c);
+  // return document.createDocumentFragment().append(children);
+  // return obj.children.forEach((child) => {
+  //   return createDomElement(child.type, child.props, ...child.children);
+  // });
+  const fragment = document.createDocumentFragment();
+  fragment.append(...obj.children);
+  return fragment;
 }
 
 const MyUILib = (() => {
@@ -39,35 +46,7 @@ const MyUILib = (() => {
     const el = document.createElement(type);
 
     // Set attributes and event listeners
-    for (const key in props) {
-      if (key === "children") continue;
-      else if (key === "onMount" && typeof props[key] === "function") {
-        // Call mount callback after element is added to DOM
-        setTimeout(() => props[key](el), 0);
-      } else if (key === "onUnmount" && typeof props[key] === "function") {
-        // Store unmount callback for later use (e.g., in removeAllEventListeners)
-        el._unmountCallback = props[key];
-      }
-      if (key.startsWith("on") && typeof props[key] === "function") {
-        const eventName = key.slice(2).toLowerCase();
-        // Remove old listener if exists
-        removeListeners(el);
-        addListener(el, eventName, props[key]);
-      } else if (key === "className") {
-        el.setAttribute("class", props[key]);
-      } else if (key === "style" && typeof props[key] === "object") {
-        Object.assign(el.style, props[key]);
-      } else if (props[key] === true) {
-        el.setAttribute(key, "");
-      } else if (props[key] === false) {
-        el.removeAttribute(key);
-      } else if (key === "ref" && typeof props[key] === "function") {
-        // Handle ref callback
-        props[key](el);
-      } else {
-        el.setAttribute(key, props[key]);
-      }
-    }
+    updateProps(props, el);
     // Append children
     children.flat().forEach((child) => {
       if (child == null) return;
@@ -177,7 +156,9 @@ const MyUILib = (() => {
   function applyPropsPatches(patches) {
     while (patches.length) {
       const patch = patches.shift();
-      updateProps(patch.$target, patch.newProps, patch.oldProps);
+      // updateProps(patch.$target, patch.newProps, patch.oldProps);
+      updateProps(patch.newProps, patch.$target);
+
       patch.$target = null;
       patch.newProps = null;
       patch.oldProps = null;
@@ -197,6 +178,38 @@ const MyUILib = (() => {
 export default MyUILib;
 export const { createDomElement, render, applyPatches, applyPropsPatches } =
   MyUILib;
+
+function updateProps(props, el) {
+  for (const key in props) {
+    if (key === "children") continue;
+    else if (key === "onMount" && typeof props[key] === "function") {
+      // Call mount callback after element is added to DOM
+      setTimeout(() => props[key](el), 0);
+    } else if (key === "onUnmount" && typeof props[key] === "function") {
+      // Store unmount callback for later use (e.g., in removeAllEventListeners)
+      el._unmountCallback = props[key];
+    }
+    if (key.startsWith("on") && typeof props[key] === "function") {
+      const eventName = key.slice(2).toLowerCase();
+      // Remove old listener if exists
+      removeListeners(el);
+      addListener(el, eventName, props[key]);
+    } else if (key === "className") {
+      el.setAttribute("class", props[key]);
+    } else if (key === "style" && typeof props[key] === "object") {
+      Object.assign(el.style, props[key]);
+    } else if (props[key] === true) {
+      el.setAttribute(key, "");
+    } else if (props[key] === false) {
+      el.removeAttribute(key);
+    } else if (key === "ref" && typeof props[key] === "function") {
+      // Handle ref callback
+      props[key](el);
+    } else {
+      el.setAttribute(key, props[key]);
+    }
+  }
+}
 
 function createStateManager(initialState = {}) {
   let state = initialState;

@@ -3,6 +3,7 @@ import MyUILib, {
   render,
   createStateManager,
   SimpleRouter,
+  applyPropsPatches,
 } from "../utils/vdom/vdom-ai"; // Assuming MyUILib.js is in the same directory
 
 // Define a simple functional component
@@ -32,20 +33,34 @@ const MyButton = ({ onClick, children }) => {
 
 const App = (props) => {
   // Root component with some state-like behavior for demonstration
-  // let counter() = 0; // Simulate state
-  const [counter, counterInst] = createStateManager(0);
+  let counter = 11; // Simulate state
+  // const [counter, counterInst] = createStateManager(0);
   let showBox = true; // Simulate state
-  let pref, ulref, inputref; // Placeholder for ref, not used in this example
+  let pref, ulref, inputref, pdivref; // Placeholder for ref, not used in this example
 
   const handleClick = () => {
     console.log("Button clicked!");
-    counterInst.set(counter() + 1); // Increment the counter
+    counter += 1; // Increment the counter
     // Apply patches to update the counter() display
     applyPatches([
       {
         op: "CONTENT",
         p: pref,
-        c: `Counter: ${counter()}`,
+        c: `Counter: ${counter}`,
+      },
+      {
+        op: "CONTENT",
+        p: pdivref,
+        c: `Counter is ${counter % 2 === 0 ? "even" : "odd"}`,
+      },
+    ]);
+
+    applyPropsPatches([
+      {
+        $target: pdivref,
+        newProps: { style: { color: counter % 2 === 0 ? "blue" : "green" } },
+
+        oldProps: { style: { color: "blue" } },
       },
     ]);
   };
@@ -107,7 +122,7 @@ const App = (props) => {
       onUnmount={(el) => {
         // This will be called when the component is unmounted
         console.log("App component unmounted:", el);
-        pref = ulref = inputref = null; // Clear the reference
+        pref = ulref = inputref = pdivref = null; // Clear the reference
       }}
     >
       <h1>My Custom UI App with Diffing</h1>
@@ -125,7 +140,7 @@ const App = (props) => {
 
       <GreetMessage
         name={props.appName || "Initial User"}
-        showEmoji={counter() % 2 === 0}
+        showEmoji={counter % 2 === 0}
       />
       <input
         ref={(el) => (inputref = el)}
@@ -150,7 +165,7 @@ const App = (props) => {
           pref = el;
         }}
       >
-        Counter: {counter()}
+        Counter is: {counter}
       </p>
       <MyButton onClick={handleClick}>Increment Counter</MyButton>
       <br />
@@ -166,28 +181,42 @@ const App = (props) => {
       >
         <li>Item 1</li>
         <li>Item 2</li>
-        {/* Example of adding/removing a child */}
-        {counter() > 2 && <li>Item 3 (Added after 2 clicks)</li>}
-        {counter() > 4 && <li>Item 4 (Added after 4 clicks)</li>}
       </ul>
       {/* Example of prop change */}
-      {counter() % 3 === 0 && <p style={{ color: "red" }}>Divisible by 3!</p>}
-      {counter() % 3 !== 0 && (
+      {/* {counter % 3 === 0 && <p style={{ color: "red" }}>Divisible by 3!</p>}
+      {counter % 3 !== 0 && (
         <p style={{ color: "green" }}>Not divisible by 3!</p>
-      )}
+      )} */}
+      <p
+        style={{ color: counter % 2 === 0 ? "blue" : "green" }}
+        ref={(el) => {
+          pdivref = el;
+          // applyPropsPatches([
+          //   {
+          //     $target: pdivref,
+          //     newProps: {},
+          //   },
+          // ]);
+        }}
+      >
+        Counter is {counter % 2 === 0 ? "even" : "odd"}
+      </p>
     </div>
   );
 };
 
 const About = () => {
   return (
-    <div>
+    <>
       <h2>About Page</h2>
       <a href="/" data-router-link>
         Back
       </a>
+      <p>This is the About page of the app.</p>
+      <p>Welcome to the About section!</p>
+      <p>Here you can find more information about this application.</p>
       <p>This is a simple about page for the app.</p>
-    </div>
+    </>
   );
 };
 
