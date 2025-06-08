@@ -38,6 +38,29 @@ const App = (props) => {
   let showBox = true; // Simulate state
   let pref, ulref, inputref, pdivref; // Placeholder for ref, not used in this example
 
+  const box = (
+    <div
+      onMount={(el) => {
+        // This will be called when the box is mounted
+        console.log("Box component mounted:", el);
+      }}
+      onUnmount={(el) => {
+        // This will be called when the box is unmounted
+        console.log("Box component unmounted:", el);
+        // Clear the reference if needed
+      }}
+      style={{
+        marginTop: "20px",
+        padding: "15px",
+        border: "1px solid blue",
+        backgroundColor: "#e0e0ff",
+      }}
+    >
+      <p>This box is conditionally rendered.</p>
+      <small>Random number: {Math.random().toFixed(4)}</small>
+    </div>
+  );
+
   const handleClick = () => {
     console.log("Button clicked!");
     counter += 1; // Increment the counter
@@ -60,24 +83,10 @@ const App = (props) => {
         $target: pdivref,
         newProps: { style: { color: counter % 2 === 0 ? "blue" : "green" } },
 
-        oldProps: { style: { color: "blue" } },
+        // oldProps: { style: { color: "blue" } },
       },
     ]);
   };
-
-  const Box = (
-    <div
-      style={{
-        marginTop: "20px",
-        padding: "15px",
-        border: "1px solid blue",
-        backgroundColor: "#e0e0ff",
-      }}
-    >
-      <p>This box is conditionally rendered.</p>
-      <small>Random number: {Math.random().toFixed(4)}</small>
-    </div>
-  );
 
   const toggleBox = () => {
     if (showBox) {
@@ -87,7 +96,7 @@ const App = (props) => {
         {
           op: "INSERT_BEFORE",
           p: ulref.parentNode,
-          c: Box,
+          c: box,
           ref: ulref,
         },
       ]);
@@ -148,7 +157,7 @@ const App = (props) => {
         placeholder="Type something..."
         onInput={(e) => {
           // Update the input value in the state manager
-          inputref.value = e.target.value;
+
           // Apply patches to update the input value display
           MyUILib.applyPatches([
             {
@@ -201,6 +210,7 @@ const App = (props) => {
       >
         Counter is {counter % 2 === 0 ? "even" : "odd"}
       </p>
+      <>Some fragment content here.</>
     </div>
   );
 };
@@ -208,7 +218,16 @@ const App = (props) => {
 const About = () => {
   return (
     <>
-      <h2>About Page</h2>
+      <h2
+        onMount={() => {
+          console.log("About component mounted");
+        }}
+        onUnmount={() => {
+          console.log("About component unmounted");
+        }}
+      >
+        About Page
+      </h2>
       <a href="/" data-router-link>
         Back
       </a>

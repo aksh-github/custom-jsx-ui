@@ -107,13 +107,25 @@ const MyUILib = (() => {
       switch (patch.op) {
         case "APPEND":
           patch.p.appendChild(patch.c);
-          patch.c = null;
+          if (typeof patch.c._mountCallback === "function") {
+            setTimeout(() => {
+              patch.c._mountCallback(patch.c);
+              patch.c = null; // Clear reference
+            }, 0);
+          }
+          // patch.c = null;
           patch.p = null;
           patch.op = null;
           break;
         case "INSERT_BEFORE":
           patch.p.insertBefore(patch.c, patch.ref);
-          patch.c = null;
+          if (typeof patch.c._mountCallback === "function") {
+            setTimeout(() => {
+              patch.c._mountCallback(patch.c);
+              patch.c = null; // Clear reference
+            }, 0);
+          }
+          // patch.c = null;
           patch.p = null;
           patch.ref = null;
           patch.op = null;
@@ -123,6 +135,12 @@ const MyUILib = (() => {
             patch.p.insertBefore(patch.c, patch.ref.nextSibling);
           } else {
             patch.p.appendChild(patch.c);
+          }
+          if (typeof patch.c._mountCallback === "function") {
+            setTimeout(() => {
+              patch.c._mountCallback(patch.c);
+              patch.c = null; // Clear reference
+            }, 0);
           }
           patch.c = null;
           patch.p = null;
@@ -184,7 +202,13 @@ function updateProps(props, el) {
     if (key === "children") continue;
     else if (key === "onMount" && typeof props[key] === "function") {
       // Call mount callback after element is added to DOM
-      setTimeout(() => props[key](el), 0);
+      // setTimeout(() => props[key](el), 0);
+      el._mountCallback = props[key];
+      setTimeout(() => {
+        if (document.body.contains(el)) {
+          props[key](el);
+        }
+      }, 0);
     } else if (key === "onUnmount" && typeof props[key] === "function") {
       // Store unmount callback for later use (e.g., in removeAllEventListeners)
       el._unmountCallback = props[key];
