@@ -3,6 +3,39 @@ import { signal } from "../utils/signal-v2";
 import { atom, state } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
+export const TextArea = () => {
+  const [t, set] = atom("");
+  // const [txt, settxt] = createSignal("");
+  // const [t, set] = signal("");
+  let txtRef;
+
+  console.log("came here");
+
+  const clear = () => {
+    set("");
+    // settxt("");
+  };
+
+  onCleanup(() => {
+    txtRef = null;
+  });
+
+  return () => (
+    <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
+      <button onClick={clear}>Clear</button>
+      {/* <br />
+        <span>{txt()}</span>
+        <textarea
+          value={txt()}
+          onInput={(e) => settxt(e.target.value)}
+        ></textarea>
+        <br /> */}
+      <span>{t()}</span>
+      <input value={t()} onInput={(e) => set(e.target.value)} />
+    </div>
+  );
+};
+
 export const DoesNotWork = (props) => {
   console.log("This does NOT work");
   return <p>{props.p}</p>;

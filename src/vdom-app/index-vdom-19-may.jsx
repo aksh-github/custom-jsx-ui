@@ -1,4 +1,4 @@
-import { App, SimpleRoute, TextArea } from "./App";
+import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import { registerCallback, state, atom } from "../utils/simple-state";
 import {

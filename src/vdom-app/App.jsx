@@ -78,6 +78,10 @@ const DynCompoPromise = () => {
   return import("../compos/ComponentPatterns").then((mod) => mod?.PropsDriven);
 };
 
+const DynTextArea = () => {
+  return import("../compos/ComponentPatterns").then((mod) => mod?.TextArea);
+};
+
 const SansCompoPromise = () => {
   // await new Promise((resolve, reject) => {
   //   setTimeout(() => resolve(10), 3000);
@@ -224,7 +228,14 @@ const Input = () => {
           value={input("v")}
         />
         <p>{input("e")}</p>
-        <TextArea />
+        {/* <TextArea /> */}
+        <SuspenseV2
+          key="dyntext"
+          cacheKey="dyntext"
+          fallback={<div>Loading TextArea...</div>}
+        >
+          <DynTextArea />
+        </SuspenseV2>
       </div>
     );
   };
@@ -240,16 +251,25 @@ function ComplexRoute(props) {
   const [s, sets] = atom("akshay");
   let ref = null;
 
-  // createEffect(() => {
-  //   console.log(c());
-  // });
+  let [holec, setHolec] = atom(0);
+  let intervalId = null;
 
   onMount(() => {
     console.log("mount app", ref);
+    const wc = document.querySelector("hole-component");
+
+    if (wc) {
+      intervalId = setInterval(() => {
+        wc.setAttribute("message", `Hello from wc after ${holec()} seconds`);
+        skipUpdate(() => {
+          setHolec((prev) => prev + 2);
+        });
+      }, 2000);
+    }
   });
 
   onCleanup(() => {
-    ref = null;
+    ref = intervalId = null;
   });
 
   const arr = [];
@@ -389,29 +409,6 @@ export const SimpleRoute = () => {
     ref = null;
   });
 
-  const NoParentComp = () => {
-    // let noParent = [<p>10</p>, <p>20</p>];
-    const [noParent, setNoParent] = createSignal([<p>10</p>, <p>20</p>]);
-    // const Arr = state({ a: [<p>10</p>, <p>20</p>] });
-    console.log("This is not supported, since h() return value is cached");
-
-    return () => (
-      <>
-        <button
-          onClick={() => {
-            setNoParent([...noParent(), <p>40</p>]);
-            console.log(noParent());
-            // Arr.set({ a: [...Arr.get("a"), <p>40</p>] });
-            // console.log(Arr.get("a"));
-          }}
-        >
-          Update below Array (NOT supported)
-        </button>
-        {noParent()}
-      </>
-    );
-  };
-
   const Row = ({ n }) => <p>{n}</p>;
 
   return () => {
@@ -422,13 +419,20 @@ export const SimpleRoute = () => {
         <Link href="/">Go Back</Link>
         <hr /> */}
         {/* <div>
-          <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3>
+          <p>before</p>
+          <h3>{pst() % 2 === 0 ? <Even /> : "<Odd />"}</h3>
           <button onClick={() => setPst((_pst) => _pst + 1)}>Change</button>
         </div> */}
 
         <p>before</p>
-        <TextArea />
-        <p>after</p>
+
+        <SuspenseV2
+          key="textarea"
+          cacheKey="textarea"
+          fallback={<div>Loading TextArea...</div>}
+        >
+          <DynTextArea />
+        </SuspenseV2>
 
         <SuspenseV2
           key="picurl"
@@ -459,6 +463,8 @@ export const SimpleRoute = () => {
           <DynCompoPromise n="This will be loaded dynamically" />
         </SuspenseV2>
 
+        <p>after</p>
+
         {data() ? (
           <div>
             <h3>This data will get erased after 7 seconds</h3>
@@ -471,39 +477,6 @@ export const SimpleRoute = () => {
       </div>
     );
   };
-};
-
-export const TextArea = () => {
-  const [t, set] = atom("");
-  // const [txt, settxt] = createSignal("");
-  // const [t, set] = signal("");
-  let txtRef;
-
-  console.log("came here");
-
-  const clear = () => {
-    set("");
-    // settxt("");
-  };
-
-  onCleanup(() => {
-    txtRef = null;
-  });
-
-  return () => (
-    <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
-      <button onClick={clear}>Clear</button>
-      {/* <br />
-        <span>{txt()}</span>
-        <textarea
-          value={txt()}
-          onInput={(e) => settxt(e.target.value)}
-        ></textarea>
-        <br /> */}
-      <span>{t()}</span>
-      <input value={t()} onInput={(e) => set(e.target.value)} />
-    </div>
-  );
 };
 
 export function App(props) {
