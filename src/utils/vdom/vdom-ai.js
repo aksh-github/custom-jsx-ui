@@ -81,6 +81,7 @@ const MyUILib = (() => {
     // Call unmount callback if present
     if (typeof node._unmountCallback === "function") {
       node._unmountCallback(node);
+      node._unmountCallback = null; // Clear reference
     }
     removeListeners(node);
     if (node && node.childNodes) {
@@ -107,24 +108,24 @@ const MyUILib = (() => {
       switch (patch.op) {
         case "APPEND":
           patch.p.appendChild(patch.c);
-          if (typeof patch.c._mountCallback === "function") {
-            setTimeout(() => {
+          setTimeout(() => {
+            if (typeof patch.c._mountCallback === "function") {
               patch.c._mountCallback(patch.c);
               patch.c = null; // Clear reference
-            }, 0);
-          }
+            }
+          }, 0);
           // patch.c = null;
           patch.p = null;
           patch.op = null;
           break;
         case "INSERT_BEFORE":
           patch.p.insertBefore(patch.c, patch.ref);
-          if (typeof patch.c._mountCallback === "function") {
-            setTimeout(() => {
+          setTimeout(() => {
+            if (typeof patch.c._mountCallback === "function") {
               patch.c._mountCallback(patch.c);
               patch.c = null; // Clear reference
-            }, 0);
-          }
+            }
+          }, 0);
           // patch.c = null;
           patch.p = null;
           patch.ref = null;
@@ -136,13 +137,13 @@ const MyUILib = (() => {
           } else {
             patch.p.appendChild(patch.c);
           }
-          if (typeof patch.c._mountCallback === "function") {
-            setTimeout(() => {
+          setTimeout(() => {
+            if (typeof patch.c._mountCallback === "function") {
               patch.c._mountCallback(patch.c);
               patch.c = null; // Clear reference
-            }, 0);
-          }
-          patch.c = null;
+            }
+          }, 0);
+          // patch.c = null;
           patch.p = null;
           patch.ref = null;
           patch.op = null;
@@ -207,6 +208,7 @@ function updateProps(props, el) {
       setTimeout(() => {
         if (document.body.contains(el)) {
           props[key](el);
+          el._mountCallback = null; // Clear reference after calling
         }
       }, 0);
     } else if (key === "onUnmount" && typeof props[key] === "function") {

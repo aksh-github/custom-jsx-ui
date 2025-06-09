@@ -37,8 +37,9 @@ const App = (props) => {
   // const [counter, counterInst] = createStateManager(0);
   let showBox = true; // Simulate state
   let pref, ulref, inputref, pdivref; // Placeholder for ref, not used in this example
+  let boxInstance = null; // Placeholder for box instance
 
-  const box = (
+  const box = () => (
     <div
       onMount={(el) => {
         // This will be called when the box is mounted
@@ -92,26 +93,27 @@ const App = (props) => {
     if (showBox) {
       // ulref.parentNode.insertBefore(Box, ulref);
       // Insert the box before the ulref element
+      boxInstance = box(); // Create a new box instance
       MyUILib.applyPatches([
         {
           op: "INSERT_BEFORE",
           p: ulref.parentNode,
-          c: box,
+          c: boxInstance,
           ref: ulref,
         },
       ]);
     } else {
       // Remove the box if it exists
-      const box = ulref.previousSibling;
-      if (box) {
-        MyUILib.applyPatches([
-          {
-            op: "REMOVE",
-            p: ulref.parentNode,
-            c: box,
-          },
-        ]);
-      }
+      // const box = ulref.previousSibling;
+
+      MyUILib.applyPatches([
+        {
+          op: "REMOVE",
+          p: ulref.parentNode,
+          c: boxInstance, // Use the box instance to remove it
+        },
+      ]);
+      boxInstance = null; // Clear the box instance reference
     }
     showBox = !showBox; // Toggle the state
   };
