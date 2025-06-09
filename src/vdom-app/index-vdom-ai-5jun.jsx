@@ -36,8 +36,21 @@ const App = (props) => {
   let counter = 11; // Simulate state
   // const [counter, counterInst] = createStateManager(0);
   let showBox = true; // Simulate state
-  let pref, ulref, inputref, pdivref; // Placeholder for ref, not used in this example
+  let pref, ulref, inputref, pdivref, spn; // Placeholder for ref, not used in this example
   let boxInstance = null; // Placeholder for box instance
+
+  let timer = 0; // Placeholder for timer
+  let intv = setInterval(() => {
+    timer += 1; // Increment the timer
+    // Apply patches to update the timer display
+    applyPatches([
+      {
+        op: "CONTENT",
+        p: spn, // Assuming spn is a reference to a span element
+        c: `Timer: ${timer}`,
+      },
+    ]);
+  }, 1000); // Update every second
 
   const box = () => (
     <div
@@ -133,7 +146,9 @@ const App = (props) => {
       onUnmount={(el) => {
         // This will be called when the component is unmounted
         console.log("App component unmounted:", el);
-        pref = ulref = inputref = pdivref = null; // Clear the reference
+        pref = ulref = inputref = pdivref = spn = null; // Clear the reference
+        clearInterval(intv); // Clear the timer interval
+        intv = null; // Clear the interval reference
       }}
     >
       <h1>My Custom UI App with Diffing</h1>
@@ -212,7 +227,10 @@ const App = (props) => {
       >
         Counter is {counter % 2 === 0 ? "even" : "odd"}
       </p>
-      <>Some fragment content here.</>
+      <>
+        Some fragment content here.{" "}
+        <span ref={(el) => (spn = el)}>{timer}</span>
+      </>
     </div>
   );
 };
