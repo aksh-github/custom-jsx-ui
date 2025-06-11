@@ -1,13 +1,73 @@
 function h(type, props, ...children) {
   // Mark fragment nodes with a special prop
-  const isFragment =
-    type === "" || type === Symbol.for("vdom.fragment") || type === "fragment";
+
   return {
     type,
-    props: { ...(props || {}), ...(isFragment ? { __isFragment: true } : {}) },
-    __isFragment: isFragment,
+    props: { ...(props || {}) },
+
     children: children.flat().map((child) => child),
   };
+}
+
+// create a function that uses linked list from jsx
+
+function jsxToLinkedList(vnode) {
+  // Helper to create a linked list node with firstChild and next
+  function createNode(value) {
+    return { value, firstChild: null, next: null };
+  }
+
+  // Recursively convert vnode tree to linked list with firstChild/next
+  function traverse(node) {
+    if (node == null) return null;
+
+    // If node is an array, flatten and link each child via next
+    if (Array.isArray(node)) {
+      let head = null,
+        current = null;
+      for (const child of node) {
+        const childNode = traverse(child);
+        if (childNode) {
+          if (!head) {
+            head = childNode;
+            current = head;
+          } else {
+            current.next = childNode;
+            current = current.next;
+          }
+          // Move to the end of the current child's chain
+          while (current && current.next) current = current.next;
+        }
+      }
+      return head;
+    }
+
+    // If node is a primitive, wrap in a linked list node
+    if (
+      typeof node === "string" ||
+      typeof node === "number" ||
+      typeof node === "boolean" ||
+      node === undefined ||
+      node === null
+    ) {
+      return createNode(node);
+    }
+
+    // If node is a vnode object
+    const linkedNode = createNode({
+      type: node.type,
+      props: node.props,
+    });
+
+    // children will be a linked list via firstChild/next
+    if (node.children && node.children.length > 0) {
+      linkedNode.firstChild = traverse(node.children);
+    }
+
+    return linkedNode;
+  }
+
+  return traverse(vnode);
 }
 
 function createElement(vnode) {
@@ -82,7 +142,7 @@ const vdom = h(
   h(Food, { name: "Pizza", price: 9.99 })
 );
 
-console.log(vdom);
+console.log(vdom, jsxToLinkedList(vdom));
 
 // Example usage:
 document.body.appendChild(createElement(vdom));
