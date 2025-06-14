@@ -348,7 +348,7 @@ const microframe = (() => {
     return (
       isEventProp(name) ||
       name === "fragChildLen" ||
-      name === "ignoreNode" ||
+      // name === "ignoreNode" ||
       name === "fallback"
     );
   }
@@ -1084,6 +1084,7 @@ const microframe = (() => {
     onCleanup,
     h,
     df,
+    createElement,
   };
 })();
 
@@ -1093,6 +1094,7 @@ export const onMount = microframe.onMount;
 export const onCleanup = microframe.onCleanup;
 export const h = microframe.h;
 export const df = microframe.df;
+export const createElement = microframe.createElement;
 
 const suspenseCache = {};
 
@@ -1312,8 +1314,10 @@ function domListIterator(rootNode) {
       // log(next);
       // arr.push(next);
       // const notToSkip = !next.getAttribute("ignorenode");
-      const notToSkip =
-        !next.getAttribute("ignorenode") || !isWebComponent(next);
+      const notToSkip = !(
+        next?.getAttribute("ignorenode") || isWebComponent(next)
+      );
+
       if (next.firstElementChild && notToSkip) {
         next = next.firstElementChild;
         // log(next);
