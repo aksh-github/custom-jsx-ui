@@ -5,6 +5,7 @@ import {
   onCleanup,
   Suspense,
   SuspenseV2,
+  createElement,
 } from "../utils/vdom/vdom-lib";
 import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
@@ -502,9 +503,16 @@ export function App(props) {
       // p.textContent = footerTp();
 
       // footRef.appendChild(p);
-      const p =
-        footRef.querySelector("p") ||
-        footRef.appendChild(document.createElement("p"));
+      const p = createElement(<p />);
+      // ||
+      footRef.appendChild(p);
+      footRef.appendChild(
+        createElement(
+          <div>
+            <h1>Static Header</h1>Static content....
+          </div>
+        )
+      );
 
       const wcd = footRef.querySelector("web-component div");
 
@@ -525,6 +533,7 @@ export function App(props) {
   onCleanup(() => {
     routeHandler.cleanup();
     clearInterval(timer);
+    timer = null;
     footRef = null;
   });
 
@@ -630,9 +639,8 @@ export function App(props) {
           ignoreNode
           // ignoreLater={true}
           style={{ backgroundColor: "bisque" }}
-        >
-          <p></p>
-        </footer>
+        ></footer>
+        <div>last element....</div>
       </div>
     );
   };
