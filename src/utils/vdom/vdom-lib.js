@@ -316,7 +316,12 @@ const microframe = (() => {
         type,
         props: props || {},
         // children: props?.ignoreNode ? [] : children,
-        children: type?.includes("-") || props?.ignoreNode ? [] : children,
+        children:
+          type?.includes("-") ||
+          props?.ignoreNode ||
+          type?.toLowerCase() === "iframe"
+            ? []
+            : children,
       };
   }
 
@@ -1315,7 +1320,9 @@ function domListIterator(rootNode) {
       // arr.push(next);
       // const notToSkip = !next.getAttribute("ignorenode");
       const notToSkip = !(
-        next?.getAttribute("ignorenode") || isWebComponent(next)
+        next?.getAttribute("ignorenode") ||
+        next.tagName === "IFRAME" ||
+        isWebComponent(next)
       );
 
       if (next.firstElementChild && notToSkip) {

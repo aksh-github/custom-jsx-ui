@@ -250,6 +250,7 @@ function ComplexRoute(props) {
   // const [s, sets] = createSignal("akshay");
   const [c, setc] = atom(0);
   const [s, sets] = atom("akshay");
+  const [yt, setYt] = atom("t779DVjCKCs");
   let ref = null;
 
   let [holec, setHolec] = atom(0);
@@ -307,6 +308,35 @@ function ComplexRoute(props) {
     >
       hello world {c()} {s()}
       <hole-component message={"Hello from wc"}></hole-component>
+      <div>
+        <span class="menu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="red">
+            <path d="M23.498 6.186a2.994 2.994 0 0 0-2.112-2.116C19.382 3.5 12 3.5 12 3.5s-7.382 0-9.386.57A2.994 2.994 0 0 0 .502 6.186C0 8.19 0 12 0 12s0 3.81.502 5.814a2.994 2.994 0 0 0 2.112 2.116C4.618 20.5 12 20.5 12 20.5s7.382 0 9.386-.57a2.994 2.994 0 0 0 2.112-2.116C24 15.81 24 12 24 12s0-3.81-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+          </svg>
+        </span>
+        <span class="menu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#555">
+            <path d="M20.453 3.548H3.547A2.548 2.548 0 0 0 1 6.095v11.81a2.548 2.548 0 0 0 2.547 2.547h16.906A2.548 2.548 0 0 0 23 17.905V6.095a2.548 2.548 0 0 0-2.547-2.547zM21.5 17.905a1.048 1.048 0 0 1-1.047 1.047H3.547A1.048 1.048 0 0 1 2.5 17.905V6.095A1.048 1.048 0 0 1 3.547 5.048h16.906A1.048 1.048 0 0 1 21.5 6.095v11.81zM7.5 8.5v3.5l-1.5-1.5-1.5 1.5V8.5H3v7h2v-2l1.5 1.5 1.5-1.5v2h2v-7zm7.5 0h-2v7h2v-2h2v2h2v-7h-2v2h-2V8.5z" />
+          </svg>
+        </span>
+      </div>
+      <input
+        type="text"
+        value={yt()}
+        onChange={(e) => {
+          // console.log(e, e.target.value);
+          setYt(e.target.value);
+        }}
+      />
+      <iframe
+        width="100%"
+        height="615"
+        src={`https://www.youtube.com/embed/${yt()}`}
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
       <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
       <div>
         <button
