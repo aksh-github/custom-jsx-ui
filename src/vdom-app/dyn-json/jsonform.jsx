@@ -22,8 +22,7 @@ const Field = (props) => {
   return (props) => {
     // console.log("field", field);
     let control;
-    const { field, fns, state } = props;
-    const { handleChange, validate, setError } = fns;
+    const { field, state } = props;
 
     switch (field.type) {
       case "text":
@@ -42,11 +41,11 @@ const Field = (props) => {
               placeholder={field.placeholder}
               required={field.required}
               defaultValue={state?.value}
-              onBlur={(e) => {
-                // console.log(validate(e.target.name, e.target.value));
-                setError(field.name, validate(field.name, e.target.value));
-              }}
-              onChange={handleChange}
+              // onBlur={(e) => {
+              //   // console.log(validate(e.target.name, e.target.value));
+              //   setError(field.name, validate(field.name, e.target.value));
+              // }}
+              // onChange={handleChange}
             />
           </df>
         );
@@ -64,15 +63,15 @@ const Field = (props) => {
               name={field.name}
               required={field.required}
               defaultValue={state?.value}
-              onBlur={(e) => {
-                // console.log(validate(e.target.name, e.target.value));
-                setError(field.name, validate(field.name, e.target.value));
-              }}
-              onChange={(e) => {
-                handleChange({
-                  target: { name: field.name, value: e.target.value },
-                });
-              }}
+              // onBlur={(e) => {
+              //   // console.log(validate(e.target.name, e.target.value));
+              //   setError(field.name, validate(field.name, e.target.value));
+              // }}
+              // onChange={(e) => {
+              //   handleChange({
+              //     target: { name: field.name, value: e.target.value },
+              //   });
+              // }}
             >
               {field.options.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -92,21 +91,17 @@ const Field = (props) => {
               id={field.id}
               name={field.name}
               required={field.required}
-              defaultValue={state?.value}
-              onBlur={(e) => {
-                // console.log(validate(e.target.name, e.target.value));
-                setError(field.name, validate(field.name, e.target.value));
-              }}
-              onChange={handleChange}
+              // defaultValue={state?.value}
+              checked={field.defaultValue}
+              // onBlur={(e) => {
+              //   // console.log(validate(e.target.name, e.target.value));
+              //   setError(field.name, validate(field.name, e.target.value));
+              // }}
+              // onChange={handleChange}
             />
             <label className="form-check-label" htmlFor={field.name}>
               {field.label}
             </label>
-            <ErrorMessage
-              name={field.name}
-              // error={formState()?.[field.name]?.error}
-              error={state?.error}
-            />
           </df>
         );
         break;
@@ -124,11 +119,11 @@ const Field = (props) => {
               required={field.required}
               rows={field.rows}
               defaultValue={state?.value}
-              onBlur={(e) => {
-                // console.log(validate(e.target.name, e.target.value));
-                setError(field.name, validate(field.name, e.target.value));
-              }}
-              onChange={handleChange}
+              // onBlur={(e) => {
+              //   // console.log(validate(e.target.name, e.target.value));
+              //   setError(field.name, validate(field.name, e.target.value));
+              // }}
+              // onChange={handleChange}
             ></textarea>
           </df>
         );
@@ -236,16 +231,30 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   };
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
+
     setFormState((prevState) => {
-      const err = validate(name, value);
-      const newState = {
-        ...prevState,
-        [name]: {
-          value,
-          error: err,
-        },
-      };
+      let err, newState;
+
+      if (type === "checkbox") {
+        err = validate(name, checked);
+        newState = {
+          ...prevState,
+          [name]: {
+            value: checked,
+            error: err,
+          },
+        };
+      } else {
+        err = validate(name, value);
+        newState = {
+          ...prevState,
+          [name]: {
+            value,
+            error: err,
+          },
+        };
+      }
 
       if (name === "selectUsecase") {
         // modify the form json based on the selected use case
@@ -338,20 +347,21 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
           <form
             id={uiJson().form.id}
             className={uiJson().form.className}
+            onBlur={(e) => {
+              const { name, value, type, checked } = e.target;
+              if (type === "checkbox") {
+                setError(name, validate(name, checked));
+              } else {
+                setError(name, validate(name, value));
+              }
+            }}
+            onChange={handleChange}
             onSubmit={handleSubmit}
           >
             {uiJson().form.fields.map((field, idx) => (
               <Field
                 // key={field.name + idx + field.name}
                 field={field}
-                fns={{
-                  handleChange,
-                  validate,
-                  setError,
-                  submit: handleSubmit,
-                }}
-                // value={formState()[field.name]?.value}
-                // error={formState()[field.name]?.error}
                 state={formState()[field.name] || field}
               />
             ))}

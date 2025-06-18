@@ -17,10 +17,19 @@
             "label": "Social Media Marketing"
           }
         ],
-        "required": true,
         "validation": {
+          "required": true,
           "minLength": 1,
           "maxLength": 50
+        }
+      },
+      {
+        "type": "checkbox",
+        "name": "checkAgree",
+        "label": "Do you agree ?",
+        "defaultValue": true,
+        "validation": {
+          "required": true
         }
       }
     ],
@@ -42,8 +51,8 @@
               },
               { "value": "EPIC generation", "label": "EPIC generation" }
             ],
-            "required": true,
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
@@ -61,9 +70,9 @@
               { "value": "US", "label": "US" },
               { "value": "ASIA", "label": "Asia" }
             ],
-            "required": true,
 
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
@@ -79,8 +88,9 @@
               { "value": "", "label": "Select Business Unit" },
               { "value": "Marketing", "label": "Marketing" }
             ],
-            "required": true,
+
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
@@ -100,8 +110,9 @@
               { "value": "", "label": "Select Action" },
               { "value": "Generate Content", "label": "Generate Content" }
             ],
-            "required": true,
+
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
@@ -119,9 +130,9 @@
               { "value": "US", "label": "US" },
               { "value": "ASIA", "label": "Asia" }
             ],
-            "required": true,
 
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
@@ -137,8 +148,9 @@
               { "value": "", "label": "Select Business Unit" },
               { "value": "Marketing", "label": "Marketing" }
             ],
-            "required": true,
+
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
@@ -157,8 +169,9 @@
               { "value": "LinkedIn", "label": "LinkedIn" },
               { "value": "Facebook", "label": "Facebook" }
             ],
-            "required": true,
+
             "validation": {
+              "required": true,
               "minLength": 1,
               "maxLength": 50
             }
