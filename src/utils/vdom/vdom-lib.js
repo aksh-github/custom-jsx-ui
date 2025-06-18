@@ -527,7 +527,9 @@ const microframe = (() => {
         // (typeof node1 === "string" && node1 !== node2) ||
         (!node1?.type && node1 !== node2) ||
         node1?.type !== node2?.type ||
-        node1?.value !== node2?.value
+        node1?.value !== node2?.value ||
+        node1?.props?.name !== node2?.props?.name
+
         // || (node1?.props && node1.props.forceUpdate)
       );
   }

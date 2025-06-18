@@ -18,6 +18,7 @@ import { LinkV2, Router, Route } from "../utils/router-v2";
 import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
 import Heavy from "../compos/Heavy";
+import JsonForm from "./dyn-json/jsonform";
 // import { Sans } from "./sans/sans";
 
 let routeHandler = Router();
@@ -582,7 +583,7 @@ export function App(props) {
 
     return (
       <div>
-        <ul>
+        <ul className="nav">
           <li>
             <LinkV2 key={"root"} to="/">
               Complex
@@ -606,6 +607,16 @@ export function App(props) {
           <li>
             <LinkV2 key={"frag"} to="/sans">
               Sanskrit
+            </LinkV2>
+          </li>
+          <li>
+            <LinkV2 key={"heavy"} to="/heavy">
+              Heavy
+            </LinkV2>
+          </li>
+          <li>
+            <LinkV2 key={"json-form"} to="/json-form">
+              Dynamic JSON
             </LinkV2>
           </li>
         </ul>
@@ -657,6 +668,10 @@ export function App(props) {
               );
             case "/heavy":
               return <Heavy />;
+            case "/json-form":
+              return (
+                <JsonForm setIsFormValid={() => {}} setRequestObj={() => {}} />
+              );
             default:
               if (curPath()?.url?.startsWith("/topics"))
                 return <Topics basepath="/topics" match={curPath()} />;
