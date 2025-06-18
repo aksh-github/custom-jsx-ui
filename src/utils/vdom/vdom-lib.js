@@ -429,7 +429,7 @@ const microframe = (() => {
           extratedName,
           props[name]
         );
-        $target.addEventListener(extratedName, props[name]);
+        $target.addEventListener(extratedName, props[name], true);
       }
     });
   }
