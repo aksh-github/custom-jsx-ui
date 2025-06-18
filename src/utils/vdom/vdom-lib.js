@@ -377,9 +377,15 @@ const microframe = (() => {
     } else if (typeof value === "boolean") {
       setBooleanProp($target, name, value);
     } else {
-      if (name === "value" || name === "htmlFor")
+      if (name === "value" || name === "htmlFor") {
         // special case
         $target[name] = value;
+
+        // special handling for select
+        setTimeout(() => {
+          $target[name] = value;
+        }, 0);
+      }
       $target.setAttribute(name, value);
     }
   }

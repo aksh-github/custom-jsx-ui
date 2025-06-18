@@ -62,7 +62,8 @@ const Field = (props) => {
               id={field.id || field.name}
               name={field.name}
               required={field.required}
-              defaultValue={state?.value}
+              // defaultValue={field.value || state?.value}
+              value={field.value || state?.value}
               // onBlur={(e) => {
               //   // console.log(validate(e.target.name, e.target.value));
               //   setError(field.name, validate(field.name, e.target.value));
