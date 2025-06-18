@@ -7,7 +7,7 @@
         "type": "select",
         "label": "Use Case",
         "name": "selectUsecase",
-        "value": "",
+        "value": "Agile",
         "error": "",
         "options": [
           { "value": "", "label": "Select Use Case" },
