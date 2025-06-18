@@ -4,6 +4,7 @@ import {
   skipUpdate,
   state,
   context,
+  createEffect,
 } from "../../utils/simple-state";
 import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
 
@@ -210,8 +211,8 @@ const fetchData = (jsonFile) =>
   fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => res.json());
 
 function GenericTab({ dkey }) {
-  let lsearch = null,
-    filtered = () => [];
+  let filtered = () => [];
+  const effect = createEffect();
 
   // const getSearchCtx = searchCtx.get;
   const TOP = -1;
@@ -222,13 +223,17 @@ function GenericTab({ dkey }) {
     const { title, filterFunc, RowComponent, asList } = UIObj[prop];
     // let srch = searchCtx.get()?.trim()?.toLowerCase();
 
-    if (lsearch !== srch) {
-      // filter();
-      lsearch = srch;
-      if (lsearch) {
+    effect(() => {
+      // console.log("effect for", dkey, "with search", srch);
+      console.log("search now", srch);
+      if (srch) {
         filtered = () => globalState[`${dkey}`].d.filter(filterFunc);
       } else filtered = () => [];
-    }
+      return () => {
+        console.log("cleanup for", dkey, "with search", srch);
+        filtered = () => [];
+      };
+    }, [srch]);
 
     console.log("exec", searchCtx.get());
 

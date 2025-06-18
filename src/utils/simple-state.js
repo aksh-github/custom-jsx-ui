@@ -1,6 +1,21 @@
 // const log = console.log;
 const log = () => {};
 
+export function createEffect() {
+  let prevDeps = [];
+  let cleanup;
+
+  return function effect(effect, deps) {
+    const depsChanged = deps.some((dep, index) => dep !== prevDeps[index]);
+
+    if (!prevDeps.length || depsChanged) {
+      if (cleanup) cleanup();
+      cleanup = effect();
+      prevDeps = deps;
+    }
+  };
+}
+
 function debounce(func, duration) {
   let timeout;
 
