@@ -233,29 +233,17 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
+    const fieldVal = type === "checkbox" ? checked : value;
 
     setFormState((prevState) => {
-      let err, newState;
-
-      if (type === "checkbox") {
-        err = validate(name, checked);
-        newState = {
-          ...prevState,
-          [name]: {
-            value: checked,
-            error: err,
-          },
-        };
-      } else {
-        err = validate(name, value);
-        newState = {
-          ...prevState,
-          [name]: {
-            value,
-            error: err,
-          },
-        };
-      }
+      const err = validate(name, fieldVal);
+      const newState = {
+        ...prevState,
+        [name]: {
+          value: fieldVal,
+          error: err,
+        },
+      };
 
       if (name === "selectUsecase") {
         // modify the form json based on the selected use case
@@ -325,7 +313,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
 
   return () => {
     effect(() => {
-      if (uiJson() && uiJson().form) {
+      if (uiJson()) {
         setFormState(
           uiJson().form.fields.reduce((acc, field) => {
             acc[field.name] = {
