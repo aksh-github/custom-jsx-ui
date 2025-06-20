@@ -40,12 +40,7 @@ const Field = (props) => {
               name={field.name}
               placeholder={field.placeholder}
               required={field.required}
-              defaultValue={state?.value}
-              // onBlur={(e) => {
-              //   // console.log(validate(e.target.name, e.target.value));
-              //   setError(field.name, validate(field.name, e.target.value));
-              // }}
-              // onChange={handleChange}
+              value={field.value || state?.value}
             />
           </df>
         );
@@ -64,15 +59,6 @@ const Field = (props) => {
               required={field.required}
               // defaultValue={field.value || state?.value}
               value={field.value || state?.value}
-              // onBlur={(e) => {
-              //   // console.log(validate(e.target.name, e.target.value));
-              //   setError(field.name, validate(field.name, e.target.value));
-              // }}
-              // onChange={(e) => {
-              //   handleChange({
-              //     target: { name: field.name, value: e.target.value },
-              //   });
-              // }}
             >
               {field.options.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -93,12 +79,7 @@ const Field = (props) => {
               name={field.name}
               required={field.required}
               // defaultValue={state?.value}
-              checked={field.defaultValue}
-              // onBlur={(e) => {
-              //   // console.log(validate(e.target.name, e.target.value));
-              //   setError(field.name, validate(field.name, e.target.value));
-              // }}
-              // onChange={handleChange}
+              checked={field.value || state?.value}
             />
             <label className="form-check-label" htmlFor={field.name}>
               {field.label}
@@ -119,12 +100,7 @@ const Field = (props) => {
               placeholder={field.placeholder}
               required={field.required}
               rows={field.rows}
-              defaultValue={state?.value}
-              // onBlur={(e) => {
-              //   // console.log(validate(e.target.name, e.target.value));
-              //   setError(field.name, validate(field.name, e.target.value));
-              // }}
-              // onChange={handleChange}
+              value={field.value || state?.value}
             ></textarea>
           </df>
         );
