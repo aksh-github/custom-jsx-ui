@@ -3,6 +3,54 @@ import { atom, createEffect, state } from "../../utils/simple-state";
 import { h, onMount, df } from "../../utils/vdom/vdom-lib";
 import { isFormValid, loadUI, setGlobalUIJson, validate } from "./utils";
 
+const Playground = () => {
+  const [json, setJson] = atom(null);
+  const [parseResult, setParseResult] = atom(null);
+
+  const effect = createEffect();
+
+  return () => {
+    // effect(() => {
+    //   try {
+    //     setParseResult(JSON.parse(json()));
+    //   } catch (error) {
+    //     setParseResult(error);
+    //   }
+    // }, [json()]);
+
+    return (
+      <df>
+        <h1>Playground</h1>
+        <div className="pg-container" style={{ display: "flex" }}>
+          <div>
+            <textarea
+              name=""
+              id=""
+              onInput={(e) => {
+                setJson(JSON.parse(e.target.value));
+                console.log(e.target.value);
+              }}
+            ></textarea>
+          </div>
+          {/* <div>{JSON.stringify(json())}</div> */}
+          <div>
+            {json()?.form?.fields.map((field, idx) => (
+              <Field
+                // key={field.name + idx + field.name}
+                field={field}
+                state={field}
+              />
+            ))}
+          </div>
+        </div>
+        <pre>
+          <code>{parseResult()}</code>
+        </pre>
+      </df>
+    );
+  };
+};
+
 const ErrorMessage = ({ name, error }) => {
   return ({ name, error }) => (
     <df>
@@ -38,9 +86,9 @@ const Field = (props) => {
               className={"col-sm-10 " + field.className}
               id={field.id}
               name={field.name}
-              placeholder={field.placeholder}
+              placeholder={field.placeholder || ""}
               required={field.required}
-              value={field.value || state?.value}
+              value={field.value || state?.value || ""}
             />
           </df>
         );
@@ -58,7 +106,7 @@ const Field = (props) => {
               name={field.name}
               required={field.required}
               // defaultValue={field.value || state?.value}
-              value={field.value || state?.value}
+              value={field.value || state?.value || ""}
             >
               {field.options.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -79,7 +127,7 @@ const Field = (props) => {
               name={field.name}
               required={field.required}
               // defaultValue={state?.value}
-              checked={field.value || state?.value}
+              checked={field.value || state?.value || false}
             />
             <label className="form-check-label" htmlFor={field.name}>
               {field.label}
@@ -97,10 +145,11 @@ const Field = (props) => {
               className={"col-sm-10 " + field.className}
               id={field.id}
               name={field.name}
-              placeholder={field.placeholder}
+              placeholder={field.placeholder || ""}
               required={field.required}
               rows={field.rows}
-              value={field.value || state?.value}
+              cols={field.cols}
+              value={field.value || state?.value || ""}
             ></textarea>
           </df>
         );
@@ -332,6 +381,10 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
             ))}
           </form>
         )}
+        <pre>{JSON.stringify(formState(), null, 2)}</pre>
+        <div>
+          <Playground />
+        </div>
       </div>
     );
   };
