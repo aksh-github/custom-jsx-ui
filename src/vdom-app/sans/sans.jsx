@@ -376,7 +376,8 @@ export function Sans() {
             value={search()}
             // value={searchCtx.get()}
             ref={(el) => (txtEl = el)}
-            type="text"
+            type="search"
+            name="search"
             placeholder="Search in English or Sanskrit..."
             onInput={(e) => {
               setSearch(e.target.value);
