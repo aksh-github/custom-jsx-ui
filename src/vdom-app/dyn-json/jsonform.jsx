@@ -21,7 +21,16 @@ const Playground = () => {
     return (
       <df>
         <h1>Playground</h1>
-        <div className="pg-container" style={{ display: "flex" }}>
+        <div
+          className="pg-container"
+          style={{
+            display: "flex",
+            gap: "1em",
+            border: "1px solid #ccc",
+            borderRadius: ".2em",
+            padding: "1em",
+          }}
+        >
           <div>
             <textarea
               name=""
@@ -30,6 +39,9 @@ const Playground = () => {
                 setJson(JSON.parse(e.target.value));
                 console.log(e.target.value);
               }}
+              value={JSON.stringify(json(), null, 2)}
+              cols="30"
+              rows="10"
             ></textarea>
           </div>
           {/* <div>{JSON.stringify(json())}</div> */}
