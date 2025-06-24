@@ -237,7 +237,7 @@ function updateProps(props, el) {
   }
 }
 
-function createStateManager(initialState = {}) {
+function createState(initialState = {}) {
   let state = initialState;
   const listeners = new Set();
 
@@ -296,10 +296,10 @@ function createStateManager(initialState = {}) {
   return [get, api];
 }
 
-export { createStateManager };
+export { createState };
 
 // Example usage:
-// const stateManager = createStateManager({ name: 'John', age: 30 });
+// const stateManager = createState({ name: 'John', age: 30 });
 
 // // Subscribe to state changes
 // const unsubscribe = stateManager.subscribe((state) => {
