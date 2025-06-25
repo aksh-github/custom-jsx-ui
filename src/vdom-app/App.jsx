@@ -585,39 +585,25 @@ export function App(props) {
       <div>
         <ul className="nav">
           <li>
-            <LinkV2 key={"root"} to="/">
-              Complex
-            </LinkV2>
+            <LinkV2 to="/">Complex</LinkV2>
           </li>
           <li>
-            <LinkV2 key={"simple"} to="/route2">
-              Simple
-            </LinkV2>
+            <LinkV2 to="/route2">Simple</LinkV2>
           </li>
           <li>
-            <LinkV2 key={"topics"} to="/topics">
-              Topics
-            </LinkV2>
+            <LinkV2 to="/topics">Topics</LinkV2>
           </li>
           <li>
-            <LinkV2 key={"frag"} to="/frag">
-              Fragments
-            </LinkV2>
+            <LinkV2 to="/frag">Fragments</LinkV2>
           </li>
           <li>
-            <LinkV2 key={"frag"} to="/sans">
-              Sanskrit
-            </LinkV2>
+            <LinkV2 to="/sans">Sanskrit</LinkV2>
           </li>
           <li>
-            <LinkV2 key={"heavy"} to="/heavy">
-              Heavy
-            </LinkV2>
+            <LinkV2 to="/heavy">Heavy</LinkV2>
           </li>
           <li>
-            <LinkV2 key={"json-form"} to="/json-form">
-              Dynamic JSON
-            </LinkV2>
+            <LinkV2 to="/json-form">Dynamic JSON</LinkV2>
           </li>
         </ul>
         <hr />
