@@ -11,8 +11,8 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { state, atom, batch, skipUpdate } from "../utils/simple-state";
-import { LinkV2, Router, Route } from "../utils/router-v2";
+import { createState, batch, skipUpdate } from "../utils/simple-state";
+import { LinkV2, Router } from "../utils/router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
@@ -91,40 +91,35 @@ const SansCompoPromise = () => {
   return import("./sans/sans").then((mod) => mod?.Sans);
 };
 
-const Topic =
-  () =>
-  ({ topicId }) =>
-    <h3>{topicId}</h3>;
+const Topic = ({ topicId }) => <h3>{topicId}</h3>;
 
-const Topics = (p) => {
+const Topics = (props) => {
   const items = [
-    { name: "Props v. State", slug: "props-v-state" },
+    { name: "Props v. State", slug: "props-v-createState" },
     { name: "Rendering with React", slug: "rendering" },
     { name: "Components", slug: "components" },
   ];
   // console.log(p);
+  // console.log(curPath.get());
+  const { basepath, match } = props;
 
-  return (props) => {
-    // console.log(curPath.get());
-    const { basepath, match } = props;
+  const item = items.find(({ name, slug }) => {
+    return match?.url?.endsWith(slug);
+  });
 
-    const item = items.find(({ name, slug }) => {
-      return match?.url?.endsWith(slug);
-    });
+  console.log(item);
 
-    console.log(item);
-
-    return (
-      <div>
-        <h2>Topics</h2>
-        <ul>
-          {items.map(({ name, slug }) => (
-            <li key={name}>
-              <LinkV2 to={`${basepath}/${slug}`}>{name}</LinkV2>
-            </li>
-          ))}
-        </ul>
-        {/* {items.map(({ name, slug }) => (
+  return (
+    <div>
+      <h2>Topics</h2>
+      <ul>
+        {items.map(({ name, slug }) => (
+          <li key={name}>
+            <LinkV2 to={`${basepath}/${slug}`}>{name}</LinkV2>
+          </li>
+        ))}
+      </ul>
+      {/* {items.map(({ name, slug }) => (
           <Route
             key={name}
             path={`${match.path}/${slug}`}
@@ -137,16 +132,15 @@ const Topics = (p) => {
           render={() => <h3>Please select a topic.</h3>}
         /> */}
 
-        <Topic topicId={(item?.name || "") + " on " + match.url} />
-      </div>
-    );
-  };
+      <Topic topicId={(item?.name || "") + " on " + match.url} />
+    </div>
+  );
 };
 
 // Ctr
 
-const Ctr = ({ v, __spl }) => {
-  const [st, setSt] = state({ c: 100, version: "Loading..." });
+const Ctr = (props) => {
+  const [st, setSt] = createState({ c: 100, version: "Loading..." });
 
   onCleanup(() => {
     console.log("unmount Ctr");
@@ -166,44 +160,40 @@ const Ctr = ({ v, __spl }) => {
     }, 4000);
   });
 
-  return (props) => {
-    // console.log(props);
-    // return <p>Json Value: {st("version")}</p>;
-    return (
-      <div
-        style={{
-          background: st("c") % 2 === 0 ? "orange" : "tomato",
-          color: st("c") % 2 === 0 ? "white" : "unset",
-          padding: "2em",
+  return (
+    <div
+      style={{
+        background: st.c % 2 === 0 ? "orange" : "tomato",
+        color: st.c % 2 === 0 ? "white" : "unset",
+        padding: "2em",
+      }}
+    >
+      <h3>Child {props.key}</h3>
+      <p>
+        Parent ctr: {props.v} {props.v % 2 === 0 ? "Even" : null}
+      </p>
+      <p>My ctr: {st.c}</p>
+      <p>Json Value: {st.version}</p>
+      <button
+        onClick={(e) => {
+          // setcc(cc() + 1);
+          // setSt(()=>{ c: st("c") + 1 });
+          setSt((prev) => ({
+            ...prev,
+            c: prev.c + 1,
+          }));
         }}
       >
-        <h3>Child {props.key}</h3>
-        <p>
-          Parent ctr: {props.v} {props.v % 2 === 0 ? "Even" : null}
-        </p>
-        <p>My ctr: {st("c")}</p>
-        <p>Json Value: {st("version")}</p>
-        <button
-          onClick={(e) => {
-            // setcc(cc() + 1);
-            // setSt(()=>{ c: st("c") + 1 });
-            setSt((prev) => ({
-              ...prev,
-              c: st("c") + 1,
-            }));
-          }}
-        >
-          click
-        </button>
-      </div>
-    );
-  };
+        click
+      </button>
+    </div>
+  );
 };
 
 // end Ctr
 
 const Input = () => {
-  const [input, setInput] = state({
+  const [input, setInput] = createState({
     v: "some",
     e: "",
   });
@@ -212,35 +202,33 @@ const Input = () => {
     console.log("unmount Input");
   });
 
-  return () => {
-    return (
-      <div>
-        {[10, 20, 30].map((it) => {
-          return <p>{it}</p>;
-        })}
-        <input
-          className="input"
-          onInput={(e) => {
-            // console.log(e, e.target.value);
-            setInput({
-              v: e.target.value,
-              e: e.target.value ? "" : "incorrect",
-            });
-          }}
-          value={input("v")}
-        />
-        <p>{input("e")}</p>
-        {/* <TextArea /> */}
-        <SuspenseV2
-          key="dyntext"
-          cacheKey="dyntext"
-          fallback={<div>Loading TextArea...</div>}
-        >
-          <DynTextArea />
-        </SuspenseV2>
-      </div>
-    );
-  };
+  return (
+    <div>
+      {[10, 20, 30].map((it) => {
+        return <p>{it}</p>;
+      })}
+      <input
+        className="input"
+        onInput={(e) => {
+          // console.log(e, e.target.value);
+          setInput({
+            v: e.target.value,
+            e: e.target.value ? "" : "incorrect",
+          });
+        }}
+        value={input.v}
+      />
+      <p>{input.e}</p>
+      {/* <TextArea /> */}
+      <SuspenseV2
+        key="dyntext"
+        cacheKey="dyntext"
+        fallback={<div>Loading TextArea...</div>}
+      >
+        <DynTextArea />
+      </SuspenseV2>
+    </div>
+  );
 };
 
 // ComplexRoute (route 1)
@@ -249,66 +237,73 @@ function ComplexRoute(props) {
   console.log("rendered App", props);
   // const [c, setc] = createSignal(0);
   // const [s, sets] = createSignal("akshay");
-  const [c, setc] = atom(0);
-  const [s, sets] = atom("akshay");
-  const [yt, setYt] = atom("t779DVjCKCs");
+  const [c, setc] = createState(0);
+  const [s, sets] = createState("akshay");
+  const [yt, setYt] = createState("t779DVjCKCs");
   let ref = null;
 
-  let [holec, setHolec] = atom(0);
+  const [holec, setHolec] = createState(0);
   let intervalId = null;
+  let wc = null;
 
   onMount(() => {
     console.log("mount app", ref);
-    const wc = document.querySelector("hole-component");
+    wc = document.querySelector("hole-component");
 
     if (wc) {
       intervalId = setInterval(() => {
-        wc.setAttribute("message", `Hello from wc after ${holec()} seconds`);
+        wc.setAttribute("message", `Hello from wc after ${holec} seconds`);
         skipUpdate(() => {
-          setHolec((prev) => prev + 2);
+          setHolec((prev) => {
+            console.log(prev);
+            return holec + 2;
+          });
         });
       }, 2000);
     }
   });
 
   onCleanup(() => {
-    ref = intervalId = null;
+    clearInterval(intervalId);
+    ref = intervalId = wc = null;
   });
 
   const arr = [];
   for (let i = 0; i < 10000; ++i) arr.push(i);
 
-  const Number = () => {
+  const Number = ({ n }) => {
     // onMount(() => {
     //   console.log("mounting number");
     // });
     // onCleanup(() => {
     //   console.log("unmounting number");
     // });
-    return ({ n }) => (
+    return (
       <li>
         <span>{n}</span>
       </li>
     );
   };
 
-  const Master = () => () =>
-    (
-      <div>
-        <Ctr v={c()} key={"k2"} />
-        <Input />
-      </div>
-    );
+  const Master = () => (
+    <div>
+      <Ctr v={c} key={"k2"} />
+      <Input />
+    </div>
+  );
 
-  return () => (
+  return (
     <div
       ref={(_r) => {
         // console.log(_r);
         ref = _r;
       }}
     >
-      hello world {c()} {s()}
-      <hole-component message={"Hello from wc"}></hole-component>
+      hello world {c} {s}
+      <hole-component
+        // ref={(_wc) => (wc = _wc)}
+        message={"Hello from wc"}
+      ></hole-component>
       <div>
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="red">
@@ -323,7 +318,7 @@ function ComplexRoute(props) {
       </div>
       <input
         type="text"
-        value={yt()}
+        value={yt}
         onChange={(e) => {
           // console.log(e, e.target.value);
           setYt(e.target.value);
@@ -332,7 +327,7 @@ function ComplexRoute(props) {
       <iframe
         width="100%"
         height="615"
-        src={`https://www.youtube.com/embed/${yt()}`}
+        src={`https://www.youtube.com/embed/${yt}`}
         title="YouTube video player"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -342,10 +337,8 @@ function ComplexRoute(props) {
       <div>
         <button
           onClick={(e) => {
-            batch(() => {
-              setc(c() + 1);
-              sets("akshay is smart");
-            });
+            setc((c) => c + 1);
+            sets("akshay is smart");
           }}
         >
           Counter
@@ -353,7 +346,7 @@ function ComplexRoute(props) {
       </div>
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
-      {c() % 2 !== 0 ? (
+      {c % 2 !== 0 ? (
         <ul style={{ minHeight: "8000px", contentVisibility2: "auto" }}>
           {arr.map((n) => (
             <Number n={n} />
@@ -372,8 +365,8 @@ function ComplexRoute(props) {
           Go to simple
         </button>
       </p>
-      <Ctr v={c()} key={"k1"} />
-      {c() % 2 === 0 ? <Master /> : "NA"}
+      <Ctr v={c} key={"k1"} />
+      {c % 2 === 0 ? <Master /> : "NA"}
     </div>
   );
 }
@@ -389,7 +382,7 @@ const Even = () => {
     console.log("unmount for Even");
   });
 
-  return () => "Divisible by 2";
+  return "Divisible by 2";
 };
 
 const SomeOdd = () => {
@@ -401,7 +394,7 @@ const SomeOdd = () => {
     console.log("unmount for SomeOdd");
   });
 
-  return () => "[SomeOdd]";
+  return "[SomeOdd]";
 };
 
 const Odd = () => {
@@ -413,7 +406,7 @@ const Odd = () => {
     console.log("unmount for Odd");
   });
 
-  return () => (
+  return (
     <div>
       <SomeOdd />
       NOT divisible
@@ -424,12 +417,12 @@ const Odd = () => {
 // SimpleRoute
 
 export const SimpleRoute = () => {
-  const [pst, setPst] = atom(0);
-  const [data, setData] = atom(null);
+  const [pst, setPst] = createState(0);
+  const [data, setData] = createState(null);
   // const tv = pst.get("r");
   let ref = null;
 
-  // const [arrState] = state({ arr: ["10", "20"] });
+  // const [arrState] = createState({ arr: ["10", "20"] });
 
   onMount(() => {
     console.log("Ref available in onMount for SimpleRoute", ref);
@@ -463,7 +456,7 @@ export const SimpleRoute = () => {
         <DynTextArea />
       </SuspenseV2>
 
-      <SuspenseV2
+      {/* <SuspenseV2
         key="picurl"
         fallback={
           <div className="lds-roller">
@@ -481,7 +474,7 @@ export const SimpleRoute = () => {
             </div>
           );
         }}
-      </SuspenseV2>
+      </SuspenseV2> */}
       <SuspenseV2
         key="dyncompo"
         cacheKey="dyncompo"
@@ -508,10 +501,11 @@ export const SimpleRoute = () => {
 };
 
 export function App(props) {
-  const [curPath, setCurPath] = state({ url: window.location.pathname });
+  const [curPath, setCurPath] = createState({ url: window.location.pathname });
   // const [route, setRoute] = signal("route2");
   let footRef = null;
-  let [footerTp, setFooterTp] = atom(0);
+
+  let [footerTp, setFooterTp] = createState(0);
   let timer = null;
 
   const onRouteChange = (newPath) => {
@@ -544,11 +538,11 @@ export function App(props) {
       const wcd = footRef.querySelector("web-component div");
 
       timer = setInterval(() => {
-        // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with state but skips ui comparison
+        // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with createState but skips ui comparison
         // setFooterTp((_tp) => _tp + 1);
         // p.textContent = footerTp();
         ct++;
-        p.textContent = "This footer demoes ignoreNode ignoreLater " + ct; // without using state
+        p.textContent = "This footer demoes ignoreNode ignoreLater " + ct; // without using createState
 
         if (wcd) {
           wcd.textContent = "Hello from wc " + ct;
@@ -561,114 +555,94 @@ export function App(props) {
     routeHandler.cleanup();
     clearInterval(timer);
     timer = null;
-    footRef = null;
+    setFootRef(null);
   });
 
-  return () => {
-    // switch (route()) {
-    //   // switch (route()) {
-    //   case "route2":
-    //     return <SimpleRoute />;
-    //   case "":
-    //     return <ComplexRoute />;
-    //   // case null:
-    //   //   return null;
-    //   default:
-    //     return "Wrong path 404";
-    // }
+  return (
+    <div>
+      <ul className="nav">
+        <li>
+          <LinkV2 to="/">Complex</LinkV2>
+        </li>
+        <li>
+          <LinkV2 to="/route2">Simple</LinkV2>
+        </li>
+        <li>
+          <LinkV2 to="/topics">Topics</LinkV2>
+        </li>
+        <li>
+          <LinkV2 to="/frag">Fragments</LinkV2>
+        </li>
+        <li>
+          <LinkV2 to="/sans">Sanskrit</LinkV2>
+        </li>
+        <li>
+          <LinkV2 to="/heavy">Heavy</LinkV2>
+        </li>
+        <li>
+          <LinkV2 to="/json-form">Dynamic JSON</LinkV2>
+        </li>
+      </ul>
+      <hr />
 
-    return (
-      <div>
-        <ul className="nav">
-          <li>
-            <LinkV2 to="/">Complex</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/route2">Simple</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/topics">Topics</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/frag">Fragments</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/sans">Sanskrit</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/heavy">Heavy</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/json-form">Dynamic JSON</LinkV2>
-          </li>
-        </ul>
-        <hr />
+      {(() => {
+        switch (curPath.url) {
+          // switch (route()) {
+          case "/route2":
+            return <SimpleRoute />;
+          case "/":
+            return <ComplexRoute />;
+          // return <Ctr v={10} />;
+          case "/frag":
+            console.log("frag");
+            const t = Date.now();
 
-        {(() => {
-          switch (curPath().url) {
-            // switch (route()) {
-            case "/route2":
-              return <SimpleRoute />;
-            case "/":
-              return <ComplexRoute />;
-            // return <Ctr v={10} />;
-            case "/frag":
-              console.log("frag");
-              const t = Date.now();
-
-              // if (!resolved && !ArrayWithFragments) {
-              //   LoadArrayWithFragments();
-              //   return <div>Loading...</div>;
-              // }
-
-              return (
-                <div>
-                  <div>before text</div>
-                  {/* <ArrayWithFragments some={200} /> */}
-                  <SuspenseV2
-                    delay={3000}
-                    cacheKey={"awfp"}
-                    fallback={<div>Loading...</div>}
-                  >
-                    <ArrayWithFragmentsPromise some={t} />
-                  </SuspenseV2>
-
-                  <div>after text</div>
-                </div>
-              );
-
-            case "/sans":
-              // return <Sans />;
-              return (
+            return (
+              <div>
+                <div>before text</div>
                 <SuspenseV2
-                  key={"sans"}
-                  cacheKey={"sans"}
-                  fallback={<p>Loading Sanskrit...</p>}
+                  delay={3000}
+                  cacheKey={"awfp"}
+                  fallback={<div>Loading...</div>}
                 >
-                  <SansCompoPromise />
+                  <ArrayWithFragmentsPromise some={t} />
                 </SuspenseV2>
-              );
-            case "/heavy":
-              return <Heavy />;
-            case "/json-form":
-              return (
-                <JsonForm setIsFormValid={() => {}} setRequestObj={() => {}} />
-              );
-            default:
-              if (curPath()?.url?.startsWith("/topics"))
-                return <Topics basepath="/topics" match={curPath()} />;
-              else return "Wrong path 404";
-          }
-        })()}
 
-        <footer
-          ref={(_ref) => (footRef = _ref)}
-          ignoreNode
-          // ignoreLater={true}
-          style={{ backgroundColor: "bisque" }}
-        ></footer>
-        <div>last element....</div>
-      </div>
-    );
-  };
+                <div>after text</div>
+              </div>
+            );
+
+          case "/sans":
+            // return <Sans />;
+            return (
+              <SuspenseV2
+                key={"sans"}
+                cacheKey={"sans"}
+                fallback={<p>Loading Sanskrit...</p>}
+              >
+                <SansCompoPromise />
+              </SuspenseV2>
+            );
+          case "/heavy":
+            return <Heavy />;
+          case "/json-form":
+            return (
+              <JsonForm setIsFormValid={() => {}} setRequestObj={() => {}} />
+            );
+          default:
+            if (curPath?.url?.startsWith("/topics"))
+              return <Topics basepath="/topics" match={curPath} />;
+            else return "Wrong path 404";
+        }
+      })()}
+
+      <footer
+        ref={(_ref) => (footRef = _ref)}
+        ignoreNode
+        // ignoreLater={true}
+        style={{ backgroundColor: "bisque" }}
+      ></footer>
+      <div>last element....</div>
+    </div>
+  );
 }

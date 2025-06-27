@@ -11,9 +11,9 @@ export const TextArea = () => {
 
   onMount(() => {
     console.log(txtRef);
-    setTimeout(() => {
-      txtRef.focus();
-    }, 100);
+    // setTimeout(() => {
+    //   txtRef.focus();
+    // }, 100);
   });
 
   console.log("came here");
@@ -134,24 +134,21 @@ export const ArrayThatWorks = () => {
 export const ArrayWithFragments = (props) => {
   console.log("This works for only static, changes won't reflect", props?.some);
 
-  const [st, setSt] = atom(null);
+  const [st, setSt] = createState(null);
 
   // setTimeout(() => {
   //   setSt("some value");
   // }, 4000);
 
-  const Row =
-    ({ n }) =>
-    () =>
-      <p>{n}</p>;
+  const Row = ({ n }) => <p>{n}</p>;
 
   const arr = [1000, 2000];
   // return () => <p>10</p>;
-  return (props) => (
+  return (
     <df>
       {/* <p>10</p>
       <p>20</p> */}
-      {st()}
+      {st}
       <p>time is {props?.some}</p>
       {arr.map((el, idx) => {
         return <Row key={idx} n={el} />;

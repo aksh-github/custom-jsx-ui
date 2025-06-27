@@ -39,6 +39,7 @@ export const setCurrComp = (comp) => {
 };
 
 let throtUpdate = null;
+let forceUpdate = () => {};
 
 const SimState = (() => {
   const globalState = {};
@@ -57,7 +58,6 @@ const SimState = (() => {
     isSkipping = false;
   };
 
-  let forceUpdate = () => {};
   let batchOp = false;
   let isSkipping = false;
 
@@ -169,10 +169,10 @@ const SimState = (() => {
 })();
 
 export const registerCallback = SimState.registerCallback;
-export const batch = SimState.batch;
+// export const batch = SimState.batch;
 export const state = SimState.state;
 export const atom = SimState.atom;
-export const skipUpdate = SimState.skipUpdate;
+// export const skipUpdate = SimState.skipUpdate;
 export const context = SimState.context;
 
 // SmartState 27-jun-25
@@ -181,6 +181,28 @@ const SmartState = (() => {
   const gs = {};
   let lastComp = null;
   let idx = 0;
+
+  let batchOp = false;
+  let isSkipping = false;
+
+  const batch = (cb) => {
+    console.warn("untested code");
+    batchOp = true;
+    cb();
+    batchOp = false;
+    forceUpdate();
+  };
+
+  const registerCallback = (cb, duration = 100) => {
+    forceUpdate = cb;
+    throtUpdate = debounce(forceUpdate, duration);
+  };
+
+  const skipUpdate = (cb) => {
+    isSkipping = true;
+    cb();
+    isSkipping = false;
+  };
 
   const reset = (key) => {
     // gs = {};
@@ -216,9 +238,16 @@ const SmartState = (() => {
     const set = (nv) => {
       if (gs[key] === nv) return;
 
-      reset();
-      gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
-      throtUpdate();
+      if (batchOp) {
+        if (lastComp) updateComps.add(lastComp);
+      } else if (isSkipping) {
+      } else {
+        // updateComps.push(lastComp);
+        if (lastComp) updateComps.add(lastComp);
+        reset();
+        gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
+        throtUpdate();
+      }
     };
 
     const specialSet = (nv) => {
@@ -228,7 +257,7 @@ const SmartState = (() => {
       throtUpdate();
     };
 
-    console.log("gs", gs);
+    // console.log("gs", gs);
 
     if (lastComp != currComp) lastComp = currComp;
 
@@ -240,9 +269,16 @@ const SmartState = (() => {
   return {
     state,
     reset,
+    skipUpdate,
+    batch,
+    registerCallback,
   };
 })();
 
 export const createState = SmartState.state;
 export const reset = SmartState.reset;
+export const skipUpdate = SmartState.skipUpdate;
+export const batch = SmartState.batch;
+export const smartRegisterCallback = SmartState.registerCallback;
+
 // export const specialSet = SmartState.specialSet;

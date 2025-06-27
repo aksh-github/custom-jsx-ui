@@ -1,4 +1,4 @@
-import { atom } from "./simple-state";
+import { atom, createState } from "./simple-state";
 import { onCleanup, onMount, h } from "./vdom/vdom-lib";
 // import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
@@ -49,59 +49,60 @@ const matchPath = (pathname, options) => {
   };
 };
 
-const [currentPath, setCurentPath] = atom(window.location.pathname);
+const [currentPath, setCurentPath] = createState(window.location.pathname);
 
-export function Route() {
-  //   const currentPath = atom(window.location.pathname);
+// export function Route() {
+//   //   const currentPath = createState(window.location.pathname);
 
-  const navigate = (abcd) => {
-    console.log(window.location.pathname, abcd);
-    if (currentPath() !== window.location.pathname)
-      setCurentPath(window.location.pathname);
-  };
+//   const navigate = (abcd) => {
+//     console.log(window.location.pathname, abcd);
+//     if (currentPath() !== window.location.pathname)
+//       setCurentPath(window.location.pathname);
+//   };
 
-  onMount(() => {
-    window.addEventListener("popstate", navigate);
-    window.addEventListener("navigate", navigate);
-  });
+//   onMount(() => {
+//     window.addEventListener("popstate", navigate);
+//     window.addEventListener("navigate", navigate);
+//   });
 
-  onCleanup(() => {
-    window.removeEventListener("popstate", navigate);
-    window.removeEventListener("navigate", navigate);
-  });
+//   onCleanup(() => {
+//     window.removeEventListener("popstate", navigate);
+//     window.removeEventListener("navigate", navigate);
+//   });
 
-  return (props) => {
-    const { path, exact, component, render } = props;
+//   return (props) => {
+//     const { path, exact, component, render } = props;
 
-    const match = matchPath(window.location.pathname, { path, exact });
+//     const match = matchPath(window.location.pathname, { path, exact });
 
-    if (!match) return null;
+//     if (!match) return null;
 
-    if (component) return h(component, { match });
+//     if (component) return h(component, { match });
 
-    console.log(props);
+//     console.log(props);
 
-    if (render) return render({ match });
+//     if (render) return render({ match });
 
-    return null;
-  };
-}
+//     return null;
+//   };
+// }
 
-export function LinkV2() {
-  return ({ to, children, replace }) => {
-    return (
-      <a
-        href={to}
-        onClick={(e) => {
-          e.preventDefault();
-          const to = e.target.getAttribute("href");
-          replace ? historyReplace(to) : historyPush(to);
-        }}
-      >
-        {children}
-      </a>
-    );
-  };
+export function LinkV2(props, children) {
+  // console.log(props, children);
+  const { to, replace } = props;
+
+  return (
+    <a
+      href={to}
+      onClick={(e) => {
+        e.preventDefault();
+        const to = e.target.getAttribute("href");
+        replace ? historyReplace(to) : historyPush(to);
+      }}
+    >
+      {children}
+    </a>
+  );
 }
 
 export function Router() {
@@ -136,7 +137,7 @@ export function Router() {
 }
 
 export const SimpleSwitch = (pmain) => {
-  const [curPath, setCurPath] = atom(window.location.pathname);
+  const [curPath, setCurPath] = createState(window.location.pathname);
 
   console.log(pmain);
 

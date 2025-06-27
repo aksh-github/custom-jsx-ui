@@ -2,6 +2,7 @@ import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import {
   registerCallback,
+  smartRegisterCallback,
   state,
   atom,
   createState,
@@ -37,6 +38,7 @@ const root = document.getElementById("root-vdom");
 
 // for my state
 registerCallback(forceUpdate);
+smartRegisterCallback(forceUpdate);
 
 const Even = () => {
   const [count, setCount] = createState(0);
@@ -77,6 +79,9 @@ const Odd = () => {
 const Counter = () => {
   const [count, setCount] = createState(0);
 
+  onMount(() => console.log("mounting Counter"));
+  onCleanup(() => console.log("unmounting Counter"));
+
   return (
     <div>
       <h2>Counter: {count}</h2>
@@ -87,7 +92,7 @@ const Counter = () => {
   );
 };
 
-mount(root, () => <SimpleRoute />);
+mount(root, () => <App />);
 // mount(root, () => <Sans />);
 
 function Svg() {

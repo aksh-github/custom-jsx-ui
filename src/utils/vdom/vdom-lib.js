@@ -81,6 +81,7 @@ const microframe = (() => {
   let funcCache = {},
     altFuncCache = {};
   let counter = 0;
+  let currComp = null;
 
   let stack = [];
 
@@ -135,7 +136,11 @@ const microframe = (() => {
 
   function onMount(cb) {
     // log(counter, cb);
-    currMount = cb;
+    if (altFuncCache[currComp]?.mount) return;
+    // currMount = cb;
+    mountFns.push(cb);
+    // if (!funcCache[currComp]) mountFns.push(cb);
+    // currMount = null;
   }
 
   function onCleanup(cb) {
@@ -187,6 +192,7 @@ const microframe = (() => {
       const cacheKey = `${type.name}:${curParent}:${props?.key}`;
 
       setCurrComp(cacheKey);
+      currComp = cacheKey;
 
       let rv = type(props, ...children);
 
@@ -195,7 +201,8 @@ const microframe = (() => {
         // altFuncCache[cacheKey] = null;
         if (exisng) {
           // rv = exisng.fn;
-          currMount = exisng.mount;
+          currMount = true;
+          // exisng.mount = null;
           currUnmount = exisng.unMount;
         } else {
           // to maintain order
@@ -208,7 +215,7 @@ const microframe = (() => {
       funcCache[cacheKey] = {
         fname: type.name,
         // fn: _fn,
-        mount: currMount,
+        mount: true,
         unMount: currUnmount,
         p: curParent,
         key: props?.key,
