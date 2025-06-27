@@ -268,144 +268,73 @@ function updateProps(props, el) {
   }
 }
 
-function createState(initialState = {}) {
-  let state = initialState;
-  const listeners = new Set();
+const SmartState = () => {
+  const gs = {};
+  let lastComp = null;
+  let idx = 0;
 
-  function get() {
-    return state;
-  }
-
-  function set(newState) {
-    // Accommodate plain values (non-object)
-    if (
-      typeof state !== "object" ||
-      state === null ||
-      typeof newState !== "object" ||
-      newState === null
-    ) {
-      state = newState;
-    } else {
-      state = { ...state, ...newState };
-    }
-    notifyListeners();
-  }
-
-  function subscribe(listener, compareFn = (prev, next) => prev !== next) {
-    const subscription = { listener, compareFn, prevState: state };
-    listeners.add(subscription);
-    return () => unsubscribe(subscription);
-  }
-
-  function unsubscribe(subscription) {
-    listeners.delete(subscription);
-  }
-
-  function notifyListeners() {
-    listeners.forEach((subscription) => {
-      if (subscription.compareFn(subscription.prevState, state)) {
-        subscription.listener(state);
-        subscription.prevState = state;
-      }
-    });
-  }
-
-  function cleanup() {
-    listeners.clear();
-    state =
-      typeof initialState === "object" && initialState !== null
-        ? {}
-        : undefined;
-  }
-
-  const api = {
-    set,
-    subscribe,
-    cleanup,
-  };
-
-  return [get, api];
-}
-
-export { createState };
-
-// Example usage:
-// const stateManager = createState({ name: 'John', age: 30 });
-
-// // Subscribe to state changes
-// const unsubscribe = stateManager.subscribe((state) => {
-//   console.log('State changed:', state);
-// });
-
-// // Update state
-// stateManager.setState({ age: 31 });
-
-// // Unsubscribe
-// unsubscribe();
-
-// // Update state again
-// stateManager.setState({ name: 'Jane' });
-
-// // Cleanup
-// stateManager.cleanup();
-
-const gs = {};
-let lastComp = null;
-let idx = 0;
-
-const reset = () => {
-  // gs = {};
-  lastComp = null;
-  idx = 0;
-  Object.keys(funcCache).forEach((key) => {
-    console.log("funcCache", funcCache[key]);
-    // clear funcCache
-    if (funcCache[key].visited === true) {
-      funcCache[key].visited = false;
-    } else {
-      delete funcCache[key];
-      Object.keys(gs).forEach((_key) => {
-        if (_key.startsWith(key)) {
-          gs[_key] = null;
-          delete gs[_key];
-        }
-        // console.log(_key, key, _key.startsWith(key));
-      });
-    }
-
-    // clear data
-  });
-};
-
-export const state = (iv) => {
-  if (lastComp != currComp) {
-    // lastComp = currComp;
+  const reset = () => {
+    // gs = {};
+    lastComp = null;
     idx = 0;
-  }
-  const key = `${currComp}-${idx}`;
-  let st = gs[key] || iv;
-  let firstRun = gs[key] == undefined;
+    Object.keys(funcCache).forEach((key) => {
+      console.log("funcCache", funcCache[key]);
+      // clear funcCache
+      if (funcCache[key].visited === true) {
+        funcCache[key].visited = false;
+      } else {
+        delete funcCache[key];
+        Object.keys(gs).forEach((_key) => {
+          if (_key.startsWith(key)) {
+            gs[_key] = null;
+            delete gs[_key];
+          }
+          // console.log(_key, key, _key.startsWith(key));
+        });
+      }
 
-  if (firstRun) gs[key] = st;
-
-  // if (gs[key] == undefined) gs[key] = st;
-
-  const get = () => {
-    return gs[key];
+      // clear data
+    });
   };
 
-  const set = (nv) => {
-    gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
+  const state = (iv) => {
+    if (lastComp != currComp) {
+      // lastComp = currComp;
+      idx = 0;
+    }
+    const key = `${currComp}-${idx}`;
+    let st = gs[key] || iv;
+    let firstRun = gs[key] == undefined;
+
+    if (firstRun) gs[key] = st;
+
+    // if (gs[key] == undefined) gs[key] = st;
+
+    const get = () => {
+      return gs[key];
+    };
+
+    const set = (nv) => {
+      gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
+    };
+
+    // console.log("gs", gs);
+
+    if (lastComp != currComp) lastComp = currComp;
+
+    idx++;
+
+    return [get(), set];
   };
 
-  // console.log("gs", gs);
-
-  if (lastComp != currComp) lastComp = currComp;
-
-  idx++;
-
-  return [get(), set];
+  return {
+    state,
+    reset,
+  };
 };
+
+export const state = SmartState().state;
+export const reset = SmartState().reset;
 
 // Simple Router
 export class SimpleRouter {
