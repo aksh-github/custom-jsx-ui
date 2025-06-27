@@ -33,14 +33,14 @@ function debounce(func, duration) {
 export const updateComps = new Set();
 export const updateCtx = new Set();
 
+let currComp = null;
+
+export const setCurrComp = (comp) => {
+  currComp = comp;
+};
+
 const SimState = (() => {
   const globalState = {};
-
-  let currComp = null;
-
-  const setCurrComp = (comp) => {
-    currComp = comp;
-  };
 
   const batch = (cb) => {
     console.warn("untested code");
@@ -166,7 +166,6 @@ const SimState = (() => {
     atom,
     context,
     skipUpdate,
-    setCurrComp,
   };
 })();
 
@@ -175,5 +174,4 @@ export const batch = SimState.batch;
 export const state = SimState.state;
 export const atom = SimState.atom;
 export const skipUpdate = SimState.skipUpdate;
-export const setCurrComp = SimState.setCurrComp;
 export const context = SimState.context;
