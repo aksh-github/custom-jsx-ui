@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
       // jsxFactory: "domv2",
       // jsxFragment: "domv2",
       jsxFactory: "MyUILib.createDomElement",
+      jsxFragment: "MyUILib.createFragement",
     },
     server: {
       proxy: {

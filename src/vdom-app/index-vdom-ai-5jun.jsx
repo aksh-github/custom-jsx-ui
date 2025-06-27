@@ -1,10 +1,12 @@
 import MyUILib, {
   applyPatches,
   render,
-  createStateManager,
   SimpleRouter,
   applyPropsPatches,
-} from "../utils/vdom/vdom-ai"; // Assuming MyUILib.js is in the same directory
+  state,
+} from "../utils/dom/dom-ai"; // Assuming MyUILib.js is in the same directory
+
+import { atom, registerCallback } from "../utils/simple-state";
 
 // Define a simple functional component
 const GreetMessage = ({ name, showEmoji }) => {
@@ -33,11 +35,14 @@ const MyButton = ({ onClick, children }) => {
 
 const App = (props) => {
   // Root component with some state-like behavior for demonstration
-  let counter = 11; // Simulate state
-  // const [counter, counterInst] = createStateManager(0);
+  // let counter = 11; // Simulate state
+  const [counter, setCounter] = atom(0);
+  // const [counter, counterInst] = createState(0);
   let showBox = true; // Simulate state
   let pref, ulref, inputref, pdivref, spn; // Placeholder for ref, not used in this example
   let boxInstance = null; // Placeholder for box instance
+
+  console.log("App component rendered", counter());
 
   let timer = 0; // Placeholder for timer
   let intv = setInterval(() => {
@@ -77,29 +82,30 @@ const App = (props) => {
 
   const handleClick = () => {
     console.log("Button clicked!");
-    counter += 1; // Increment the counter
+    // counter += 1; // Increment the counter
+    setCounter((counter) => counter + 1);
     // Apply patches to update the counter() display
-    applyPatches([
-      {
-        op: "CONTENT",
-        p: pref,
-        c: `Counter: ${counter}`,
-      },
-      {
-        op: "CONTENT",
-        p: pdivref,
-        c: `Counter is ${counter % 2 === 0 ? "even" : "odd"}`,
-      },
-    ]);
+    // applyPatches([
+    //   {
+    //     op: "CONTENT",
+    //     p: pref,
+    //     c: `Counter: ${counter}`,
+    //   },
+    //   {
+    //     op: "CONTENT",
+    //     p: pdivref,
+    //     c: `Counter is ${counter % 2 === 0 ? "even" : "odd"}`,
+    //   },
+    // ]);
 
-    applyPropsPatches([
-      {
-        $target: pdivref,
-        newProps: { style: { color: counter % 2 === 0 ? "blue" : "green" } },
+    // applyPropsPatches([
+    //   {
+    //     $target: pdivref,
+    //     newProps: { style: { color: counter % 2 === 0 ? "blue" : "green" } },
 
-        // oldProps: { style: { color: "blue" } },
-      },
-    ]);
+    //     // oldProps: { style: { color: "blue" } },
+    //   },
+    // ]);
   };
 
   const toggleBox = () => {
@@ -164,10 +170,10 @@ const App = (props) => {
         Go to About
       </button>
 
-      <GreetMessage
+      {/* <GreetMessage
         name={props.appName || "Initial User"}
         showEmoji={counter % 2 === 0}
-      />
+      /> */}
       <input
         ref={(el) => (inputref = el)}
         type="text"
@@ -191,12 +197,16 @@ const App = (props) => {
           pref = el;
         }}
       >
-        Counter is: {counter}
+        Counter is: {counter()}
       </p>
-      <MyButton onClick={handleClick}>Increment Counter</MyButton>
+      <MyButton key={"increment"} onClick={handleClick}>
+        Increment Counter
+      </MyButton>
       <br />
       <br />
-      <MyButton onClick={toggleBox}>Toggle Box</MyButton>
+      <MyButton key={"toggleBox"} onClick={toggleBox}>
+        Toggle Box
+      </MyButton>
 
       {/* Conditional rendering example */}
 
@@ -259,12 +269,65 @@ const About = () => {
   );
 };
 
+const Even = () => {
+  const [count, setCount] = state(0);
+
+  return (
+    <div>
+      <h2>Even Component</h2>
+      <p>
+        This is the Even component.
+        {count + 2}
+      </p>
+      <button onClick={() => setCount((count) => count + 2)}>Increment</button>
+    </div>
+  );
+};
+
+const Odd = () => {
+  const [count, setCount] = state(0);
+  return (
+    <div>
+      <h2>Odd Component</h2>
+      <p>
+        This is the Odd component.
+        {count + 1}
+      </p>
+      <button onClick={() => setCount((count) => count + 1)}>Increment</button>
+    </div>
+  );
+};
+
+const Counter = () => {
+  const [name, setName] = state("abc");
+  const [count, setCount] = state(10);
+
+  return (
+    <div>
+      <h2>
+        Counter: {count} {name}
+      </h2>
+      {/* <button onClick={() => setCount((count) => count + 1)}>Increment</button> */}
+      <button
+        onClick={() => {
+          setCount((count) => count + 1);
+          setName("xyz");
+        }}
+      >
+        Increment
+      </button>
+      <hr />
+      {count % 2 === 0 ? <Even /> : <Odd />}
+    </div>
+  );
+};
+
 // Get the root DOM element
 const rootElement = document.getElementById("root");
 
 // --- Router integration with render function ---
 const routes = {
-  "/": () => render(<App appName="Home" />, rootElement),
+  "/": () => render(<Counter />, rootElement),
   "/about": () => render(<About />, rootElement),
   404: () => render(<h2>404 Not Found this...</h2>, rootElement),
 };
@@ -273,3 +336,25 @@ const Router = new SimpleRouter(routes);
 document.body.addEventListener("click", (e) => Router.linkHandler(e));
 // Initial render (optional, router will handle on mount)
 Router.mount(rootElement);
+
+// let ctr = 0;
+// const iv = setInterval(() => {
+//   // <Counter />;
+//   // console.log(<Counter />);
+//   render(<Counter />, rootElement);
+
+//   if (ctr < 1) {
+//     ctr++;
+//   } else {
+//     clearInterval(iv);
+//   }
+// }, 2500);
+
+document.body.addEventListener("click", (e) => {
+  render(<Counter />, rootElement);
+});
+
+// registerCallback(() => {
+//   // render(<App />, rootElement);
+//   <Counter />;
+// });

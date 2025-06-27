@@ -1,3 +1,5 @@
+import { setCurrComp } from "../simple-state";
+
 // Use WeakMap for event listeners (no DOM pollution)
 const listenersMap = new WeakMap();
 
@@ -29,6 +31,10 @@ function createFragement(obj) {
   return fragment;
 }
 
+const funcCache = {};
+let currComp = null;
+let compStack = [];
+
 const MyUILib = (() => {
   /**
    * Creates a real DOM node from a component or element description.
@@ -40,7 +46,30 @@ const MyUILib = (() => {
   function createDomElement(type, props = {}, ...children) {
     // If type is a function, treat as a component
     if (typeof type === "function") {
-      return type({ ...props, children });
+      // funcCache[type.name] = { props };
+      compStack.push(type.name);
+      // console.log(`${type.name}:${compStack[compStack.length - 2]}:`);
+      currComp = `${type.name}:${compStack[compStack.length - 2]}:${
+        props?.key
+      }`;
+      setCurrComp(currComp);
+
+      let rf = null;
+
+      if (funcCache[currComp]) {
+        funcCache[currComp].visited = true;
+      } else {
+        funcCache[currComp] = {
+          fname: currComp,
+          props: props || {},
+          visited: true,
+        };
+      }
+
+      const rv = type({ ...props, children });
+      compStack.pop();
+      currComp = null;
+      return rv;
     }
     // If type is a string, create an element
     const el = document.createElement(type);
@@ -98,6 +127,8 @@ const MyUILib = (() => {
     container.childNodes.forEach((child) => removeAllEventListeners(child));
     container.innerHTML = "";
     container.appendChild(node);
+    console.log(funcCache, compStack);
+    reset();
     return node;
   }
 
@@ -317,6 +348,64 @@ export { createState };
 
 // // Cleanup
 // stateManager.cleanup();
+
+const gs = {};
+let lastComp = null;
+let idx = 0;
+
+const reset = () => {
+  // gs = {};
+  lastComp = null;
+  idx = 0;
+  Object.keys(funcCache).forEach((key) => {
+    console.log("funcCache", funcCache[key]);
+    // clear funcCache
+    if (funcCache[key].visited === true) {
+      funcCache[key].visited = false;
+    } else {
+      delete funcCache[key];
+      Object.keys(gs).forEach((_key) => {
+        if (_key.startsWith(key)) {
+          gs[_key] = null;
+          delete gs[_key];
+        }
+        // console.log(_key, key, _key.startsWith(key));
+      });
+    }
+
+    // clear data
+  });
+};
+
+export const state = (iv) => {
+  if (lastComp != currComp) {
+    // lastComp = currComp;
+    idx = 0;
+  }
+  const key = `${currComp}-${idx}`;
+  let st = gs[key] || iv;
+  let firstRun = gs[key] == undefined;
+
+  if (firstRun) gs[key] = st;
+
+  // if (gs[key] == undefined) gs[key] = st;
+
+  const get = () => {
+    return gs[key];
+  };
+
+  const set = (nv) => {
+    gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
+  };
+
+  // console.log("gs", gs);
+
+  if (lastComp != currComp) lastComp = currComp;
+
+  idx++;
+
+  return [get(), set];
+};
 
 // Simple Router
 export class SimpleRouter {
