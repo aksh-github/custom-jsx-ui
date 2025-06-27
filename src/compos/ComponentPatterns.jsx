@@ -1,13 +1,20 @@
 import { createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { atom, state } from "../utils/simple-state";
+import { atom, createState, state } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const TextArea = () => {
-  const [t, set] = atom("");
-  // const [txt, settxt] = createSignal("");
-  // const [t, set] = signal("");
+  // const [t, set] = atom("");
+
+  const [t, set] = createState("");
   let txtRef;
+
+  onMount(() => {
+    console.log(txtRef);
+    setTimeout(() => {
+      txtRef.focus();
+    }, 100);
+  });
 
   console.log("came here");
 
@@ -20,7 +27,7 @@ export const TextArea = () => {
     txtRef = null;
   });
 
-  return () => (
+  return (
     <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
       {/* <br />
@@ -30,8 +37,8 @@ export const TextArea = () => {
           onInput={(e) => settxt(e.target.value)}
         ></textarea>
         <br /> */}
-      <span>{t()}</span>
-      <input value={t()} onInput={(e) => set(e.target.value)} />
+      <span>{t}</span>
+      <input value={t} onInput={(e) => set(e.target.value)} />
     </div>
   );
 };
@@ -43,7 +50,7 @@ export const DoesNotWork = (props) => {
 
 export const PropsDriven = (props) => {
   //   console.log(props);
-  return () => <div style={{ backgroundColor: "beige" }}>{props.n}</div>;
+  return <div style={{ backgroundColor: "beige" }}>{props.n}</div>;
 };
 
 export const ArrayWithoutMap = () => {

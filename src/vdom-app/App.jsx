@@ -19,7 +19,7 @@ import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
 import Heavy from "../compos/Heavy";
 import JsonForm from "./dyn-json/jsonform";
-// import { Sans } from "./sans/sans";
+import { Lazy } from "../utils/vdom/lazy";
 
 let routeHandler = Router();
 
@@ -424,7 +424,6 @@ const Odd = () => {
 // SimpleRoute
 
 export const SimpleRoute = () => {
-  const [r, setr] = createSignal(0);
   const [pst, setPst] = atom(0);
   const [data, setData] = atom(null);
   // const tv = pst.get("r");
@@ -443,72 +442,69 @@ export const SimpleRoute = () => {
 
   const Row = ({ n }) => <p>{n}</p>;
 
-  return () => {
-    // console.log(pst());
-    return (
-      <div ref={(_ref) => (ref = _ref)}>
-        {/* route2
+  return (
+    <div ref={(_ref) => (ref = _ref)}>
+      {/* route2
         <Link href="/">Go Back</Link>
         <hr /> */}
-        {/* <div>
+      {/* <div>
           <p>before</p>
           <h3>{pst() % 2 === 0 ? <Even /> : "<Odd />"}</h3>
           <button onClick={() => setPst((_pst) => _pst + 1)}>Change</button>
         </div> */}
 
-        <p>before</p>
+      <p>before</p>
 
-        <SuspenseV2
-          key="textarea"
-          cacheKey="textarea"
-          fallback={<div>Loading TextArea...</div>}
-        >
-          <DynTextArea />
-        </SuspenseV2>
+      <SuspenseV2
+        key="textarea"
+        cacheKey="textarea"
+        fallback={<div>Loading TextArea...</div>}
+      >
+        <DynTextArea />
+      </SuspenseV2>
 
-        <SuspenseV2
-          key="picurl"
-          fallback={
-            <div className="lds-roller">
-              <div></div>
-            </div>
-          }
-          cacheKey="picurl"
-          fetch={getMyAwesomePic()}
-        >
-          {(res) => {
-            // console.log(res);
-            return (
-              <div>
-                <img src={res} alt="pic" />
-              </div>
-            );
-          }}
-        </SuspenseV2>
-        <SuspenseV2
-          key="dyncompo"
-          cacheKey="dyncompo"
-          fallback={<div>Loading...</div>}
-          // fallback="Loading..."
-          // errorFallback={<div>Something went wrong</div>}
-        >
-          <DynCompoPromise n="This will be loaded dynamically" />
-        </SuspenseV2>
-
-        <p>after</p>
-
-        {data() ? (
-          <div>
-            <h3>This data will get erased after 7 seconds</h3>
-            {data()?.map((d) => {
-              const sv = d?.sv?.join(", ");
-              return <Row n={JSON.stringify(d)} />;
-            })}
+      {/* <SuspenseV2
+        key="picurl"
+        fallback={
+          <div className="lds-roller">
+            <div></div>
           </div>
-        ) : null}
-      </div>
-    );
-  };
+        }
+        cacheKey="picurl"
+        fetch={getMyAwesomePic()}
+      >
+        {(res) => {
+          // console.log(res);
+          return (
+            <div>
+              <img src={res} alt="pic" />
+            </div>
+          );
+        }}
+      </SuspenseV2> */}
+      <SuspenseV2
+        key="dyncompo"
+        cacheKey="dyncompo"
+        fallback={<div>Loading...</div>}
+        // fallback="Loading..."
+        // errorFallback={<div>Something went wrong</div>}
+      >
+        <DynCompoPromise n="This will be loaded dynamically" />
+      </SuspenseV2>
+
+      <p>after</p>
+
+      {/* {data() ? (
+        <div>
+          <h3>This data will get erased after 7 seconds</h3>
+          {data()?.map((d) => {
+            const sv = d?.sv?.join(", ");
+            return <Row n={JSON.stringify(d)} />;
+          })}
+        </div>
+      ) : null} */}
+    </div>
+  );
 };
 
 export function App(props) {

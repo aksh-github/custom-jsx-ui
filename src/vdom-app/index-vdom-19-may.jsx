@@ -1,6 +1,11 @@
 import { App, SimpleRoute } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
-import { registerCallback, state, atom } from "../utils/simple-state";
+import {
+  registerCallback,
+  state,
+  atom,
+  createState,
+} from "../utils/simple-state";
 import {
   h,
   mount,
@@ -8,11 +13,13 @@ import {
   onMount,
   // div,
   Suspense,
+  onCleanup,
 } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 // import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
 import { Sans } from "./sans/sans";
+import { TextArea } from "../compos/ComponentPatterns";
 
 // =======================
 
@@ -31,7 +38,56 @@ const root = document.getElementById("root-vdom");
 // for my state
 registerCallback(forceUpdate);
 
-mount(root, () => <App />);
+const Even = () => {
+  const [count, setCount] = createState(0);
+
+  onMount(() => console.log("mounting Even"));
+  onCleanup(() => console.log("unmounting Even"));
+
+  return (
+    <div>
+      <h2>Even Component</h2>
+      <p>
+        This is the Even component.
+        {count}
+      </p>
+      <button onClick={() => setCount((count) => count + 2)}>Increment</button>
+    </div>
+  );
+};
+
+const Odd = () => {
+  const [count, setCount] = createState(1);
+
+  onMount(() => console.log("mounting Odd"));
+  onCleanup(() => console.log("unmounting Odd"));
+
+  return (
+    <div>
+      <h2>Odd Component</h2>
+      <p>
+        This is the Odd component.
+        {count}
+      </p>
+      <button onClick={() => setCount((count) => count + 2)}>Increment</button>
+    </div>
+  );
+};
+
+const Counter = () => {
+  const [count, setCount] = createState(0);
+
+  return (
+    <div>
+      <h2>Counter: {count}</h2>
+      <button onClick={() => setCount((count) => count + 1)}>Increment</button>
+      <hr />
+      {count % 2 === 0 ? <Even /> : <Odd />}
+    </div>
+  );
+};
+
+mount(root, () => <SimpleRoute />);
 // mount(root, () => <Sans />);
 
 function Svg() {

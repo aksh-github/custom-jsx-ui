@@ -34,10 +34,11 @@ export const updateComps = new Set();
 export const updateCtx = new Set();
 
 let currComp = null;
-
 export const setCurrComp = (comp) => {
   currComp = comp;
 };
+
+let throtUpdate = null;
 
 const SimState = (() => {
   const globalState = {};
@@ -55,8 +56,6 @@ const SimState = (() => {
     cb();
     isSkipping = false;
   };
-
-  let throtUpdate = null;
 
   let forceUpdate = () => {};
   let batchOp = false;
@@ -175,3 +174,75 @@ export const state = SimState.state;
 export const atom = SimState.atom;
 export const skipUpdate = SimState.skipUpdate;
 export const context = SimState.context;
+
+// SmartState 27-jun-25
+
+const SmartState = (() => {
+  const gs = {};
+  let lastComp = null;
+  let idx = 0;
+
+  const reset = (key) => {
+    // gs = {};
+    lastComp = null;
+    idx = 0;
+
+    Object.keys(gs).forEach((_key) => {
+      if (_key.startsWith(key)) {
+        gs[_key] = null;
+        delete gs[_key];
+      }
+      // console.log(_key, key, _key.startsWith(key));
+    });
+  };
+
+  const state = (iv) => {
+    if (lastComp != currComp) {
+      // lastComp = currComp;
+      idx = 0;
+    }
+    const key = `${currComp}-${idx}`;
+    let st = gs[key] || iv;
+    let firstRun = gs[key] == undefined;
+
+    if (firstRun) gs[key] = st;
+
+    // if (gs[key] == undefined) gs[key] = st;
+
+    const get = () => {
+      return gs[key];
+    };
+
+    const set = (nv) => {
+      if (gs[key] === nv) return;
+
+      reset();
+      gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
+      throtUpdate();
+    };
+
+    const specialSet = (nv) => {
+      if (gs[key] === nv) return;
+      reset();
+      gs[key] = nv;
+      throtUpdate();
+    };
+
+    console.log("gs", gs);
+
+    if (lastComp != currComp) lastComp = currComp;
+
+    idx++;
+
+    return [get(), set, specialSet];
+  };
+
+  return {
+    state,
+    reset,
+  };
+})();
+
+export const createState = SmartState.state;
+export const reset = SmartState.reset;
+// export const specialSet = SmartState.specialSet;
