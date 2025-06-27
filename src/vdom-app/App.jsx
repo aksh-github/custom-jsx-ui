@@ -463,7 +463,7 @@ export const SimpleRoute = () => {
         <DynTextArea />
       </SuspenseV2>
 
-      {/* <SuspenseV2
+      <SuspenseV2
         key="picurl"
         fallback={
           <div className="lds-roller">
@@ -481,7 +481,7 @@ export const SimpleRoute = () => {
             </div>
           );
         }}
-      </SuspenseV2> */}
+      </SuspenseV2>
       <SuspenseV2
         key="dyncompo"
         cacheKey="dyncompo"

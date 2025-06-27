@@ -1276,14 +1276,14 @@ export function SuspenseV2(props, child) {
 
   if (resolved) {
     if (props?.fetch?.then) {
-      // case when child is render props
+      // case when child is render props pattern
 
       suspenseCache[`${props?.cacheKey}`] = {
-        callbackFn: props.children[0],
+        callbackFn: child || props.children[0],
         returnVal,
       };
 
-      return props.children[0](returnVal);
+      return (child || props.children[0])(returnVal);
     } else {
       // case when child is normal component
       if (returnVal) {
