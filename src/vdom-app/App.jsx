@@ -249,16 +249,26 @@ function ComplexRoute(props) {
   onMount(() => {
     console.log("mount app", ref);
     wc = document.querySelector("hole-component");
+    let _holec = 0;
 
     if (wc) {
       intervalId = setInterval(() => {
-        wc.setAttribute("message", `Hello from wc after ${holec} seconds`);
+        console.log(wc, holec);
+        wc.setAttribute("message", `Hello from wc after ${_holec} seconds`);
         skipUpdate(() => {
           setHolec((prev) => {
             console.log(prev);
-            return holec + 2;
+            _holec = prev + 2;
+            return _holec;
           });
         });
+        // setHolec((prev) => {
+        //   console.log(prev);
+        //   return holec + 2;
+        // });
+        if (_holec > 4) {
+          clearInterval(intervalId);
+        }
       }, 2000);
     }
   });
@@ -456,7 +466,7 @@ export const SimpleRoute = () => {
         <DynTextArea />
       </SuspenseV2>
 
-      {/* <SuspenseV2
+      <SuspenseV2
         key="picurl"
         fallback={
           <div className="lds-roller">
@@ -474,7 +484,7 @@ export const SimpleRoute = () => {
             </div>
           );
         }}
-      </SuspenseV2> */}
+      </SuspenseV2>
       <SuspenseV2
         key="dyncompo"
         cacheKey="dyncompo"

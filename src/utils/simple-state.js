@@ -209,6 +209,8 @@ const SmartState = (() => {
     lastComp = null;
     idx = 0;
 
+    if (!key) return;
+
     Object.keys(gs).forEach((_key) => {
       if (_key.startsWith(key)) {
         gs[_key] = null;
@@ -241,6 +243,7 @@ const SmartState = (() => {
       if (batchOp) {
         if (lastComp) updateComps.add(lastComp);
       } else if (isSkipping) {
+        gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
       } else {
         // updateComps.push(lastComp);
         if (lastComp) updateComps.add(lastComp);
