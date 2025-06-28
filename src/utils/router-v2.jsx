@@ -96,7 +96,9 @@ export function LinkV2(props, children) {
       href={to}
       onClick={(e) => {
         e.preventDefault();
-        const to = e.target.getAttribute("href");
+        const href = e.target.getAttribute("href");
+        const pathname = window.location.pathname;
+        if (href === pathname) return;
         replace ? historyReplace(to) : historyPush(to);
       }}
     >
