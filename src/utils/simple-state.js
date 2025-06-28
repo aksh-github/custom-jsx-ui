@@ -1,20 +1,33 @@
 // const log = console.log;
 const log = () => {};
 
-export function createEffect() {
+function _createEffect() {
   let prevDeps = [];
   let cleanupFn;
+  let once = false;
 
   return (effectFn, dependencies) => {
     const dependenciesChanged = dependencies.some(
       (dep, i) => dep != prevDeps?.[i]
     );
 
-    if (!prevDeps?.length || dependenciesChanged) {
-      if (cleanupFn) cleanupFn();
-      cleanupFn = effectFn();
+    // if (!prevDeps?.length || dependenciesChanged) {
+    if (dependenciesChanged) {
+      // if (cleanupFn) cleanupFn();
+      // cleanupFn = effectFn();
+      effectFn();
       prevDeps = dependencies;
+    } else if (
+      prevDeps?.length === dependencies?.length &&
+      dependencies.length === 0
+    ) {
+      if (!once) {
+        cleanupFn = effectFn(); // only for 0 deps
+        once = true;
+      }
     }
+
+    return cleanupFn;
   };
 }
 
@@ -181,8 +194,15 @@ export const context = SimState.context;
 
 const SmartState = (() => {
   const gs = {};
+
+  // for state
   let lastComp = null;
   let idx = 0;
+
+  // for mount, change etc
+  let fnLastComp = null;
+  let fnIdx = 0;
+  const unMountMap = new Map();
 
   let batchOp = false;
   let isSkipping = false;
@@ -206,19 +226,35 @@ const SmartState = (() => {
     isSkipping = false;
   };
 
-  const reset = (key) => {
+  const reset = (keysArr) => {
     // gs = {};
-    lastComp = null;
-    idx = 0;
+    lastComp = fnLastComp = null;
+    idx = fnIdx = 0;
 
-    if (!key) return;
+    if (!keysArr) return;
 
-    Object.keys(gs).forEach((_key) => {
-      if (_key.startsWith(key)) {
-        gs[_key] = null;
-        delete gs[_key];
+    keysArr.forEach((key) => {
+      // call unmount
+      for (const [_key, fn] of unMountMap) {
+        // console.log(_key, value);
+        if (_key.startsWith(key)) {
+          fn();
+          unMountMap.delete(_key);
+        }
       }
-      // console.log(_key, key, _key.startsWith(key));
+      // if (unMountMap.has(key)) {
+      //   unMountMap.get(key)();
+      //   unMountMap.delete(key);
+      // }
+
+      // clear data
+      Object.keys(gs).forEach((_key) => {
+        if (_key.startsWith(key)) {
+          gs[_key] = null;
+          delete gs[_key];
+        }
+        // console.log(gs);
+      });
     });
   };
 
@@ -241,6 +277,7 @@ const SmartState = (() => {
 
     const set = (nv) => {
       if (gs[key] === nv) return;
+      lastComp = key;
 
       if (batchOp) {
         if (lastComp) updateComps.add(lastComp);
@@ -253,15 +290,18 @@ const SmartState = (() => {
         gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
         throtUpdate();
       }
+      lastComp = null;
 
       console.log("gs", gs);
     };
 
     const specialSet = (nv) => {
       if (gs[key] === nv) return;
+      lastComp = key;
       reset();
       gs[key] = nv;
       throtUpdate();
+      lastComp = null;
     };
 
     // console.log("gs", gs);
@@ -273,12 +313,33 @@ const SmartState = (() => {
     return [get(), set, specialSet];
   };
 
+  const effect = (cb, deps) => {
+    if (fnLastComp != currComp) {
+      // lastComp = currComp;
+      fnIdx = 0;
+    }
+
+    const key = `${currComp}-fn-${fnIdx}`;
+
+    if (!gs[key]) {
+      const fn = _createEffect();
+      gs[key] = fn;
+    }
+    const unMountFn = gs[key](cb, deps);
+    if (unMountFn && deps?.length === 0) unMountMap.set(key, unMountFn);
+
+    if (fnLastComp != currComp) fnLastComp = currComp;
+
+    fnIdx++;
+  };
+
   return {
     state,
     reset,
     skipUpdate,
     batch,
     registerCallback,
+    effect,
   };
 })();
 
@@ -287,5 +348,6 @@ export const reset = SmartState.reset;
 export const skipUpdate = SmartState.skipUpdate;
 export const batch = SmartState.batch;
 export const smartRegisterCallback = SmartState.registerCallback;
+export const createEffect = SmartState.effect;
 
 // export const specialSet = SmartState.specialSet;

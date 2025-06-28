@@ -1,4 +1,4 @@
-import { createSignal, createEffect } from "../utils/signal-complex";
+// import { createSignal } from "../utils/signal-complex";
 import {
   h,
   onMount,
@@ -11,7 +11,12 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { createState, batch, skipUpdate } from "../utils/simple-state";
+import {
+  createState,
+  batch,
+  skipUpdate,
+  createEffect,
+} from "../utils/simple-state";
 import { LinkV2, Router } from "../utils/router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
@@ -142,23 +147,38 @@ const Topics = (props) => {
 const Ctr = (props) => {
   const [st, setSt] = createState({ c: 100, version: "Loading..." });
 
-  onCleanup(() => {
-    console.log("unmount Ctr");
-  });
+  // onCleanup(() => {
+  //   console.log("unmount Ctr");
+  // });
 
-  onMount(() => {
-    const timer = setTimeout(() => {
-      clearTimeout(timer);
-      fetch("/package.json")
-        .then((res) => res.json())
-        .then((res) => {
-          setSt((prev) => ({
-            ...prev,
-            version: res.version,
-          }));
-        });
-    }, 4000);
-  });
+  // onMount(() => {
+  //   const timer = setTimeout(() => {
+  //     clearTimeout(timer);
+  //     fetch("/package.json")
+  //       .then((res) => res.json())
+  //       .then((res) => {
+  //         setSt((prev) => ({
+  //           ...prev,
+  //           version: res.version,
+  //         }));
+  //       });
+  //   }, 4000);
+  // });
+
+  createEffect(() => {
+    fetch("/package.json")
+      .then((res) => res.json())
+      .then((res) => {
+        setSt((prev) => ({
+          ...prev,
+          version: res.version,
+        }));
+      });
+
+    return () => {
+      console.log("unmount Ctr");
+    };
+  }, []);
 
   return (
     <div
@@ -253,11 +273,11 @@ function ComplexRoute(props) {
 
     if (wc) {
       intervalId = setInterval(() => {
-        console.log(wc, holec);
+        // console.log(wc, holec);
         wc.setAttribute("message", `Hello from wc after ${_holec} seconds`);
         skipUpdate(() => {
           setHolec((prev) => {
-            console.log(prev);
+            // console.log(prev);
             _holec = prev + 2;
             return _holec;
           });
@@ -334,7 +354,7 @@ function ComplexRoute(props) {
           setYt(e.target.value);
         }}
       />
-      <iframe
+      {/* <iframe
         width="100%"
         height="615"
         src={`https://www.youtube.com/embed/${yt}`}
@@ -342,7 +362,7 @@ function ComplexRoute(props) {
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
-      ></iframe>
+      ></iframe> */}
       <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
       <div>
         <button
