@@ -171,13 +171,24 @@ const Field = (props) => {
   ) : null;
 };
 
-const effect = createEffect();
-
 const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   const [uiJson, setUiJson] = createState(null);
   const [formState, setFormState] = createState(null);
 
-  onMount(() => {
+  // const mountEff = createEffect();
+  // const effect = createEffect();
+
+  // onMount(() => {
+  //   loadUI("/form.json?t=" + Date.now())
+  //     .then((data) => {
+  //       console.log("UI JSON loaded successfully", data);
+  //       setUiJson(data);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error loading UI JSON:", error);
+  //     });
+  // });
+  createEffect(() => {
     loadUI("/form.json?t=" + Date.now())
       .then((data) => {
         console.log("UI JSON loaded successfully", data);
@@ -186,7 +197,23 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
       .catch((error) => {
         console.error("Error loading UI JSON:", error);
       });
-  });
+  }, []);
+
+  createEffect(() => {
+    if (uiJson) {
+      setFormState(
+        uiJson.form?.fields.reduce((acc, field) => {
+          acc[field.name] = {
+            value: formState?.[field.name]?.value || field.value || "",
+            error: formState?.[field.name]?.error || field.error || "",
+          };
+          return acc;
+        }, {})
+      );
+
+      setGlobalUIJson(uiJson);
+    }
+  }, [uiJson]);
 
   const [formValid, setFormValid] = createState(false);
 
@@ -335,37 +362,6 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
     });
   };
 
-  effect(() => {
-    if (uiJson) {
-      setFormState(
-        uiJson.form?.fields.reduce((acc, field) => {
-          acc[field.name] = {
-            value: formState?.[field.name]?.value || field.value || "",
-            error: formState?.[field.name]?.error || field.error || "",
-          };
-          return acc;
-        }, {})
-      );
-
-      setGlobalUIJson(uiJson);
-    }
-  }, [uiJson]);
-
-  // useEffect(() => {
-  //   if (uiJson) {
-  //     console.log("uiJson", uiJson);
-  //     setFormState(
-  //       uiJson.form?.fields.reduce((acc, field) => {
-  //         acc[field.name] = {
-  //           value: formState?.[field.name]?.value || field.value || "",
-  //           error: formState?.[field.name]?.error || field.error || "",
-  //         };
-  //         return acc;
-  //       }, {})
-  //     );
-  //   }
-  // }, [uiJson, formState]);
-
   return (
     <div>
       <h1>Json Based Form</h1>
@@ -395,9 +391,9 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
         </form>
       )}
       <pre>{JSON.stringify(formState, null, 2)}</pre>
-      {/* <div>
+      <div>
         <Playground />
-      </div> */}
+      </div>
     </div>
   );
 };

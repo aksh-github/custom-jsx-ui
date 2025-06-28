@@ -211,7 +211,6 @@ const fetchData = (jsonFile) =>
 
 function GenericTab({ prop, search: srch, dkey }) {
   let filtered = () => [];
-  const effect = createEffect();
 
   // const getSearchCtx = searchCtx.get;
   const TOP = -1;
@@ -221,7 +220,7 @@ function GenericTab({ prop, search: srch, dkey }) {
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
   // let srch = searchCtx.get()?.trim()?.toLowerCase();
 
-  effect(() => {
+  createEffect(() => {
     // console.log("effect for", dkey, "with search", srch);
     console.log("search now", srch);
     if (srch) {

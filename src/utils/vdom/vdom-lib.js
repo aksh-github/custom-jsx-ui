@@ -151,6 +151,8 @@ const microframe = (() => {
   function callUnmountAll() {
     // log(suspenseCache);
 
+    const keys = [];
+
     Object.keys(altFuncCache).forEach((key) => {
       if (!funcCache[key]) {
         altFuncCache[key].unMount?.();
@@ -160,9 +162,11 @@ const microframe = (() => {
         altFuncCache[key] = null;
         delete altFuncCache[key];
 
-        reset(key);
+        // reset(key);
+        keys.push(key);
       }
     });
+    reset(keys);
   }
 
   function callMountAll() {
