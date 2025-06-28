@@ -1,70 +1,60 @@
 // import React, { useEffect, useState } from "react";
-import { atom, createEffect, state } from "../../utils/simple-state";
+import { createState, createEffect, state } from "../../utils/simple-state";
 import { h, onMount, df } from "../../utils/vdom/vdom-lib";
 import { isFormValid, loadUI, setGlobalUIJson, validate } from "./utils";
 
 const Playground = () => {
-  const [json, setJson] = atom(null);
-  const [parseResult, setParseResult] = atom(null);
+  const [json, setJson] = createState(null);
+  const [parseResult, setParseResult] = createState(null);
 
-  const effect = createEffect();
+  // const effect = createEffect();
 
-  return () => {
-    // effect(() => {
-    //   try {
-    //     setParseResult(JSON.parse(json()));
-    //   } catch (error) {
-    //     setParseResult(error);
-    //   }
-    // }, [json()]);
-
-    return (
-      <df>
-        <h1>Playground</h1>
-        <div
-          className="pg-container"
-          style={{
-            display: "flex",
-            gap: "1em",
-            border: "1px solid #ccc",
-            borderRadius: ".2em",
-            padding: "1em",
-          }}
-        >
-          <div>
-            <textarea
-              name=""
-              id=""
-              onInput={(e) => {
-                setJson(JSON.parse(e.target.value));
-                console.log(e.target.value);
-              }}
-              value={JSON.stringify(json(), null, 2)}
-              cols="30"
-              rows="10"
-            ></textarea>
-          </div>
-          {/* <div>{JSON.stringify(json())}</div> */}
-          <div>
-            {json()?.form?.fields.map((field, idx) => (
-              <Field
-                // key={field.name + idx + field.name}
-                field={field}
-                state={field}
-              />
-            ))}
-          </div>
+  return (
+    <df>
+      <h1>Playground</h1>
+      <div
+        className="pg-container"
+        style={{
+          display: "flex",
+          gap: "1em",
+          border: "1px solid #ccc",
+          borderRadius: ".2em",
+          padding: "1em",
+        }}
+      >
+        <div>
+          <textarea
+            name=""
+            id=""
+            onInput={(e) => {
+              setJson(JSON.parse(e.target.value));
+              console.log(e.target.value);
+            }}
+            value={JSON.stringify(json, null, 2)}
+            cols="30"
+            rows="10"
+          ></textarea>
         </div>
-        <pre>
-          <code>{parseResult()}</code>
-        </pre>
-      </df>
-    );
-  };
+        {/* <div>{JSON.stringify(json())}</div> */}
+        <div>
+          {json?.form?.fields.map((field, idx) => (
+            <Field
+              // key={field.name + idx + field.name}
+              field={field}
+              state={field}
+            />
+          ))}
+        </div>
+      </div>
+      <pre>
+        <code>{parseResult}</code>
+      </pre>
+    </df>
+  );
 };
 
 const ErrorMessage = ({ name, error }) => {
-  return ({ name, error }) => (
+  return (
     <df>
       <div className="col-sm-2"></div>
       <p id={name + "Error"} className="message-invalid danger col-sm-10">
@@ -79,113 +69,113 @@ const ErrorMessage = ({ name, error }) => {
 };
 
 const Field = (props) => {
-  return (props) => {
-    // console.log("field", field);
-    let control;
-    const { field, state } = props;
+  // console.log("field", field);
+  let control;
+  const { field, state } = props;
 
-    switch (field.type) {
-      case "text":
-      case "email":
-      case "password":
-        control = (
-          <df>
-            <label htmlFor={field.name} className="form-label">
-              {field.label}
-            </label>
-            <input
-              type={field.type}
-              className={"col-sm-10 " + field.className}
-              id={field.id}
-              name={field.name}
-              placeholder={field.placeholder || ""}
-              required={field.required}
-              value={field.value || state?.value || ""}
-            />
-          </df>
-        );
-        break;
-      case "select":
-        control = (
-          <df>
-            <label htmlFor={field.name} className="form-label">
-              {field.label}
-            </label>
-            <select
-              aria-label={field.label}
-              className={"col-sm-101 " + field.className}
-              id={field.id || field.name}
-              name={field.name}
-              required={field.required}
-              // defaultValue={field.value || state?.value}
-              value={field.value || state?.value || ""}
-            >
-              {field.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </df>
-        );
-        break;
-      case "checkbox":
-        control = (
-          <df>
-            <input
-              type="checkbox"
-              className={field.className}
-              id={field.id}
-              name={field.name}
-              required={field.required}
-              // defaultValue={state?.value}
-              checked={field.value || state?.value || false}
-            />
-            <label className="form-check-label" htmlFor={field.name}>
-              {field.label}
-            </label>
-          </df>
-        );
-        break;
-      case "textarea":
-        control = (
-          <df>
-            <label htmlFor={field.name} className="form-label">
-              {field.label}
-            </label>
-            <textarea
-              className={"col-sm-10 " + field.className}
-              id={field.id}
-              name={field.name}
-              placeholder={field.placeholder || ""}
-              required={field.required}
-              rows={field.rows}
-              cols={field.cols}
-              value={field.value || state?.value || ""}
-            ></textarea>
-          </df>
-        );
-        break;
-      default:
-        control = null;
-    }
+  switch (field.type) {
+    case "text":
+    case "email":
+    case "password":
+      control = (
+        <df>
+          <label htmlFor={field.name} className="form-label">
+            {field.label}
+          </label>
+          <input
+            type={field.type}
+            className={"col-sm-10 " + field.className}
+            id={field.id}
+            name={field.name}
+            placeholder={field.placeholder || ""}
+            required={field.required}
+            value={field.value || state?.value || ""}
+          />
+        </df>
+      );
+      break;
+    case "select":
+      control = (
+        <df>
+          <label htmlFor={field.name} className="form-label">
+            {field.label}
+          </label>
+          <select
+            aria-label={field.label}
+            className={"col-sm-101 " + field.className}
+            id={field.id || field.name}
+            name={field.name}
+            required={field.required}
+            // defaultValue={field.value || state?.value}
+            value={field.value || state?.value || ""}
+          >
+            {field.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </df>
+      );
+      break;
+    case "checkbox":
+      control = (
+        <df>
+          <input
+            type="checkbox"
+            className={field.className}
+            id={field.id}
+            name={field.name}
+            required={field.required}
+            // defaultValue={state?.value}
+            checked={field.value || state?.value || false}
+          />
+          <label className="form-check-label" htmlFor={field.name}>
+            {field.label}
+          </label>
+        </df>
+      );
+      break;
+    case "textarea":
+      control = (
+        <df>
+          <label htmlFor={field.name} className="form-label">
+            {field.label}
+          </label>
+          <textarea
+            className={"col-sm-10 " + field.className}
+            id={field.id}
+            name={field.name}
+            placeholder={field.placeholder || ""}
+            required={field.required}
+            rows={field.rows}
+            cols={field.cols}
+            value={field.value || state?.value || ""}
+          ></textarea>
+        </df>
+      );
+      break;
+    default:
+      control = null;
+  }
 
-    return control ? (
-      <div className="mb-3" key={field.name}>
-        {control}
-        <ErrorMessage
-          name={field.name}
-          // error={formState()?.[field.name]?.error}
-          error={state?.error}
-        />
-      </div>
-    ) : null;
-  };
+  return control ? (
+    <div className="mb-3" key={field.name}>
+      {control}
+      <ErrorMessage
+        name={field.name}
+        // error={formState()?.[field.name]?.error}
+        error={state?.error}
+      />
+    </div>
+  ) : null;
 };
 
+const effect = createEffect();
+
 const JsonForm = ({ setIsFormValid, setRequestObj }) => {
-  const [uiJson, setUiJson] = atom(null);
-  const [formState, setFormState] = atom(null);
+  const [uiJson, setUiJson] = createState(null);
+  const [formState, setFormState] = createState(null);
 
   onMount(() => {
     loadUI("/form.json?t=" + Date.now())
@@ -198,9 +188,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
       });
   });
 
-  const effect = createEffect();
-
-  const [formValid, setFormValid] = atom(false);
+  const [formValid, setFormValid] = createState(false);
 
   const validateForm = () => {
     // console.log("validateForm", formState());
@@ -290,10 +278,9 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
             ...prevUiJson,
             form: {
               ...prevUiJson.form,
-              fields: uiJson()
-                .form.fields // .filter((field, idx) => idx === 0)
+              fields: uiJson.form.fields // .filter((field, idx) => idx === 0)
                 .filter((field) => field.name === "selectUsecase")
-                .concat(uiJson().form.more[value]?.fields || []),
+                .concat(uiJson.form.more[value]?.fields || []),
               id: "configForm" + Date.now(), // update form id to force re-render
             },
           };
@@ -308,7 +295,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
         let reqObj = {};
 
         if (isValid) {
-          const { fields } = uiJson().form;
+          const { fields } = uiJson.form;
           Object.keys(fields).forEach((idx) => {
             // console.log("field", idx, fields[idx]);
 
@@ -348,58 +335,71 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
     });
   };
 
-  return () => {
-    effect(() => {
-      if (uiJson()) {
-        setFormState(
-          uiJson().form.fields.reduce((acc, field) => {
-            acc[field.name] = {
-              value: formState()?.[field.name]?.value || field.value || "",
-              error: formState()?.[field.name]?.error || field.error || "",
-            };
-            return acc;
-          }, {})
-        );
+  effect(() => {
+    if (uiJson) {
+      setFormState(
+        uiJson.form?.fields.reduce((acc, field) => {
+          acc[field.name] = {
+            value: formState?.[field.name]?.value || field.value || "",
+            error: formState?.[field.name]?.error || field.error || "",
+          };
+          return acc;
+        }, {})
+      );
 
-        setGlobalUIJson(uiJson());
-      }
-    }, [uiJson()]);
+      setGlobalUIJson(uiJson);
+    }
+  }, [uiJson]);
 
-    return (
-      <div>
-        <h1>Json Based Form</h1>
-        <p>JsonForm valid: {isFormValid(formState()) ? "true" : "false"}</p>
-        {uiJson() && formState() && (
-          <form
-            id={uiJson().form.id}
-            className={uiJson().form.className}
-            onBlur={(e) => {
-              const { name, value, type, checked } = e.target;
-              if (type === "checkbox") {
-                setError(name, validate(name, checked));
-              } else {
-                setError(name, validate(name, value));
-              }
-            }}
-            onChange={handleChange}
-            onSubmit={handleSubmit}
-          >
-            {uiJson().form.fields.map((field, idx) => (
-              <Field
-                // key={field.name + idx + field.name}
-                field={field}
-                state={formState()[field.name] || field}
-              />
-            ))}
-          </form>
-        )}
-        <pre>{JSON.stringify(formState(), null, 2)}</pre>
-        <div>
-          <Playground />
-        </div>
-      </div>
-    );
-  };
+  // useEffect(() => {
+  //   if (uiJson) {
+  //     console.log("uiJson", uiJson);
+  //     setFormState(
+  //       uiJson.form?.fields.reduce((acc, field) => {
+  //         acc[field.name] = {
+  //           value: formState?.[field.name]?.value || field.value || "",
+  //           error: formState?.[field.name]?.error || field.error || "",
+  //         };
+  //         return acc;
+  //       }, {})
+  //     );
+  //   }
+  // }, [uiJson, formState]);
+
+  return (
+    <div>
+      <h1>Json Based Form</h1>
+      <p>JsonForm valid: {isFormValid(formState) ? "true" : "false"}</p>
+      {uiJson && formState && (
+        <form
+          id={uiJson.form.id}
+          className={uiJson.form.className}
+          onBlur={(e) => {
+            const { name, value, type, checked } = e.target;
+            if (type === "checkbox") {
+              setError(name, validate(name, checked));
+            } else {
+              setError(name, validate(name, value));
+            }
+          }}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+        >
+          {uiJson.form.fields.map((field, idx) => (
+            <Field
+              // key={field.name + idx + field.name}
+              field={field}
+              state={formState[field.name] || field}
+            />
+          ))}
+        </form>
+      )}
+      <pre>{JSON.stringify(formState, null, 2)}</pre>
+      {/* <div>
+        <Playground />
+      </div> */}
+    </div>
+  );
 };
 
 export default JsonForm;

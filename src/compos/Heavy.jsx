@@ -1,11 +1,11 @@
-import { atom } from "../utils/simple-state";
+import { createState } from "../utils/simple-state";
 import { h, onMount } from "../utils/vdom/vdom-lib";
 // import "./App.css";
 
 function SlowComponent(props) {
   const largeArray = Array.from({ length: 10000 }, (_, i) => i);
 
-  return () => (
+  return (
     <div
       //   className="flex flex-wrap overflow-scroll gap-1"
       style={{
@@ -33,7 +33,7 @@ function SlowComponent(props) {
 }
 
 function CounterButton(props) {
-  return () => (
+  return (
     <button
       onClick={props.onClick}
       className="px-4 py-2 bg-neutral-700 text-white rounded hover:bg-neutral-600 border border-white/20"
@@ -44,7 +44,7 @@ function CounterButton(props) {
 }
 
 function ColorPicker(props) {
-  return () => (
+  return (
     <input
       type="color"
       value={props.value}
@@ -56,25 +56,25 @@ function ColorPicker(props) {
 }
 
 function DemoComponent(props) {
-  const [count, setCount] = atom(0);
-  const [color, setColor] = atom("#ffffff");
+  const [count, setCount] = createState(0);
+  const [color, setColor] = createState("#ffffff");
 
-  return () => (
+  return (
     <div className={`flex gap-8`}>
       <div className="flex flex-col p-4 border border-white h-64 w-96 gap-4">
         <h2 className="text-xl font-bold mb-8 text-center">Color Picker</h2>
         <div className="mt-2">
           Current value: <br />
-          <span className="font-mono">{color()}</span>
+          <span className="font-mono">{color}</span>
         </div>
-        <ColorPicker value={color()} onChange={(e) => setColor(e)} />
+        <ColorPicker value={color} onChange={(e) => setColor(e)} />
       </div>
       <div className="flex flex-col p-4 border border-white h-64 w-96 gap-4">
         <h2 className="text-xl font-bold mb-8 text-center">Counter</h2>
         <CounterButton onClick={() => setCount((count) => count + 1)} />
         <div className="mt-2">
           Current value: <br />
-          <span className="font-mono">{count()}</span>
+          <span className="font-mono">{count}</span>
         </div>
       </div>
       <div className="flex flex-col p-4 border border-white h-64 w-96 gap-2">
@@ -123,7 +123,7 @@ function Dnd() {
     }
   });
 
-  return () => (
+  return (
     <div
       id="container"
       style={{ width: "500px", height: "500px", background: "coral" }}
@@ -143,7 +143,7 @@ function Dnd() {
 }
 
 function Heavy() {
-  return () => (
+  return (
     <div className="flex flex-col min-h-screen">
       <h1 className="text-2xl font-bold text-center py-8 absolute top-0 left-0 right-0">
         Heavy Component? Demo

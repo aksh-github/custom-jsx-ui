@@ -1,8 +1,7 @@
 import {
-  atom,
+  createState,
   batch,
   skipUpdate,
-  state,
   context,
   createEffect,
 } from "../../utils/simple-state";
@@ -50,13 +49,13 @@ const globalState = {
   verbs: { d: [], ts: 0 },
 };
 
-// const [filtered, setFiltered] = atom([]);
+// const [filtered, setFiltered] = createState([]);
 let gsearchPair = null;
 
 const searchCtx = context("");
 
-const VerbRow = () => {
-  return ({ row: verb }) => (
+const VerbRow = ({ row: verb }) => {
+  return (
     <div className="divrow">
       <h3>{verb?.ev}</h3>
       <p> {verb?.sv?.join(", ")}</p>
@@ -72,7 +71,7 @@ const VerbRow = () => {
 };
 
 const verbFilter = (w) => {
-  let srch = gsearchPair[0]()?.trim()?.toLowerCase();
+  let srch = gsearchPair[0]?.trim()?.toLowerCase();
   // let srch = searchCtx.get()?.trim()?.toLowerCase();
   let flag = w?.ev?.includes(srch);
 
@@ -97,8 +96,8 @@ const verbFilter = (w) => {
   return flag;
 };
 
-const WordRow = () => {
-  return ({ row: word }) => (
+const WordRow = ({ row: word }) => {
+  return (
     <li>
       <h3>{word?.ew}</h3>
       <p>{word?.sw?.join(", ")}</p>
@@ -109,7 +108,7 @@ const WordRow = () => {
 
 const wordFilter = (w) => {
   // let srch = search();
-  let srch = gsearchPair[0]()?.trim()?.toLowerCase();
+  let srch = gsearchPair[0]?.trim()?.toLowerCase();
   let flag = w?.ew?.includes(srch);
 
   if (!flag) {
@@ -210,60 +209,58 @@ const fetchData = (jsonFile) =>
   // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
   fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => res.json());
 
-function GenericTab({ dkey }) {
+function GenericTab({ prop, search: srch, dkey }) {
   let filtered = () => [];
   const effect = createEffect();
 
   // const getSearchCtx = searchCtx.get;
   const TOP = -1;
 
-  const [data, setData] = atom(globalState[`${dkey}`].d.slice(0, TOP));
+  const [data, setData] = createState(globalState[`${dkey}`].d.slice(0, TOP));
 
-  return ({ prop, search: srch, dkey }) => {
-    const { title, filterFunc, RowComponent, asList } = UIObj[prop];
-    // let srch = searchCtx.get()?.trim()?.toLowerCase();
+  const { title, filterFunc, RowComponent, asList } = UIObj[prop];
+  // let srch = searchCtx.get()?.trim()?.toLowerCase();
 
-    effect(() => {
-      // console.log("effect for", dkey, "with search", srch);
-      console.log("search now", srch);
-      if (srch) {
-        filtered = () => globalState[`${dkey}`].d.filter(filterFunc);
-      } else filtered = () => [];
-      return () => {
-        console.log("cleanup for", dkey, "with search", srch);
-        filtered = () => [];
-      };
-    }, [srch]);
+  effect(() => {
+    // console.log("effect for", dkey, "with search", srch);
+    console.log("search now", srch);
+    if (srch) {
+      filtered = () => globalState[`${dkey}`].d.filter(filterFunc);
+    } else filtered = () => [];
+    return () => {
+      console.log("cleanup for", dkey, "with search", srch);
+      filtered = () => [];
+    };
+  }, [srch]);
 
-    console.log("exec", searchCtx.get());
+  console.log("exec", searchCtx.get());
 
-    const RR = (filtered().length > 0 ? filtered() : data()).map((d) => (
-      <RowComponent row={d} />
-    ));
+  const RR = (filtered().length > 0 ? filtered() : data).map((d) => (
+    <RowComponent row={d} />
+  ));
 
-    return (
-      <div>
-        <h2 className="title">{title}</h2>
-        {filtered().length === 0 && srch ? (
-          <p className="info">No results for your search: "{srch}"</p>
-        ) : null}
-        {/* Ctxt Value: {searchCtx.get()} */}
-        {filtered().length > 0 && srch ? (
-          <p className="info">Matching results: {filtered().length}</p>
-        ) : null}
-        {asList ? (
-          <ul className="list">{RR}</ul>
-        ) : (
-          <div className="search">{RR}</div>
-        )}
-      </div>
-    );
-  };
+  return (
+    <div>
+      <h2 className="title">{title}</h2>
+      {filtered().length === 0 && srch ? (
+        <p className="info">No results for your search: "{srch}"</p>
+      ) : null}
+      {/* Ctxt Value: {searchCtx.get()} */}
+      {filtered().length > 0 && srch ? (
+        <p className="info">Matching results: {filtered().length}</p>
+      ) : null}
+      {asList ? (
+        <ul className="list">{RR}</ul>
+      ) : (
+        <div className="search">{RR}</div>
+      )}
+    </div>
+  );
 }
 
 // function VerbTab() {
-//   const [data, setData] = atom(globalState.verbs);
-//   const [filtered, setFiltered] = atom([]);
+//   const [data, setData] = createState(globalState.verbs);
+//   const [filtered, setFiltered] = createState([]);
 //   let lsearch = null;
 
 //   onMount(() => {
@@ -308,13 +305,13 @@ function GenericTab({ dkey }) {
 //   };
 // }
 
-export function Sans() {
-  const [currTab, setCurrTab] = atom(0);
-  const [isLoaded, setIsLoaded] = atom(false);
-  // gsearchPair = atom("");
+export function Sans(props) {
+  const [currTab, setCurrTab] = createState(0);
+  const [isLoaded, setIsLoaded] = createState(false);
+  // gsearchPair = createState("");
   let txtEl = null;
 
-  const [search, setSearch] = (gsearchPair = atom(""));
+  const [search, setSearch] = (gsearchPair = createState(""));
 
   onMount(() => {
     console.log("mount for Sans");
@@ -360,7 +357,7 @@ export function Sans() {
     // setSearch("");
   });
 
-  return (props) => (
+  return (
     <div className="sans">
       <header className="sticky-header">
         <h1 className="main-head">संस्कृतकोष:</h1>
@@ -373,7 +370,7 @@ export function Sans() {
 
         <div style={{ textAlign: "center" }} className="search-box">
           <input
-            value={search()}
+            value={search}
             // value={searchCtx.get()}
             ref={(el) => (txtEl = el)}
             type="search"
@@ -428,14 +425,14 @@ export function Sans() {
       >
         <header style={{ backgroundColor: "bisque" }}>footer with skip</header>
       </Skip> */}
-      {isLoaded() ? (
+      {isLoaded ? (
         <div className="search-wrapper">
           <Provider contextdf={searchCtx.get()}>
             <GenericTab
-              key={UIObj[currTab()].dkey}
-              dkey={UIObj[currTab()].dkey}
-              prop={currTab()}
-              search={search()}
+              key={UIObj[currTab].dkey}
+              dkey={UIObj[currTab].dkey}
+              prop={currTab}
+              search={search}
             />
           </Provider>
         </div>
@@ -456,7 +453,4 @@ export function Sans() {
   );
 }
 
-const Provider =
-  () =>
-  ({ children }) =>
-    <div>{children}</div>;
+const Provider = (p, children) => <div>{children}</div>;

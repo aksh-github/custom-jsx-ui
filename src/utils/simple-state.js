@@ -3,15 +3,17 @@ const log = () => {};
 
 export function createEffect() {
   let prevDeps = [];
-  let cleanup;
+  let cleanupFn;
 
-  return function effect(effect, deps) {
-    const depsChanged = deps.some((dep, index) => dep !== prevDeps[index]);
+  return (effectFn, dependencies) => {
+    const dependenciesChanged = dependencies.some(
+      (dep, i) => dep != prevDeps?.[i]
+    );
 
-    if (!prevDeps.length || depsChanged) {
-      if (cleanup) cleanup();
-      cleanup = effect();
-      prevDeps = deps;
+    if (!prevDeps?.length || dependenciesChanged) {
+      if (cleanupFn) cleanupFn();
+      cleanupFn = effectFn();
+      prevDeps = dependencies;
     }
   };
 }
@@ -251,6 +253,8 @@ const SmartState = (() => {
         gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
         throtUpdate();
       }
+
+      console.log("gs", gs);
     };
 
     const specialSet = (nv) => {
