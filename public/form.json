@@ -7,7 +7,7 @@
         "type": "select",
         "label": "Use Case",
         "name": "selectUsecase",
-        "value": "Agile",
+        "value": "",
         "error": "",
         "options": [
           { "value": "", "label": "Select Use Case" },
@@ -15,27 +15,28 @@
           {
             "value": "Social Media Marketing",
             "label": "Social Media Marketing"
-          }
+          },
+          { "value": "Plain", "label": "Plain" }
         ],
         "validation": {
           "required": true,
           "minLength": 1,
           "maxLength": 50
         }
-      },
-      {
-        "type": "checkbox",
-        "name": "checkAgree",
-        "label": "Do you agree ?",
-        "defaultValue": true,
-        "validation": {
-          "required": true
-        }
       }
     ],
     "more": {
       "Agile": {
         "fields": [
+          {
+            "type": "checkbox",
+            "name": "checkAgree",
+            "label": "Do you agree ?",
+            "value": true,
+            "validation": {
+              "required": true
+            }
+          },
           {
             "type": "select",
             "label": "Action",
@@ -177,6 +178,9 @@
             }
           }
         ]
+      },
+      "Plain Text": {
+        "fields": []
       }
     }
   }

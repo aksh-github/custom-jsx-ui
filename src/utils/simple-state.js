@@ -277,7 +277,7 @@ const SmartState = (() => {
 
     const set = (nv) => {
       if (gs[key] === nv) return;
-      lastComp = key;
+      lastComp = key.split("-")?.[0];
 
       if (batchOp) {
         if (lastComp) updateComps.add(lastComp);
@@ -297,7 +297,8 @@ const SmartState = (() => {
 
     const specialSet = (nv) => {
       if (gs[key] === nv) return;
-      lastComp = key;
+
+      lastComp = key.split("-")?.[0];
       reset();
       gs[key] = nv;
       throtUpdate();

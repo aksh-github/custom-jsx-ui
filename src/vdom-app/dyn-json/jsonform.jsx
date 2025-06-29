@@ -174,6 +174,7 @@ const Field = (props) => {
 const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   const [uiJson, setUiJson] = createState(null);
   const [formState, setFormState] = createState(null);
+  const [formValid, setFormValid] = createState(false);
 
   // const mountEff = createEffect();
   // const effect = createEffect();
@@ -188,6 +189,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   //       console.error("Error loading UI JSON:", error);
   //     });
   // });
+
   createEffect(() => {
     loadUI("/form.json?t=" + Date.now())
       .then((data) => {
@@ -215,7 +217,13 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
     }
   }, [uiJson]);
 
-  const [formValid, setFormValid] = createState(false);
+  createEffect(() => {
+    if (!formState || !uiJson) {
+      return;
+    }
+
+    setFormValid(isFormValid(formState));
+  }, [uiJson, formState]);
 
   const validateForm = () => {
     // console.log("validateForm", formState());
@@ -315,27 +323,27 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
       }
 
       // if no save button, then need to have setTimeout
-      setTimeout(() => {
-        // console.log("newState", newState);
+      // setTimeout(() => {
+      //   // console.log("newState", newState);
 
-        const isValid = isFormValid(newState);
-        let reqObj = {};
+      //   const isValid = isFormValid(newState);
+      //   let reqObj = {};
 
-        if (isValid) {
-          const { fields } = uiJson.form;
-          Object.keys(fields).forEach((idx) => {
-            // console.log("field", idx, fields[idx]);
+      //   if (isValid) {
+      //     const { fields } = uiJson.form;
+      //     Object.keys(fields).forEach((idx) => {
+      //       // console.log("field", idx, fields[idx]);
 
-            if (fields[idx].requestObjName)
-              reqObj[fields[idx].requestObjName] =
-                newState[fields[idx].name]?.value;
-          });
+      //       if (fields[idx].requestObjName)
+      //         reqObj[fields[idx].requestObjName] =
+      //           newState[fields[idx].name]?.value;
+      //     });
 
-          console.log("Form is valid now... Request Object", reqObj);
-          // setRequestObj(reqObj);
-        }
-        // setIsFormValid(isValid);
-      }, 0);
+      //     console.log("Form is valid now... Request Object", reqObj);
+      //     // setRequestObj(reqObj);
+      //   }
+      //   // setIsFormValid(isValid);
+      // }, 0);
 
       return newState;
     });
@@ -353,10 +361,10 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
         },
       };
 
-      setTimeout(() => {
-        // setIsFormValid(isFormValid(newState));
-        console.log(isFormValid(newState));
-      }, 0);
+      // setTimeout(() => {
+      //   // setIsFormValid(isFormValid(newState));
+      //   console.log(isFormValid(newState));
+      // }, 0);
 
       return newState;
     });
@@ -365,7 +373,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   return (
     <div>
       <h1>Json Based Form</h1>
-      <p>JsonForm valid: {isFormValid(formState) ? "true" : "false"}</p>
+      <p>JsonForm valid: {formValid ? "true" : "false"}</p>
       {uiJson && formState && (
         <form
           id={uiJson.form.id}
