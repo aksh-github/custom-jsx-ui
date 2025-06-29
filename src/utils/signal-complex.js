@@ -64,7 +64,7 @@ export function createSignal(value) {
   return [read, write];
 }
 
-export function createEffect(fn) {
+function createEffect(fn) {
   const effect = {
     execute() {
       cleanup(effect);

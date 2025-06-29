@@ -1,6 +1,6 @@
-import { createSignal } from "../utils/signal-complex";
+// import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { atom, createState, state } from "../utils/simple-state";
+import { atom, createState, state, createEffect } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const TextArea = () => {
@@ -9,12 +9,16 @@ export const TextArea = () => {
   const [t, set] = createState("");
   let txtRef;
 
-  onMount(() => {
-    console.log(txtRef);
-    // setTimeout(() => {
-    //   txtRef.focus();
-    // }, 100);
-  });
+  // onMount(() => {
+  //   console.log(txtRef);
+  //   setTimeout(() => {
+  //     txtRef.focus();
+  //   }, 100);
+  // }, []);
+
+  createEffect(() => {
+    if (txtRef) txtRef.focus();
+  }, []);
 
   console.log("came here");
 
@@ -28,7 +32,7 @@ export const TextArea = () => {
   });
 
   return (
-    <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
+    <div style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
       {/* <br />
         <span>{txt()}</span>
@@ -38,7 +42,16 @@ export const TextArea = () => {
         ></textarea>
         <br /> */}
       <span>{t}</span>
-      <input value={t} onInput={(e) => set(e.target.value)} />
+      <input
+        value={t}
+        ref={(ta) => {
+          txtRef = ta;
+          // setTimeout(() => {
+          //   ta.focus();
+          // }, 100);
+        }}
+        onInput={(e) => set(e.target.value)}
+      />
     </div>
   );
 };
