@@ -68,8 +68,10 @@ function findMatchingObjects(json, key, value) {
 import {
   atom,
   createState,
+  init,
   reset,
   setCurrComp,
+  skipUpdate,
   updateComps,
   updateCtx,
 } from "../simple-state";
@@ -174,6 +176,9 @@ const microframe = (() => {
       // log(mountFns.pop());
       mountFns.pop()();
     }
+
+    // if (len)
+    init();
   }
 
   // vdom

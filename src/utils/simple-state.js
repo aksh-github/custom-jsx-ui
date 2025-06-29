@@ -5,8 +5,16 @@ function _createEffect() {
   let prevDeps = [];
   let cleanupFn;
   let once = false;
+  let firstRun = true;
 
   return (effectFn, dependencies) => {
+    // skip effect when its not 0 deps
+    if (prevDeps?.length === dependencies?.length && dependencies?.length > 0) {
+      prevDeps = dependencies;
+      // firstRun = false;
+      return;
+    }
+
     const dependenciesChanged = dependencies.some(
       (dep, i) => dep != prevDeps?.[i]
     );
@@ -202,6 +210,7 @@ const SmartState = (() => {
   // for mount, change etc
   let fnLastComp = null;
   let fnIdx = 0;
+  const mountMap = new Map();
   const unMountMap = new Map();
 
   let batchOp = false;
@@ -226,6 +235,15 @@ const SmartState = (() => {
     isSkipping = false;
   };
 
+  // called for each component mount
+  const init = () => {
+    for (const [_key, fn] of mountMap) {
+      const umt = fn();
+      mountMap.set(_key, () => {});
+      if (umt) unMountMap.set(_key, umt);
+    }
+  };
+
   const reset = (keysArr) => {
     // gs = {};
     lastComp = fnLastComp = null;
@@ -235,10 +253,13 @@ const SmartState = (() => {
 
     keysArr.forEach((key) => {
       // call unmount
-      for (const [_key, fn] of unMountMap) {
-        // console.log(_key, value);
-        if (_key.startsWith(key)) {
-          fn();
+      for (const [_key, fn] of mountMap) {
+        // console.log(_key);
+
+        if (_key === key) {
+          mountMap.delete(_key);
+
+          unMountMap.get(_key)?.();
           unMountMap.delete(_key);
         }
       }
@@ -292,7 +313,7 @@ const SmartState = (() => {
       }
       lastComp = null;
 
-      console.log("gs", gs);
+      // console.log("gs", gs);
     };
 
     const specialSet = (nv) => {
@@ -320,6 +341,15 @@ const SmartState = (() => {
       fnIdx = 0;
     }
 
+    // for mount only logic
+    if (deps?.length === 0) {
+      if (!mountMap.has(`${currComp}`)) {
+        mountMap.set(`${currComp}`, cb);
+      }
+      fnIdx = 0;
+      return;
+    }
+
     const key = `${currComp}-fn-${fnIdx}`;
 
     if (!gs[key]) {
@@ -327,7 +357,10 @@ const SmartState = (() => {
       gs[key] = fn;
     }
     const unMountFn = gs[key](cb, deps);
-    if (unMountFn && deps?.length === 0) unMountMap.set(key, unMountFn);
+    if (deps?.length === 0) {
+      gs[key] = () => {};
+      if (unMountFn) unMountMap.set(key, unMountFn);
+    }
 
     if (fnLastComp != currComp) fnLastComp = currComp;
 
@@ -336,6 +369,7 @@ const SmartState = (() => {
 
   return {
     state,
+    init,
     reset,
     skipUpdate,
     batch,
@@ -345,6 +379,7 @@ const SmartState = (() => {
 })();
 
 export const createState = SmartState.state;
+export const init = SmartState.init;
 export const reset = SmartState.reset;
 export const skipUpdate = SmartState.skipUpdate;
 export const batch = SmartState.batch;

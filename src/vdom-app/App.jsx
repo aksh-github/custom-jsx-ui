@@ -547,7 +547,7 @@ export function App(props) {
 
   let ct = 0;
 
-  onMount(() => {
+  createEffect(() => {
     routeHandler.init(onRouteChange);
     if (footRef) {
       // const p = document.createElement("p");
@@ -579,14 +579,20 @@ export function App(props) {
         }
       }, 1000);
     }
-  });
 
-  onCleanup(() => {
-    routeHandler.cleanup();
-    clearInterval(timer);
-    timer = null;
-    setFootRef(null);
-  });
+    return () => {
+      routeHandler.cleanup();
+      clearInterval(timer);
+      timer = footRef = null;
+    };
+  }, []);
+
+  // onCleanup(() => {
+  //   routeHandler.cleanup();
+  //   clearInterval(timer);
+  //   timer = null;
+  // setFootRef(null);
+  // });
 
   return (
     <div>

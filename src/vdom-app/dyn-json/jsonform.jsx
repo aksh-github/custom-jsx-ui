@@ -189,19 +189,10 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   //       console.error("Error loading UI JSON:", error);
   //     });
   // });
+  let formRef;
 
   createEffect(() => {
-    loadUI("/form.json?t=" + Date.now())
-      .then((data) => {
-        console.log("UI JSON loaded successfully", data);
-        setUiJson(data);
-      })
-      .catch((error) => {
-        console.error("Error loading UI JSON:", error);
-      });
-  }, []);
-
-  createEffect(() => {
+    console.log("uiJson changed");
     if (uiJson) {
       setFormState(
         uiJson.form?.fields.reduce((acc, field) => {
@@ -224,6 +215,26 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
 
     setFormValid(isFormValid(formState));
   }, [uiJson, formState]);
+
+  onMount(() => {
+    console.log("onMount", formRef);
+  });
+
+  createEffect(() => {
+    console.log("onMount", formRef);
+    loadUI("/form.json?t=" + Date.now())
+      .then((data) => {
+        console.log("UI JSON loaded successfully", data);
+        setUiJson(data);
+      })
+      .catch((error) => {
+        console.error("Error loading UI JSON:", error);
+      });
+
+    return () => {
+      console.log("onCleanup jsonform");
+    };
+  }, []);
 
   const validateForm = () => {
     // console.log("validateForm", formState());
@@ -292,6 +303,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   };
 
   const handleChange = (event) => {
+    console.log(formRef);
     const { name, value, type, checked } = event.target;
     const fieldVal = type === "checkbox" ? checked : value;
 
@@ -377,6 +389,11 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
       {uiJson && formState && (
         <form
           id={uiJson.form.id}
+          ref={(el) => {
+            formRef = el;
+
+            // console.log("el", el);
+          }}
           className={uiJson.form.className}
           onBlur={(e) => {
             const { name, value, type, checked } = e.target;
