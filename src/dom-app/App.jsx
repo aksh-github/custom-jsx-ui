@@ -1,4 +1,4 @@
-import { createSignal, batch, createEffect } from "../utils/signal-complex";
+// import { createSignal, batch, createEffect } from "../utils/signal-complex";
 import { domv2, onMount, onCleanup } from "../utils/dom/lib.v2";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "../compos/Link";
