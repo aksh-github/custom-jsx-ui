@@ -419,6 +419,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
       <div>
         <Playground />
       </div>
+      <template id="template">this is a template</template>
     </div>
   );
 };
