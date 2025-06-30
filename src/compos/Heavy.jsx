@@ -1,9 +1,27 @@
-import { createState } from "../utils/simple-state";
-import { h, onMount } from "../utils/vdom/vdom-lib";
+import { createEffect, createState } from "../utils/simple-state";
+import { createElement, h, onMount } from "../utils/vdom/vdom-lib";
 // import "./App.css";
 
 function SlowComponent(props) {
-  const largeArray = Array.from({ length: 10000 }, (_, i) => i);
+  const [largeArray, setLargeArray] = createState([]);
+  const [ignore, setIgnore] = createState(false);
+
+  createEffect(() => {
+    console.log("mounting SlowComponent");
+    // largeArray = Array.from({ length: 10000 }, (_, i) => i);
+    setLargeArray(Array.from({ length: 10000 }, (_, i) => i));
+
+    return () => {
+      console.log("unmounting SlowComponent");
+    };
+  }, []);
+
+  createEffect(() => {
+    console.log("updating SlowComponent");
+    setTimeout(() => {
+      setIgnore(true);
+    }, 1000);
+  }, [largeArray]);
 
   return (
     <div
@@ -14,6 +32,7 @@ function SlowComponent(props) {
         // overflow: "scroll",
         gap: "1px",
       }}
+      ignoreNode2={ignore}
     >
       {largeArray.map((value) => (
         <div
