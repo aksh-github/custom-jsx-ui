@@ -16,8 +16,14 @@ function _createEffect() {
     // }
 
     const dependenciesChanged = dependencies.some(
-      (dep, i) => dep != prevDeps?.[i]
+      (dep, i) => dep !== prevDeps?.[i]
     );
+
+    // skip update effect for first run
+    if (firstRun && dependencies?.length > 0) {
+      firstRun = false;
+      return;
+    }
 
     // if (!prevDeps?.length || dependenciesChanged) {
     if (dependenciesChanged) {
