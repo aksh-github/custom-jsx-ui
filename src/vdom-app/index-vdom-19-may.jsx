@@ -6,6 +6,7 @@ import {
   state,
   atom,
   createState,
+  createEffect,
 } from "../utils/simple-state";
 import {
   h,
@@ -43,8 +44,13 @@ smartRegisterCallback(forceUpdate);
 const Even = () => {
   const [count, setCount] = createState(0);
 
-  onMount(() => console.log("mounting Even"));
-  onCleanup(() => console.log("unmounting Even"));
+  createEffect(() => {
+    console.log("mounting Even");
+
+    return () => {
+      console.log("unmounting Even");
+    };
+  }, []);
 
   return (
     <div>
@@ -61,8 +67,13 @@ const Even = () => {
 const Odd = () => {
   const [count, setCount] = createState(1);
 
-  onMount(() => console.log("mounting Odd"));
-  onCleanup(() => console.log("unmounting Odd"));
+  createEffect(() => {
+    console.log("mounting Odd");
+
+    return () => {
+      console.log("unmounting Odd");
+    };
+  }, []);
 
   return (
     <div>
@@ -79,8 +90,12 @@ const Odd = () => {
 const Counter = () => {
   const [count, setCount] = createState(0);
 
-  onMount(() => console.log("mounting Counter"));
-  onCleanup(() => console.log("unmounting Counter"));
+  // onMount(() => console.log("mounting Counter"));
+  // onCleanup(() => console.log("unmounting Counter"));
+
+  createEffect(() => {
+    console.log("mounting Counter");
+  }, []);
 
   return (
     <div>
@@ -92,7 +107,7 @@ const Counter = () => {
   );
 };
 
-mount(root, () => <App />);
+mount(root, () => <Counter />);
 // mount(root, () => <Sans />);
 
 function Svg() {
