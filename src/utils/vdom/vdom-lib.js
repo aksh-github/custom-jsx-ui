@@ -352,7 +352,8 @@ const microframe = (() => {
         children:
           type?.includes("-") ||
           props?.ignoreNode ||
-          type?.toLowerCase() === "iframe"
+          type?.toLowerCase() === "iframe" ||
+          type?.toLowerCase() === "template"
             ? []
             : children,
       };
