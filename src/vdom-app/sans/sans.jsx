@@ -8,6 +8,7 @@ import {
 import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
+import { WordDict } from "./Word-Dict";
 
 const env = import.meta.env;
 
@@ -50,7 +51,7 @@ const globalState = {
 };
 
 // const [filtered, setFiltered] = createState([]);
-let gsearchPair = null;
+let currentSearch = null;
 
 const searchCtx = context("");
 
@@ -72,7 +73,7 @@ const VerbRow = ({ row: verb }) => {
 };
 
 const verbFilter = (w) => {
-  let srch = gsearchPair[0]?.trim()?.toLowerCase();
+  let srch = currentSearch?.trim()?.toLowerCase();
   // let srch = searchCtx.get()?.trim()?.toLowerCase();
   let flag = w?.ev?.includes(srch);
 
@@ -109,7 +110,7 @@ const WordRow = ({ row: word }) => {
 
 const wordFilter = (w) => {
   // let srch = search();
-  let srch = gsearchPair[0]?.trim()?.toLowerCase();
+  let srch = currentSearch?.trim()?.toLowerCase();
   let flag = w?.ew?.includes(srch);
 
   if (!flag) {
@@ -211,43 +212,33 @@ const fetchData = (jsonFile) =>
   fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => res.json());
 
 function GenericTab({ prop, search: srch, dkey }) {
-  let filtered = () => [];
-
-  // const getSearchCtx = searchCtx.get;
   const TOP = 10;
-
-  const [data, setData] = createState(globalState[`${dkey}`].d.slice(0, TOP));
-
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
-  // let srch = searchCtx.get()?.trim()?.toLowerCase();
+  currentSearch = srch;
+  const filtered = srch
+    ? globalState[`${dkey}`].d.filter(filterFunc)
+    : globalState[`${dkey}`].d.slice(0, TOP);
+  // let filtered = [];
 
-  createEffect(() => {
-    // console.log("effect for", dkey, "with search", srch);
-    console.log("search now", srch);
-    if (srch) {
-      filtered = () => globalState[`${dkey}`].d.filter(filterFunc);
-    } else filtered = () => [];
-    return () => {
-      console.log("cleanup for", dkey, "with search", srch);
-      filtered = () => [];
-    };
-  }, [srch]);
+  // if (srch) {
+  //   filtered = globalState[`${dkey}`].d.filter(filterFunc);
+  // } else {
+  //   filtered = globalState[`${dkey}`].d.slice(0, TOP);
+  // }
 
-  console.log("exec", searchCtx.get());
+  // console.log("exec", searchCtx.get());
 
-  const RR = (filtered().length > 0 ? filtered() : data).map((d) => (
-    <RowComponent row={d} />
-  ));
+  const RR = filtered.map((d) => <RowComponent row={d} />);
 
   return (
     <div>
       <h2 className="title">{title}</h2>
-      {filtered().length === 0 && srch ? (
+      {filtered.length === 0 && srch ? (
         <p className="info">No results for your search: "{srch}"</p>
       ) : null}
       {/* Ctxt Value: {searchCtx.get()} */}
-      {filtered().length > 0 && srch ? (
-        <p className="info">Matching results: {filtered().length}</p>
+      {filtered.length > 0 && srch ? (
+        <p className="info">Matching results: {filtered.length}</p>
       ) : null}
       {asList ? (
         <ul className="list">{RR}</ul>
@@ -258,62 +249,17 @@ function GenericTab({ prop, search: srch, dkey }) {
   );
 }
 
-// function VerbTab() {
-//   const [data, setData] = createState(globalState.verbs);
-//   const [filtered, setFiltered] = createState([]);
-//   let lsearch = null;
-
-//   onMount(() => {
-//     if (globalState.verbs.length === 0) {
-//       fetch("/data/verbs-v2.json")
-//         .then((res) => res.json())
-//         .then((_data) => {
-//           // console.log(data);
-//           setData(_data);
-//           // setGlobalState((prev) => ({ ...prev, verbs: data() }));
-//           globalState.verbs = _data;
-//         });
-//     }
-//   });
-
-//   const filter = () => {
-//     setFiltered(data().filter(verbFilter));
-//   };
-
-//   return () => {
-//     if (lsearch !== search()) {
-//       filter();
-//       lsearch = search();
-//     }
-
-//     return (
-//       <div>
-//         <h1>Verbs</h1>
-
-//         <p style={{ color: "red" }}>
-//           {filtered().length === 0 && search() ? "No results" : ""}
-//         </p>
-//         <ul>
-//           {(filtered().length > 0 ? filtered() : data()).map((w) => (
-//             <li>
-//               {w?.ev}, {w?.sv?.join(", ")}, {w?.mv?.join(", ")}
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//     );
-//   };
-// }
-
 export function Sans(props) {
   const [currTab, setCurrTab] = createState(0);
   const [isLoaded, setIsLoaded] = createState(false);
-  // gsearchPair = createState("");
+  const [showWordDict, setShowWordDict] = createState(false);
+  // currentSearch = createState("");
   let txtEl = null;
+  let chatIcon = null;
 
-  const [search, setSearch] = (gsearchPair = createState(""));
+  const [search, setSearch] = createState("");
 
-  onMount(() => {
+  createEffect(() => {
     console.log("mount for Sans");
 
     // alert("https://www.youtube.com/watch?v=b6iVByCOx8A");
@@ -349,13 +295,20 @@ export function Sans(props) {
         console.log(err);
         isLoaded(true);
       });
-  });
 
-  onCleanup(() => {
-    console.log("unmount for Sans");
-    skipUpdate(() => setSearch(""));
-    // setSearch("");
-  });
+    return () => {
+      console.log("cleanup for Sans");
+      // setSearch("");
+      // searchCtx.set("");
+      currentSearch = null;
+    };
+  }, []);
+
+  // onCleanup(() => {
+  //   console.log("unmount for Sans");
+  //   skipUpdate(() => setSearch(""));
+  //   // setSearch("");
+  // });
 
   return (
     <div className="sans">
@@ -377,7 +330,7 @@ export function Sans(props) {
             name="search"
             placeholder="Search in English or Sanskrit..."
             onInput={(e) => {
-              setSearch(e.target.value);
+              setSearch(e.target.value?.trim());
               // searchCtx.set(e.target.value);
             }}
           />
@@ -427,14 +380,12 @@ export function Sans(props) {
       </Skip> */}
       {isLoaded ? (
         <div className="search-wrapper">
-          <Provider contextdf={searchCtx.get()}>
-            <GenericTab
-              key={UIObj[currTab].dkey}
-              dkey={UIObj[currTab].dkey}
-              prop={currTab}
-              search={search}
-            />
-          </Provider>
+          <GenericTab
+            key={UIObj[currTab].dkey}
+            dkey={UIObj[currTab].dkey}
+            prop={currTab}
+            search={search}
+          />
         </div>
       ) : (
         <p>Loading...</p>
@@ -449,8 +400,37 @@ export function Sans(props) {
       >
         {() => <Tabs currTab={currTab()} />}
       </Suspense> */}
+      {!showWordDict ? (
+        <div
+          id="chat-icon"
+          ref={(el) => {
+            // console.log("chat icon ref", el);
+            chatIcon = el;
+
+            const t = setTimeout(() => {
+              if (chatIcon) {
+                chatIcon.style.animation = "none";
+              }
+              clearTimeout(t);
+            }, 8000);
+          }}
+          onClick={() => {
+            console.log("chat icon clicked");
+            setShowWordDict((prev) => !prev);
+          }}
+        >
+          शब्दपाठ
+        </div>
+      ) : null}
+
+      {showWordDict ? (
+        <WordDict
+          toggle={showWordDict}
+          onClose={() => setShowWordDict(false)}
+        />
+      ) : null}
     </div>
   );
 }
 
-const Provider = (p, children) => <div>{children}</div>;
+// const Provider = (p, children) => <div>{children}</div>;
