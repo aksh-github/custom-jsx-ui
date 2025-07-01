@@ -25,6 +25,7 @@ import { signal } from "../utils/signal-v2";
 import Heavy from "../compos/Heavy";
 import JsonForm from "./dyn-json/jsonform";
 import { Lazy } from "../utils/vdom/lazy";
+import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 
 let routeHandler = Router();
 
@@ -662,9 +663,7 @@ export function App(props) {
           case "/heavy":
             return <Heavy />;
           case "/json-form":
-            return (
-              <JsonForm setIsFormValid={() => {}} setRequestObj={() => {}} />
-            );
+            return <JsonFormConsumer />;
           default:
             if (curPath?.url?.startsWith("/topics"))
               return <Topics basepath="/topics" match={curPath} />;

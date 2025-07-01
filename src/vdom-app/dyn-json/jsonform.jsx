@@ -171,24 +171,11 @@ const Field = (props) => {
   ) : null;
 };
 
-const JsonForm = ({ setIsFormValid, setRequestObj }) => {
-  const [uiJson, setUiJson] = createState(null);
+const JsonForm = ({ setIsFormValid, setRequestObj, uiJson, onFormChange }) => {
+  // const [uiJson, setUiJson] = createState(null);
   const [formState, setFormState] = createState(null);
   const [formValid, setFormValid] = createState(false);
 
-  // const mountEff = createEffect();
-  // const effect = createEffect();
-
-  // onMount(() => {
-  //   loadUI("/form.json?t=" + Date.now())
-  //     .then((data) => {
-  //       console.log("UI JSON loaded successfully", data);
-  //       setUiJson(data);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error loading UI JSON:", error);
-  //     });
-  // });
   let formRef;
 
   createEffect(() => {
@@ -215,26 +202,6 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
 
     setFormValid(isFormValid(formState));
   }, [uiJson, formState]);
-
-  onMount(() => {
-    console.log("onMount", formRef);
-  });
-
-  createEffect(() => {
-    console.log("onMount", formRef);
-    loadUI("/form.json?t=" + Date.now())
-      .then((data) => {
-        console.log("UI JSON loaded successfully", data);
-        setUiJson(data);
-      })
-      .catch((error) => {
-        console.error("Error loading UI JSON:", error);
-      });
-
-    return () => {
-      console.log("onCleanup jsonform");
-    };
-  }, []);
 
   const validateForm = () => {
     // console.log("validateForm", formState());
@@ -303,7 +270,6 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
   };
 
   const handleChange = (event) => {
-    console.log(formRef);
     const { name, value, type, checked } = event.target;
     const fieldVal = type === "checkbox" ? checked : value;
 
@@ -317,45 +283,13 @@ const JsonForm = ({ setIsFormValid, setRequestObj }) => {
         },
       };
 
-      if (name === "selectUsecase") {
-        // modify the form json based on the selected use case
+      setTimeout(() => {
+        // setIsFormValid(isFormValid(newState));
+        onFormChange?.(newState, { name, value: fieldVal, error: err });
 
-        setUiJson((prevUiJson) => {
-          return {
-            ...prevUiJson,
-            form: {
-              ...prevUiJson.form,
-              fields: uiJson.form.fields // .filter((field, idx) => idx === 0)
-                .filter((field) => field.name === "selectUsecase")
-                .concat(uiJson.form.more[value]?.fields || []),
-              id: "configForm" + Date.now(), // update form id to force re-render
-            },
-          };
-        });
-      }
-
-      // if no save button, then need to have setTimeout
-      // setTimeout(() => {
-      //   // console.log("newState", newState);
-
-      //   const isValid = isFormValid(newState);
-      //   let reqObj = {};
-
-      //   if (isValid) {
-      //     const { fields } = uiJson.form;
-      //     Object.keys(fields).forEach((idx) => {
-      //       // console.log("field", idx, fields[idx]);
-
-      //       if (fields[idx].requestObjName)
-      //         reqObj[fields[idx].requestObjName] =
-      //           newState[fields[idx].name]?.value;
-      //     });
-
-      //     console.log("Form is valid now... Request Object", reqObj);
-      //     // setRequestObj(reqObj);
-      //   }
-      //   // setIsFormValid(isValid);
-      // }, 0);
+        // const isValid = isFormValid(newState);
+        // setFormValid(isValid);
+      }, 0);
 
       return newState;
     });
