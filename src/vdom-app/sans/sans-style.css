@@ -1,6 +1,7 @@
 .sans {
   /* padding: 0 1em; */
   color: brown;
+  min-height: 50em;
 
   input:focus {
     outline: none;

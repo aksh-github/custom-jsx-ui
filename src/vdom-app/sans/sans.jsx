@@ -57,13 +57,14 @@ const searchCtx = context("");
 const VerbRow = ({ row: verb }) => {
   return (
     <div className="divrow">
-      <h3>{verb?.ev}</h3>
+      <h3>
+        {verb?.ev} {verb?.mv?.join(", ")}
+      </h3>
       <p> {verb?.sv?.join(", ")}</p>
       <p>{verb?.gana?.join(", ")}</p>
       <p>{verb?.roop?.join(", ")}</p>
       <p>{verb?.lyut?.join(", ")}</p>
       <p>{verb?.kta?.join(", ")}</p>
-      <p>{verb?.mv?.join(", ")}</p>
       {/* {row?.ev}, {row?.sv?.join(", ")}, {row?.mv?.join(", ")} */}
       {/* <hr /> */}
     </div>
@@ -213,7 +214,7 @@ function GenericTab({ prop, search: srch, dkey }) {
   let filtered = () => [];
 
   // const getSearchCtx = searchCtx.get;
-  const TOP = -1;
+  const TOP = 10;
 
   const [data, setData] = createState(globalState[`${dkey}`].d.slice(0, TOP));
 
@@ -380,7 +381,7 @@ export function Sans(props) {
               // searchCtx.set(e.target.value);
             }}
           />
-          <button
+          {/* <button
             className="clear-search"
             onClick={() => {
               setSearch("");
@@ -388,7 +389,7 @@ export function Sans(props) {
             }}
           >
             x
-          </button>
+          </button> */}
         </div>
 
         {/* <p>{search()}</p> */}
