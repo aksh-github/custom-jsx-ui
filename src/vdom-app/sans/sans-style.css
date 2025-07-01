@@ -2,6 +2,7 @@
   /* padding: 0 1em; */
   color: brown;
   min-height: 30em;
+  font-size: 16px;
 
   input:focus {
     outline: none;
@@ -125,6 +126,7 @@
 
 @media (width < 768px) {
   .sans {
+    font-size: 14px;
     padding: 0;
     header {
       h1.main-head {

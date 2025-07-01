@@ -5,7 +5,7 @@ import {
   context,
   createEffect,
 } from "../../utils/simple-state";
-import { h, onMount, onCleanup, Suspense } from "../../utils/vdom/vdom-lib";
+import { h } from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
 import { WordDict } from "./Word-Dict";
