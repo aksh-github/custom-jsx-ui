@@ -400,7 +400,13 @@ export function Sans(props) {
       >
         {() => <Tabs currTab={currTab()} />}
       </Suspense> */}
-      {!showWordDict ? (
+
+      {showWordDict ? (
+        <WordDict
+          toggle={showWordDict}
+          onClose={() => setShowWordDict(false)}
+        />
+      ) : (
         <div
           id="chat-icon"
           ref={(el) => {
@@ -421,14 +427,7 @@ export function Sans(props) {
         >
           शब्दपाठ
         </div>
-      ) : null}
-
-      {showWordDict ? (
-        <WordDict
-          toggle={showWordDict}
-          onClose={() => setShowWordDict(false)}
-        />
-      ) : null}
+      )}
     </div>
   );
 }
