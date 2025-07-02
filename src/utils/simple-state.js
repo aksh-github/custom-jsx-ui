@@ -8,22 +8,15 @@ function _createEffect() {
   let firstRun = true;
 
   return (effectFn, dependencies) => {
-    // skip effect when its not 0 deps
-    // if (prevDeps?.length === dependencies?.length && dependencies?.length > 0) {
-    //   prevDeps = dependencies;
-    //   // firstRun = false;
-    //   return;
-    // }
-
-    const dependenciesChanged = dependencies.some(
-      (dep, i) => dep !== prevDeps?.[i]
-    );
-
-    // skip update effect for first run
+        // skip update effect for first run
     if (firstRun && dependencies?.length > 0) {
       firstRun = false;
       return;
     }
+
+    const dependenciesChanged = dependencies.some(
+      (dep, i) => dep !== prevDeps?.[i]
+    );
 
     // if (!prevDeps?.length || dependenciesChanged) {
     if (dependenciesChanged) {

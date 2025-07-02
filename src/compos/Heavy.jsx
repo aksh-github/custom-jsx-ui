@@ -7,6 +7,13 @@ function SlowComponent(props) {
   const [ignore, setIgnore] = createState(false);
 
   createEffect(() => {
+    console.log("updating SlowComponent");
+    setTimeout(() => {
+      setIgnore(true);
+    }, 1000);
+  }, [largeArray]);
+
+  createEffect(() => {
     console.log("mounting SlowComponent");
     // largeArray = Array.from({ length: 10000 }, (_, i) => i);
     setLargeArray(Array.from({ length: 10000 }, (_, i) => i));
@@ -15,13 +22,6 @@ function SlowComponent(props) {
       console.log("unmounting SlowComponent");
     };
   }, []);
-
-  createEffect(() => {
-    console.log("updating SlowComponent");
-    setTimeout(() => {
-      setIgnore(true);
-    }, 1000);
-  }, [largeArray]);
 
   return (
     <div
