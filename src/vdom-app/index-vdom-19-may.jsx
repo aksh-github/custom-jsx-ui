@@ -90,11 +90,12 @@ const Odd = () => {
 const Counter = () => {
   const [count, setCount] = createState(0);
 
-  // onMount(() => console.log("mounting Counter"));
-  // onCleanup(() => console.log("unmounting Counter"));
-
   createEffect(() => {
     console.log("mounting Counter");
+
+    return () => {
+      console.log("unmounting Counter");
+    };
   }, []);
 
   return (
@@ -107,11 +108,11 @@ const Counter = () => {
   );
 };
 
-mount(root, () => <Counter />);
+mount(root, () => <App />);
 // mount(root, () => <Sans />);
 
 function Svg() {
-  return () => (
+  return (
     <button>
       Search{" "}
       <svg width="24" height="24" viewBox="0 0 24 24">
@@ -122,7 +123,7 @@ function Svg() {
 }
 
 function Captcha() {
-  onMount(() => {
+  createEffect(() => {
     const canvas = document.getElementById("captcha");
     const ctx = canvas.getContext("2d");
 
@@ -149,9 +150,9 @@ function Captcha() {
     ctx.moveTo(strikeThroughX - strikeThroughLength / 2, strikeThroughY);
     ctx.lineTo(strikeThroughX + strikeThroughLength / 2, strikeThroughY);
     ctx.stroke();
-  });
+  }, []);
 
-  return () => <canvas id="myCanvas" height="50"></canvas>;
+  return <canvas id="myCanvas" height="50"></canvas>;
 }
 
 {

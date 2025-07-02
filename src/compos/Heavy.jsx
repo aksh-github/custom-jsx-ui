@@ -110,7 +110,7 @@ function DemoComponent(props) {
 function Dnd() {
   let card = null;
 
-  onMount(() => {
+  createEffect(() => {
     // draw();
     let newX = 0,
       newY = 0,
@@ -140,7 +140,7 @@ function Dnd() {
     function mouseUp(e) {
       document.removeEventListener("mousemove", mouseMove);
     }
-  });
+  }, []);
 
   return (
     <div

@@ -17,7 +17,12 @@ export const TextArea = () => {
   // }, []);
 
   createEffect(() => {
-    if (txtRef) txtRef.focus();
+    // if (txtRef) txtRef.focus();
+
+    return () => {
+      console.log("unmounting TextArea");
+      txtRef = null;
+    };
   }, []);
 
   console.log("came here");
@@ -26,10 +31,6 @@ export const TextArea = () => {
     set("");
     // settxt("");
   };
-
-  onCleanup(() => {
-    txtRef = null;
-  });
 
   return (
     <div style={{ backgroundColor: "beige" }}>

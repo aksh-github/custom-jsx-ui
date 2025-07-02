@@ -1,7 +1,6 @@
 // import { createSignal } from "../utils/signal-complex";
 import {
   h,
-  onMount,
   onCleanup,
   Suspense,
   SuspenseV2,
@@ -148,24 +147,6 @@ const Topics = (props) => {
 const Ctr = (props) => {
   const [st, setSt] = createState({ c: 100, version: "Loading..." });
 
-  // onCleanup(() => {
-  //   console.log("unmount Ctr");
-  // });
-
-  // onMount(() => {
-  //   const timer = setTimeout(() => {
-  //     clearTimeout(timer);
-  //     fetch("/package.json")
-  //       .then((res) => res.json())
-  //       .then((res) => {
-  //         setSt((prev) => ({
-  //           ...prev,
-  //           version: res.version,
-  //         }));
-  //       });
-  //   }, 4000);
-  // });
-
   createEffect(() => {
     fetch("/package.json")
       .then((res) => res.json())
@@ -264,51 +245,47 @@ function ComplexRoute(props) {
   let ref = null;
 
   const [holec, setHolec] = createState(0);
-  let intervalId = null;
-  let wc = null;
 
-  onMount(() => {
+  createEffect(() => {
     console.log("mount app", ref);
-    wc = document.querySelector("hole-component");
+    let wc = document.querySelector("hole-component");
     let _holec = 0;
 
-    if (wc) {
-      intervalId = setInterval(() => {
-        // console.log(wc, holec);
-        wc.setAttribute("message", `Hello from wc after ${_holec} seconds`);
-        skipUpdate(() => {
-          setHolec((prev) => {
-            // console.log(prev);
-            _holec = prev + 2;
-            return _holec;
-          });
+    let intervalId = setInterval(() => {
+      // console.log(wc, holec);
+      wc?.setAttribute("message", `Hello from wc after ${_holec} seconds`);
+      skipUpdate(() => {
+        setHolec((prev) => {
+          // console.log(prev);
+          _holec = prev + 2;
+          return _holec;
         });
-        // setHolec((prev) => {
-        //   console.log(prev);
-        //   return holec + 2;
-        // });
-        if (_holec > 4) {
-          clearInterval(intervalId);
-        }
-      }, 2000);
-    }
-  });
+      });
+      // setHolec((prev) => {
+      //   console.log(prev);
+      //   return holec + 2;
+      // });
+      if (_holec > 4) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }, 1000);
 
-  onCleanup(() => {
-    clearInterval(intervalId);
-    ref = intervalId = wc = null;
-  });
+    return () => {
+      ref = wc = null;
+    };
+  }, []);
 
   const arr = [];
   for (let i = 0; i < 10000; ++i) arr.push(i);
 
   const Number = ({ n }) => {
-    // onMount(() => {
-    //   console.log("mounting number");
-    // });
-    // onCleanup(() => {
-    //   console.log("unmounting number");
-    // });
+    createEffect(() => {
+      console.log("mounting number");
+      return () => {
+        console.log("unmounting number");
+      };
+    }, []);
     return (
       <li>
         <span>{n}</span>
@@ -355,7 +332,7 @@ function ComplexRoute(props) {
           setYt(e.target.value);
         }}
       />
-      {/* <iframe
+      <iframe
         width="100%"
         height="615"
         src={`https://www.youtube.com/embed/${yt}`}
@@ -363,7 +340,7 @@ function ComplexRoute(props) {
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
-      ></iframe> */}
+      ></iframe>
       <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
       <div>
         <button
@@ -405,37 +382,34 @@ function ComplexRoute(props) {
 // SimpleRoute (route 2)
 
 const Even = () => {
-  onMount(() => {
+  createEffect(() => {
     console.log("onMount for Even");
-  });
-
-  onCleanup(() => {
-    console.log("unmount for Even");
-  });
+    return () => {
+      console.log("unmount for Even");
+    };
+  }, []);
 
   return "Divisible by 2";
 };
 
 const SomeOdd = () => {
-  onMount(() => {
+  createEffect(() => {
     console.log("onMount for SomeOdd");
-  });
-
-  onCleanup(() => {
-    console.log("unmount for SomeOdd");
-  });
+    return () => {
+      console.log("unmount for SomeOdd");
+    };
+  }, []);
 
   return "[SomeOdd]";
 };
 
 const Odd = () => {
-  onMount(() => {
+  createEffect(() => {
     console.log("onMount for Odd");
-  });
-
-  onCleanup(() => {
-    console.log("unmount for Odd");
-  });
+    return () => {
+      console.log("unmount for Odd");
+    };
+  }, []);
 
   return (
     <div>
@@ -455,14 +429,13 @@ export const SimpleRoute = () => {
 
   // const [arrState] = createState({ arr: ["10", "20"] });
 
-  onMount(() => {
+  createEffect(() => {
     console.log("Ref available in onMount for SimpleRoute", ref);
-  });
-
-  onCleanup(() => {
-    console.log("unmount for SimpleRoute");
-    ref = null;
-  });
+    return () => {
+      console.log("unmount for SimpleRoute");
+      ref = null;
+    };
+  }, []);
 
   const Row = ({ n }) => <p>{n}</p>;
 

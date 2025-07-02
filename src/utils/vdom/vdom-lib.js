@@ -67,6 +67,7 @@ function findMatchingObjects(json, key, value) {
 
 import {
   atom,
+  createEffect,
   createState,
   init,
   reset,
@@ -137,6 +138,8 @@ const microframe = (() => {
     currUnmount = null;
 
   function onMount(cb) {
+    throw new Error("onMount is deprecated, use createEffect instead");
+
     // log(counter, cb);
     if (altFuncCache[currComp]?.mount) return;
     // currMount = cb;
@@ -159,7 +162,10 @@ const microframe = (() => {
       if (!funcCache[key]) {
         altFuncCache[key].unMount?.();
         altFuncCache[key].unMount = null;
-        if (suspenseCache[key]) delete suspenseCache[key];
+        if (suspenseCache[key]) {
+          suspenseCache[key] = null;
+          delete suspenseCache[key];
+        }
 
         altFuncCache[key] = null;
         delete altFuncCache[key];
@@ -1247,7 +1253,7 @@ export function SuspenseV2(props, child) {
 
   // log("promise NOT resolved");
 
-  onMount(() => {
+  createEffect(() => {
     if (props?.fetch?.then) {
       // case 1. if fetch prop is provided (it can be any promise)
       props.fetch.then((res) => {
@@ -1273,7 +1279,7 @@ export function SuspenseV2(props, child) {
           setResolved(true); // need so render is triggered
         });
     }
-  });
+  }, []);
 
   // if already in cache then return
   const ch = child || props.children[0];
