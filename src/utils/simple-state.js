@@ -303,18 +303,28 @@ const SmartState = (() => {
     };
 
     const set = (nv) => {
-      if (gs[key] === nv) return;
+      let temp;
+
+      if (typeof nv === "function") {
+        temp = nv(gs[key]);
+      } else {
+        temp = nv;
+      }
+
+      if (temp === gs[key]) return;
+
+      gs[key] = temp;
+
       lastComp = key.split("-")?.[0];
 
       if (batchOp) {
         if (lastComp) updateComps.add(lastComp);
       } else if (isSkipping) {
-        gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
       } else {
         // updateComps.push(lastComp);
         if (lastComp) updateComps.add(lastComp);
         reset();
-        gs[key] = typeof nv === "function" ? nv(gs[key]) : nv;
+
         throtUpdate();
       }
       lastComp = null;
