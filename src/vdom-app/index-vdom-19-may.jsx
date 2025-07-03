@@ -7,6 +7,7 @@ import {
   atom,
   createState,
   createEffect,
+  createContext,
 } from "../utils/simple-state";
 import {
   h,
@@ -41,6 +42,9 @@ const root = document.getElementById("root-vdom");
 registerCallback(forceUpdate);
 smartRegisterCallback(forceUpdate);
 
+const ctx = createContext(0);
+const nameCtx = createContext("Aks");
+
 const Even = () => {
   const [count, setCount] = createState(0);
 
@@ -59,7 +63,14 @@ const Even = () => {
         This is the Even component.
         {count}
       </p>
-      <button onClick={() => setCount((count) => count + 2)}>Increment</button>
+      <button
+        onClick={() => {
+          setCount((count) => count + 2);
+          ctx.set((c) => c + 1);
+        }}
+      >
+        Increment
+      </button>
     </div>
   );
 };
@@ -82,7 +93,17 @@ const Odd = () => {
         This is the Odd component.
         {count}
       </p>
-      <button onClick={() => setCount((count) => count + 2)}>Increment</button>
+      <p>{nameCtx.get()}</p>
+      <button
+        onClick={() => {
+          ctx.set((c) => c + 1);
+
+          setCount((count) => count + 2);
+          nameCtx.set("hello world");
+        }}
+      >
+        Increment
+      </button>
     </div>
   );
 };
@@ -101,6 +122,14 @@ const Counter = () => {
   return (
     <div>
       <h2>Counter: {count}</h2>
+      <p
+        style={{
+          backgroundColor: "lightblue",
+          padding: "10px",
+        }}
+      >
+        {ctx.get()}
+      </p>
       <button onClick={() => setCount((count) => count + 1)}>Increment</button>
       <hr />
       {count % 2 === 0 ? <Even /> : <Odd />}

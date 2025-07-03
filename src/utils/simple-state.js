@@ -1,5 +1,5 @@
-// const log = console.log;
-const log = () => {};
+const log = console.log;
+// const log = () => {};
 
 function _createEffect() {
   let prevDeps = [];
@@ -8,7 +8,7 @@ function _createEffect() {
   let firstRun = true;
 
   return (effectFn, dependencies) => {
-        // skip update effect for first run
+    // skip update effect for first run
     if (firstRun && dependencies?.length > 0) {
       firstRun = false;
       return;
@@ -212,6 +212,10 @@ const SmartState = (() => {
   const mountMap = new Map();
   const unMountMap = new Map();
 
+  // for context
+  const gCtx = {};
+  let ctxIdx = 0;
+
   let batchOp = false;
   let isSkipping = false;
 
@@ -247,6 +251,11 @@ const SmartState = (() => {
     // gs = {};
     lastComp = fnLastComp = null;
     idx = fnIdx = 0;
+
+    // reset context update flag
+    Object.keys(gCtx).forEach((key) => {
+      gCtx[key]();
+    });
 
     if (!keysArr) return;
 
@@ -344,6 +353,56 @@ const SmartState = (() => {
     return [get(), set, specialSet];
   };
 
+  const context = (iv) => {
+    // if (!globalState[currComp]) globalState[currComp] = [];
+    if (currComp)
+      throw new Error("Context cannot be created inside a component");
+
+    // globalState[currComp].push(iv);
+    let st = iv;
+    let updated = false;
+
+    gCtx[ctxIdx] = () => {
+      updated = false;
+    };
+
+    ctxIdx++;
+
+    const get = () => {
+      log("get in context", currComp);
+
+      if (updated) updateComps.add(currComp);
+
+      return st;
+    };
+
+    const set = (nv) => {
+      let temp;
+
+      if (typeof nv === "function") {
+        temp = nv(st);
+      } else {
+        temp = nv;
+      }
+
+      if (temp === st) return;
+
+      st = temp;
+      updated = true;
+
+      if (batchOp) {
+      } else if (isSkipping) {
+      } else {
+        // updateComps.push(lastComp);
+        reset();
+
+        throtUpdate();
+      }
+    };
+
+    return { get, set };
+  };
+
   const effect = (cb, deps) => {
     if (fnLastComp != currComp) {
       // lastComp = currComp;
@@ -378,6 +437,7 @@ const SmartState = (() => {
 
   return {
     state,
+    context,
     init,
     reset,
     skipUpdate,
@@ -388,6 +448,7 @@ const SmartState = (() => {
 })();
 
 export const createState = SmartState.state;
+export const createContext = SmartState.context;
 export const init = SmartState.init;
 export const reset = SmartState.reset;
 export const skipUpdate = SmartState.skipUpdate;
