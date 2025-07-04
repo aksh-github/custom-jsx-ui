@@ -187,3 +187,80 @@ export const ArrayWithFragmentsComplex = () => {
     </df>
   );
 };
+
+const Gist = () => {
+  const [gistContent, setGistContent] = createState("");
+  let divRef = null;
+
+  createEffect(() => {
+    // console.log("divRef", divRef)
+
+    fetch("https://api.github.com/gists/3535c82ef14db4120481951f71c8df89")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Gist data:", data);
+        const file = data.files["README.md"];
+        if (file) {
+          setGistContent(file.content);
+          if (divRef) {
+            divRef.innerHTML = `<script type="text/markdown">
+          ${file.content}
+        </script>`;
+          }
+        } else {
+          console.error("File not found in the gist");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching gist:", error);
+      });
+  }, []);
+
+  return (
+    <div>
+      <pre>{gistContent}</pre>
+
+      <zero-md
+        ref={(el) => {
+          divRef = el;
+        }}
+      ></zero-md>
+      {/* <iframe
+          src="https://gist.github.com/jherr/3535c82ef14db4120481951f71c8df89.js"
+          width="100%"
+          height="500"
+        ></iframe> */}
+    </div>
+  );
+};
+
+export const Embed = () => {
+  const [yt, setYt] = createState("t779DVjCKCs");
+
+  return (
+    <div>
+      <h2>Embed</h2>
+      <input
+        type="text"
+        value={yt}
+        onChange={(e) => {
+          // console.log(e, e.target.value);
+          setYt(e.target.value);
+        }}
+      />
+      <iframe
+        width="100%"
+        height="615"
+        src={`https://www.youtube.com/embed/${yt}`}
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+      <hr />
+      <Gist />
+      <hr />
+      <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
+    </div>
+  );
+};

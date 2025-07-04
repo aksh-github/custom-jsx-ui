@@ -25,6 +25,7 @@ import Heavy from "../compos/Heavy";
 import JsonForm from "./dyn-json/jsonform";
 import { Lazy } from "../utils/vdom/lazy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
+import { Embed } from "../compos/ComponentPatterns";
 
 let routeHandler = Router();
 
@@ -241,7 +242,7 @@ function ComplexRoute(props) {
   // const [s, sets] = createSignal("akshay");
   const [c, setc] = createState(0);
   const [s, sets] = createState("akshay");
-  const [yt, setYt] = createState("t779DVjCKCs");
+
   let ref = null;
 
   const [holec, setHolec] = createState(0);
@@ -324,24 +325,6 @@ function ComplexRoute(props) {
           </svg>
         </span>
       </div>
-      <input
-        type="text"
-        value={yt}
-        onChange={(e) => {
-          // console.log(e, e.target.value);
-          setYt(e.target.value);
-        }}
-      />
-      <iframe
-        width="100%"
-        height="615"
-        src={`https://www.youtube.com/embed/${yt}`}
-        title="YouTube video player"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-      ></iframe>
-      <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
       <div>
         <button
           onClick={(e) => {
@@ -575,6 +558,9 @@ export function App(props) {
           <LinkV2 to="/">Complex</LinkV2>
         </li>
         <li>
+          <LinkV2 to="/embed">Embed YT,MD</LinkV2>
+        </li>
+        <li>
           <LinkV2 to="/route2">Simple</LinkV2>
         </li>
         <li>
@@ -602,6 +588,8 @@ export function App(props) {
             return <SimpleRoute />;
           case "/":
             return <ComplexRoute />;
+          case "/embed":
+            return <Embed />;
           // return <Ctr v={10} />;
           case "/frag":
             console.log("frag");
