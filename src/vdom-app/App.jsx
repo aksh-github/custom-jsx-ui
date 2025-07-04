@@ -346,7 +346,7 @@ function ComplexRoute(props) {
       ) : // <Number n={10} />
       null}
       <p>
-        <LinkV2 to="/route2">Go next</LinkV2>
+        <LinkV2 to="/route2?q=some">Go next</LinkV2>
         <button
           onClick={() => {
             // alert("prog'matic navigatiion to be implemented");
@@ -495,9 +495,12 @@ export function App(props) {
   let [footerTp, setFooterTp] = createState(0);
   let timer = null;
 
-  const onRouteChange = (newPath) => {
-    console.log(newPath);
+  // console.log(routerContext.get());
+
+  const onRouteChange = (newPath, routeConfig) => {
+    console.log(newPath, routeConfig);
     setCurPath(newPath);
+    // setCurPath(routerContext.get());
   };
   // moved globally
   // let routeHandler = Router();

@@ -107,9 +107,9 @@ export function LinkV2(props, children) {
   );
 }
 
-const { get: currPath, set: setCurrPath } = createContext(
-  window.location.pathname
-);
+export const routerContext = createContext(window.location.pathname);
+
+const { get: currPath, set: setCurrPath } = routerContext;
 
 export function Router() {
   // const [currPath, setCurrPath] = atom(window.location.pathname);
@@ -118,7 +118,11 @@ export function Router() {
     console.log(window.location.pathname, abcd);
     if (currPath() !== window.location.pathname) {
       setCurrPath(window.location.pathname);
-      onRouteChange(matchPath(currPath(), {}));
+      onRouteChange(matchPath(currPath(), {}), {
+        search: window.location.search,
+        hash: window.location.hash,
+        state: window.history.state,
+      });
     }
   };
 
@@ -128,7 +132,11 @@ export function Router() {
       // window.addEventListener("pushstate", navigate);
       window.addEventListener("navigate", navigate);
       onRouteChange = cb || (() => {});
-      onRouteChange(matchPath(currPath(), {}));
+      onRouteChange(matchPath(currPath(), {}), {
+        search: window.location.search,
+        hash: window.location.hash,
+        state: window.history.state,
+      });
     },
     cleanup: () => {
       window.removeEventListener("popstate", navigate);
