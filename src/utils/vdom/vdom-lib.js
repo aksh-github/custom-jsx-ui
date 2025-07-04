@@ -470,12 +470,15 @@ const microframe = (() => {
     Object.keys(props).forEach((name) => {
       if (isEventProp(name)) {
         const extratedName = extractEventName(name);
-        eventListenerInst.registerEventListener(
-          $target,
-          extratedName,
-          props[name]
-        );
-        $target.addEventListener(extratedName, props[name], true);
+
+        if (extratedName in $target) {
+          eventListenerInst.registerEventListener(
+            $target,
+            extratedName,
+            props[name]
+          );
+          $target.addEventListener(extratedName, props[name], true);
+        }
       }
     });
   }
