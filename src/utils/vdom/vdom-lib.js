@@ -471,7 +471,8 @@ const microframe = (() => {
       if (isEventProp(name)) {
         const extratedName = extractEventName(name);
 
-        if (extratedName in $target) {
+        // for json based rendering, form and onblur this is reqd
+        if (extratedName in $target || $target.tagName === "FORM") {
           eventListenerInst.registerEventListener(
             $target,
             extratedName,
