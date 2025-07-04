@@ -1,4 +1,4 @@
-import { atom, createState } from "./simple-state";
+import { createContext, createState } from "./simple-state";
 import { onCleanup, onMount, h } from "./vdom/vdom-lib";
 // import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
@@ -107,8 +107,12 @@ export function LinkV2(props, children) {
   );
 }
 
+const { get: currPath, set: setCurrPath } = createContext(
+  window.location.pathname
+);
+
 export function Router() {
-  const [currPath, setCurrPath] = atom(window.location.pathname);
+  // const [currPath, setCurrPath] = atom(window.location.pathname);
   let onRouteChange;
   const navigate = (abcd) => {
     console.log(window.location.pathname, abcd);
