@@ -89,7 +89,7 @@ const Field = (props) => {
             name={field.name}
             placeholder={field.placeholder || ""}
             required={field.required}
-            value={field.value || state?.value || ""}
+            value={field.defaultValue || state?.value || ""}
           />
         </df>
       );
@@ -107,7 +107,7 @@ const Field = (props) => {
             name={field.name}
             required={field.required}
             // defaultValue={field.value || state?.value}
-            value={field.value || state?.value || ""}
+            value={field.defaultValue || state?.value || ""}
           >
             {field.options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -128,7 +128,7 @@ const Field = (props) => {
             name={field.name}
             required={field.required}
             // defaultValue={state?.value}
-            checked={field.value || state?.value || false}
+            checked={field.defaultValue || state?.value || false}
           />
           <label className="form-check-label" htmlFor={field.name}>
             {field.label}
@@ -150,7 +150,7 @@ const Field = (props) => {
             required={field.required}
             rows={field.rows}
             cols={field.cols}
-            value={field.value || state?.value || ""}
+            value={field.defaultValue || state?.value || ""}
           ></textarea>
         </df>
       );
@@ -184,12 +184,13 @@ const JsonForm = ({ setIsFormValid, setRequestObj, uiJson, onFormChange }) => {
       setFormState(
         uiJson.form?.fields.reduce((acc, field) => {
           acc[field.name] = {
-            value: formState?.[field.name]?.value || field.value || "",
+            value: formState?.[field.name]?.value || field.defaultValue || "",
             error: formState?.[field.name]?.error || field.error || "",
           };
           return acc;
         }, {})
       );
+      // setFormValid(isFormValid(initialState));
 
       setGlobalUIJson(uiJson);
     }

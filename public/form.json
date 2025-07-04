@@ -7,7 +7,7 @@
         "type": "select",
         "label": "Use Case",
         "name": "selectUsecase",
-        "value": "",
+        "defaultValue": "Plain",
         "error": "",
         "options": [
           { "value": "", "label": "Select Use Case" },
@@ -32,7 +32,7 @@
             "type": "checkbox",
             "name": "checkAgree",
             "label": "Do you agree ?",
-            "value": true,
+            "defaultValue": true,
             "validation": {
               "required": true
             }
@@ -42,7 +42,7 @@
             "label": "Action",
             "name": "selectAction-ag",
             "requestObjName": "action",
-            "value": "",
+            "defaultValue": "",
             "error": "",
             "options": [
               { "value": "", "label": "Select Action" },
@@ -123,7 +123,7 @@
             "label": "Region",
             "name": "selectRegion",
             "requestObjName": "region",
-            "value": "CA",
+            "defaultValue": "CA",
             "error": "",
             "options": [
               { "value": "", "label": "Select Region" },
