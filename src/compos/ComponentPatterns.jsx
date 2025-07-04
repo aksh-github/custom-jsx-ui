@@ -235,7 +235,7 @@ const Gist = () => {
 };
 
 export const Embed = () => {
-  const [yt, setYt] = createState("t779DVjCKCs");
+  const [yt, setYt] = createState("HwUyhqQCA5Q");
 
   return (
     <div>
