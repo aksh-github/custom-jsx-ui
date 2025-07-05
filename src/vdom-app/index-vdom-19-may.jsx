@@ -1,10 +1,8 @@
-import { App, SimpleRoute } from "./App";
+import { App } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
 import {
-  registerCallback,
+  // registerCallback,
   smartRegisterCallback,
-  state,
-  atom,
   createState,
   createEffect,
   createContext,
@@ -14,8 +12,6 @@ import {
   mount,
   forceUpdate,
   onMount,
-  // div,
-  Suspense,
   onCleanup,
 } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
@@ -39,7 +35,7 @@ const root = document.getElementById("root-vdom");
 // registerRenderCallbackV2(forceUpdate);
 
 // for my state
-registerCallback(forceUpdate);
+// registerCallback(forceUpdate);
 smartRegisterCallback(forceUpdate);
 
 const ctx = createContext(0);

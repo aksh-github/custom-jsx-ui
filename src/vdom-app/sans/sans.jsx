@@ -2,7 +2,6 @@ import {
   createState,
   batch,
   skipUpdate,
-  context,
   createEffect,
 } from "../../utils/simple-state";
 import { h } from "../../utils/vdom/vdom-lib";
@@ -53,7 +52,7 @@ const globalState = {
 // const [filtered, setFiltered] = createState([]);
 let currentSearch = null;
 
-const searchCtx = context("");
+// const searchCtx = context("");
 
 const VerbRow = ({ row: verb }) => {
   return (

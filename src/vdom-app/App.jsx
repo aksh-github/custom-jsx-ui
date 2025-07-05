@@ -2,7 +2,6 @@
 import {
   h,
   onCleanup,
-  Suspense,
   SuspenseV2,
   createElement,
 } from "../utils/vdom/vdom-lib";
@@ -23,7 +22,7 @@ import { SimpleSwitch } from "../compos/Switch";
 import { signal } from "../utils/signal-v2";
 import Heavy from "../compos/Heavy";
 import JsonForm from "./dyn-json/jsonform";
-import { Lazy } from "../utils/vdom/lazy";
+// import { Lazy } from "../utils/vdom/lazy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
 
@@ -456,7 +455,7 @@ export const SimpleRoute = () => {
         {(res) => {
           // console.log(res);
           return (
-            <div>
+            <div style={{ minHeight: "200px" }}>
               <img src={res} alt="pic" />
             </div>
           );

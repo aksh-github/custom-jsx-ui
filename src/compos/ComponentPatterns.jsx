@@ -1,6 +1,6 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { atom, createState, state, createEffect } from "../utils/simple-state";
+import { createState, createEffect } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const TextArea = () => {
@@ -109,41 +109,41 @@ export const ArrayWithMap = () => {
   );
 };
 
-export const ArrayThatWorks = () => {
-  //   console.log("This does work");
-  console.log("This works as expected");
-  //   const arr = [<li>10</li>, <li>20</li>];
-  const Arr = state({ a: [<li>10</li>, <li>20</li>] });
-  return () => (
-    <div style={{ backgroundColor: "greenyellow" }}>
-      <button
-        onClick={() => {
-          Arr.set({ a: [...Arr.get("a"), <li>40</li>] });
-          console.log(Arr.get("a"));
-        }}
-      >
-        Update below Array
-      </button>
-      <button
-        onClick={() => {
-          Arr.set({
-            a: Arr.get("a").filter((el) => {
-              return false;
-            }),
-          });
-          console.log(Arr.get("a"));
-        }}
-      >
-        Filter below Array
-      </button>
-      <ul>
-        {Arr.get("a").map((el) => {
-          return el;
-        })}
-      </ul>
-    </div>
-  );
-};
+// export const ArrayThatWorks = () => {
+//   //   console.log("This does work");
+//   console.log("This works as expected");
+//   //   const arr = [<li>10</li>, <li>20</li>];
+//   const Arr = state({ a: [<li>10</li>, <li>20</li>] });
+//   return () => (
+//     <div style={{ backgroundColor: "greenyellow" }}>
+//       <button
+//         onClick={() => {
+//           Arr.set({ a: [...Arr.get("a"), <li>40</li>] });
+//           console.log(Arr.get("a"));
+//         }}
+//       >
+//         Update below Array
+//       </button>
+//       <button
+//         onClick={() => {
+//           Arr.set({
+//             a: Arr.get("a").filter((el) => {
+//               return false;
+//             }),
+//           });
+//           console.log(Arr.get("a"));
+//         }}
+//       >
+//         Filter below Array
+//       </button>
+//       <ul>
+//         {Arr.get("a").map((el) => {
+//           return el;
+//         })}
+//       </ul>
+//     </div>
+//   );
+// };
 
 export const ArrayWithFragments = (props) => {
   console.log("This works for only static, changes won't reflect", props?.some);

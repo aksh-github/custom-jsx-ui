@@ -66,7 +66,7 @@ function findMatchingObjects(json, key, value) {
 // end meta
 
 import {
-  atom,
+  // atom,
   createEffect,
   createState,
   init,
@@ -1157,98 +1157,98 @@ export const createElement = microframe.createElement;
 const suspenseCache = {};
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
-export function Suspense(props, child) {
-  // if already in cache then return
-  const cached = suspenseCache[`${props?.cacheKey}`];
-  if (cached) {
-    if (cached.returnFn) {
-      cached.compo(child?.props);
-      return () => cached.returnFn(child?.props);
-    } else {
-      // return suspenseCache[`${props?.cacheKey}`](child?.props);
-      return cached.callbackFn(cached.returnVal);
-    }
-  }
+// export function Suspense(props, child) {
+//   // if already in cache then return
+//   const cached = suspenseCache[`${props?.cacheKey}`];
+//   if (cached) {
+//     if (cached.returnFn) {
+//       cached.compo(child?.props);
+//       return () => cached.returnFn(child?.props);
+//     } else {
+//       // return suspenseCache[`${props?.cacheKey}`](child?.props);
+//       return cached.callbackFn(cached.returnVal);
+//     }
+//   }
 
-  // log(props);
-  let returnVal;
-  const [resolved, setResolved] = atom(false);
+//   // log(props);
+//   let returnVal;
+//   const [resolved, setResolved] = atom(false);
 
-  // log("promise NOT resolved");
+//   // log("promise NOT resolved");
 
-  if (props?.fetch?.then) {
-    // case 1. if fetch prop is provided (it can be any promise)
-    props.fetch.then((res) => {
-      // log("promise resolved", res);
-      // Suspense({ ...props, fetchCompleted: true }, res);
-      returnVal = res;
-      setResolved(true); // need so render is triggered
-    });
-  } else {
-    // case 2. if child is a promise module
-    child?.value
-      ?.then((res) => {
-        returnVal = res;
-        // update suspense cache
-        suspenseCache[`${props?.cacheKey}`] = res;
+//   if (props?.fetch?.then) {
+//     // case 1. if fetch prop is provided (it can be any promise)
+//     props.fetch.then((res) => {
+//       // log("promise resolved", res);
+//       // Suspense({ ...props, fetchCompleted: true }, res);
+//       returnVal = res;
+//       setResolved(true); // need so render is triggered
+//     });
+//   } else {
+//     // case 2. if child is a promise module
+//     child?.value
+//       ?.then((res) => {
+//         returnVal = res;
+//         // update suspense cache
+//         suspenseCache[`${props?.cacheKey}`] = res;
 
-        setResolved(true); // need so render is triggered
-      })
-      .catch((e) => {
-        // log(e);
-        setResolved(true); // need so render is triggered
-      });
-  }
+//         setResolved(true); // need so render is triggered
+//       })
+//       .catch((e) => {
+//         // log(e);
+//         setResolved(true); // need so render is triggered
+//       });
+//   }
 
-  return (props) => {
-    if (resolved()) {
-      if (props?.fetch?.then) {
-        // case when child is render props
+//   return (props) => {
+//     if (resolved()) {
+//       if (props?.fetch?.then) {
+//         // case when child is render props
 
-        suspenseCache[`${props?.cacheKey}`] = {
-          callbackFn: props.children[0],
-          returnVal,
-        };
+//         suspenseCache[`${props?.cacheKey}`] = {
+//           callbackFn: props.children[0],
+//           returnVal,
+//         };
 
-        return props.children[0](returnVal);
-      } else {
-        // case when child is normal component
-        if (returnVal) {
-          //cache the resolved compo
+//         return props.children[0](returnVal);
+//       } else {
+//         // case when child is normal component
+//         if (returnVal) {
+//           //cache the resolved compo
 
-          const returnFn = returnVal(props?.children?.[0]?.props || {});
+//           const returnFn = returnVal(props?.children?.[0]?.props || {});
 
-          suspenseCache[`${props?.cacheKey}`] = {
-            compo: returnVal, // this is compo
-            returnFn: returnFn,
-          };
+//           suspenseCache[`${props?.cacheKey}`] = {
+//             compo: returnVal, // this is compo
+//             returnFn: returnFn,
+//           };
 
-          log(suspenseCache[`${props?.cacheKey}`]);
+//           log(suspenseCache[`${props?.cacheKey}`]);
 
-          return returnFn(props?.children?.[0]?.props || {});
-          // return h(returnVal({ ...props?.children?.[0]?.props }));
-        } else {
-          if (props?.errorFallback) return props?.errorFallback;
-          else return h("div", {}, [null]);
-        }
-      }
-    } else {
-      if (props?.fallback) {
-        // if (typeof props.fallback === "string") {
-        //   return h("div", {}, [props.fallback]);
-        //   // return {
-        //   //   type: "div",
-        //   //   children: [props.fallback],
-        //   // };
-        // } else {
-        //   return props.fallback;
-        // }
-        return h("div", {}, [props.fallback]);
-      } else return h("div", {}, [null]);
-      // return props?.fallback;
-    }
-  };
-}
+//           return returnFn(props?.children?.[0]?.props || {});
+//           // return h(returnVal({ ...props?.children?.[0]?.props }));
+//         } else {
+//           if (props?.errorFallback) return props?.errorFallback;
+//           else return h("div", {}, [null]);
+//         }
+//       }
+//     } else {
+//       if (props?.fallback) {
+//         // if (typeof props.fallback === "string") {
+//         //   return h("div", {}, [props.fallback]);
+//         //   // return {
+//         //   //   type: "div",
+//         //   //   children: [props.fallback],
+//         //   // };
+//         // } else {
+//         //   return props.fallback;
+//         // }
+//         return h("div", {}, [props.fallback]);
+//       } else return h("div", {}, [null]);
+//       // return props?.fallback;
+//     }
+//   };
+// }
 
 export function SuspenseV2(props, child) {
   // log(props);
