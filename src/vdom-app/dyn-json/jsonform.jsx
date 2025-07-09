@@ -345,7 +345,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj, uiJson, onFormChange }) => {
             <Field
               // key={field.name + idx + field.name}
               field={field}
-              state={formState[field.name] || field}
+              state={formState[field.name]}
             />
           ))}
         </form>
