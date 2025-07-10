@@ -36,7 +36,7 @@ const root = document.getElementById("root-vdom");
 
 // for my state
 // registerCallback(forceUpdate);
-smartRegisterCallback(forceUpdate);
+smartRegisterCallback(forceUpdate, 50);
 
 const ctx = createContext(0);
 const nameCtx = createContext("Aks");
@@ -106,6 +106,9 @@ const Odd = () => {
 
 const Counter = () => {
   const [count, setCount] = createState(0);
+  const [t, sett] = createState("");
+
+  console.log("Counter");
 
   createEffect(() => {
     console.log("mounting Counter");
@@ -114,6 +117,32 @@ const Counter = () => {
       console.log("unmounting Counter");
     };
   }, []);
+
+  const validate = () => {
+    console.log("validating", t);
+    // Add your validation logic here
+    return t.length > 0; // Example: non-empty string
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    validate();
+    // Perform the submit action
+    console.log("submitted", t);
+    // sett("");
+  };
+
+  const onInput = (e) => {
+    const value = e.target.value;
+    console.log("input value", value);
+    sett(value);
+  };
+
+  const onChange = (e) => {
+    const value = e.target.value;
+    console.log("change value", value);
+    sett(value);
+  };
 
   return (
     <div>
@@ -129,11 +158,16 @@ const Counter = () => {
       <button onClick={() => setCount((count) => count + 1)}>Increment</button>
       <hr />
       {count % 2 === 0 ? <Even /> : <Odd />}
+      <hr />
+      <form onSubmit={submit}>
+        <input value={t} onInput={onInput} onChange={onChange} />
+        <button type="submit">Submit</button>
+      </form>
     </div>
   );
 };
 
-mount(root, () => <App />);
+mount(root, () => <Counter />);
 // mount(root, () => <Sans />);
 
 function Svg() {

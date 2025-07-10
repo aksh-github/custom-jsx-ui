@@ -92,25 +92,33 @@ const microframe = (() => {
   let curr = null;
   let old = null;
 
-  function EventListner() {
     const eventListeners = new WeakMap();
 
+  function EventListner() {
     return {
-      registerEventListener: (node, type, listener, options) => {
-        if (!eventListeners.has(node)) eventListeners.set(node, []);
+      // registerEventListener: (node, type, listener, options) => {
+      //   if (!eventListeners.has(node)) eventListeners.set(node, []);
 
-        eventListeners.get(node).push({ type, listener, options });
-      },
+      //   entry.push({ type, listener, options });
+      // },
+
+      // getEventListeners: (node) => entry || [],
       unregisterEventListener: (node) => {
         if (eventListeners.has(node)) {
-          const listeners = eventListeners.get(node);
-          while (listeners.length) {
-            const { type, listener, options } = listeners.pop();
-            node.removeEventListener(type, listener, options);
+          const entry = eventListeners.get(node);
+          if (entry) {
+            entry.forEach((evt) => {
+              node.removeEventListener(
+                evt.replace("__", ""),
+                node[evt],
+                evt.options
+              );
+              console.log(evt);
+            });
+            eventListeners.delete(node);
           }
         }
       },
-      getEventListeners: (node) => eventListeners.get(node) || [],
       unRegisterAllEventListeners: async (node) => {
         const domList = domListIterator(node);
 
@@ -451,6 +459,16 @@ const microframe = (() => {
   function updateProp($target, name, newVal, oldVal) {
     if (!newVal && (newVal === undefined || newVal === null)) {
       removeProp($target, name, oldVal);
+    } else if (isCustomProp(name)) {
+      // console.log("custom prop", name, newVal, oldVal);
+      // eventListenerInst.unregisterEventListener($target, oldVal);
+      // eventListenerInst.unregisterEventListener(
+      //   $target,
+      //   extractEventName(name)
+      // );
+      if (isEventProp(name)) {
+        if (name === "onSubmit") addEventListeners($target, { [name]: newVal });
+      }
     } else if (!oldVal || newVal !== oldVal) {
       setProp($target, name, newVal);
     }
@@ -471,16 +489,31 @@ const microframe = (() => {
       if (isEventProp(name)) {
         const extratedName = extractEventName(name);
 
+        if (!eventListeners.has($target))
+          eventListeners.set($target, new Set());
+
         // for json based rendering, form and onblur this is reqd
         // if (extratedName in $target || $target.tagName === "FORM")
-        {
-          eventListenerInst.registerEventListener(
-            $target,
-            extratedName,
-            props[name]
-          );
-          $target.addEventListener(extratedName, props[name], true);
+
+        // eventListenerInst.registerEventListener(
+        //   $target,
+        //   extratedName,
+        //   props[name]
+        // );
+        const evtName = `__${extratedName}`;
+        const entry = eventListeners.get($target);
+
+        if ($target[evtName]) {
+          $target.removeEventListener(extratedName, $target[evtName], true);
+          // setTimeout(() => {
+          //   const idx = entry.findIndex((_evt) => _evt == evtName);
+          //   if (idx !== -1) entry.splice(idx, 1);
+          // }, 0);
         }
+        $target[evtName] = props[name];
+          $target.addEventListener(extratedName, props[name], true);
+        entry.add(evtName);
+        // console.log(eventListeners);
       }
     });
   }
