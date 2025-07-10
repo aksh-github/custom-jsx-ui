@@ -113,7 +113,6 @@ const microframe = (() => {
                 node[evt],
                 evt.options
               );
-              console.log(evt);
             });
             eventListeners.delete(node);
           }
