@@ -459,15 +459,9 @@ const microframe = (() => {
     if (!newVal && (newVal === undefined || newVal === null)) {
       removeProp($target, name, oldVal);
     } else if (isCustomProp(name)) {
-      // console.log("custom prop", name, newVal, oldVal);
-      // eventListenerInst.unregisterEventListener($target, oldVal);
-      // eventListenerInst.unregisterEventListener(
-      //   $target,
-      //   extractEventName(name)
-      // );
-      if (isEventProp(name)) {
-        if (name === "onSubmit") addEventListeners($target, { [name]: newVal });
-      }
+      // if (isEventProp(name)) {
+      //   if (name === "onSubmit") addEventListeners($target, { [name]: newVal });
+      // }
     } else if (!oldVal || newVal !== oldVal) {
       setProp($target, name, newVal);
     }
@@ -479,7 +473,9 @@ const microframe = (() => {
     // }
     const props = Object.assign({}, newProps, oldProps);
     Object.keys(props).forEach((name) => {
-      updateProp($target, name, newProps[name], oldProps[name]);
+      if (name === "onSubmit")
+        addEventListeners($target, { [name]: newProps[name] });
+      else updateProp($target, name, newProps[name], oldProps[name]);
     });
   }
 
