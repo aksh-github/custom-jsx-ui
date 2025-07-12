@@ -589,7 +589,34 @@ const microframe = (() => {
       addEventListeners($el, node.props);
     }
 
-    node.children.map(createElement).forEach($el.appendChild.bind($el));
+    // Use requestIdleCallback to avoid blocking the main thread for large children arrays
+    const appendChildren = (children, parent) => {
+      let i = 0;
+      const len = children.length;
+      function processChunk(deadline) {
+        while (
+          i < len &&
+          (deadline.timeRemaining() > 0 || deadline.didTimeout)
+        ) {
+          parent.appendChild(createElement(children[i]));
+          i++;
+        }
+        if (i < len) {
+          requestIdleCallback(processChunk);
+        }
+      }
+      requestIdleCallback(processChunk);
+    };
+
+    if (node.children.length > 100) {
+      appendChildren(node.children, $el);
+    } else {
+      for (let i = 0, len = node.children.length; i < len; ++i) {
+        $el.appendChild(createElement(node.children[i]));
+      }
+    }
+
+    // node.children.map(createElement).forEach($el.appendChild.bind($el));
 
     return $el;
   }
