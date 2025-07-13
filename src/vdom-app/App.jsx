@@ -243,13 +243,13 @@ function ComplexRoute(props) {
   const [s, sets] = createState("akshay");
 
   let ref = null;
+  let _holec = 0;
 
   const [holec, setHolec] = createState(0);
 
   createEffect(() => {
     console.log("mount app", ref);
     let wc = document.querySelector("hole-component");
-    let _holec = 0;
 
     let intervalId = setInterval(() => {
       // console.log(wc, holec);
