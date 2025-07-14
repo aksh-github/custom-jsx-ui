@@ -92,7 +92,7 @@ const microframe = (() => {
   let curr = null;
   let old = null;
 
-    const eventListeners = new WeakMap();
+  const eventListeners = new WeakMap();
 
   function EventListner() {
     return {
@@ -508,7 +508,7 @@ const microframe = (() => {
           // }, 0);
         }
         $target[evtName] = props[name];
-          $target.addEventListener(extratedName, props[name], true);
+        $target.addEventListener(extratedName, props[name], true);
         entry.add(evtName);
         // console.log(eventListeners);
       }
@@ -791,6 +791,7 @@ const microframe = (() => {
       old = current;
 
       altFuncCache = { ...funcCache };
+      // altFuncCache = structuredClone(funcCache);
       funcCache = {};
     }, 0);
     // requestAnimationFrame(() => {
@@ -839,10 +840,10 @@ const microframe = (() => {
 
     let _C = 0;
 
-    if (navigate.routeChange) {
-      updateComps.clear();
-      navigate.set(false);
-    }
+    // if (navigate.routeChange) {
+    //   updateComps.clear();
+    //   navigate.set(false);
+    // }
 
     const updateCompsSize = updateComps.size;
     let currComp = null;
@@ -1120,6 +1121,8 @@ const microframe = (() => {
     }
 
     updateElement($parent, newNode, oldNode, index);
+
+    stk = null;
 
     updateComps.clear();
     updateCtx.clear();
