@@ -337,7 +337,7 @@ function ComplexRoute(props) {
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
       {c % 2 !== 0 ? (
-        <ul style={{ minHeight: "8000px", contentVisibility2: "auto" }}>
+        <ul className="long-list">
           {arr.map((n) => (
             <Number n={n} />
           ))}
