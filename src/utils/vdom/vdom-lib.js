@@ -548,6 +548,22 @@ const microframe = (() => {
 
   // end SVG
 
+  // Use requestIdleCallback to avoid blocking the main thread for large children arrays
+  const appendChildren = (children, parent) => {
+    let i = 0;
+    const len = children.length;
+    function processChunk(deadline) {
+      while (i < len && (deadline.timeRemaining() > 0 || deadline.didTimeout)) {
+        parent.appendChild(createElement(children[i]));
+        i++;
+      }
+      if (i < len) {
+        requestIdleCallback(processChunk);
+      }
+    }
+    requestIdleCallback(processChunk);
+  };
+
   function createElement(node) {
     if (!node?.type) {
       if (node?.$c) {
@@ -575,7 +591,14 @@ const microframe = (() => {
       // );
       const $el2 = $d.createDocumentFragment();
 
-      node.children.map(createElement).forEach($el2.appendChild.bind($el2));
+      // node.children.map(createElement).forEach($el2.appendChild.bind($el2));
+      if (node.children.length > 100) {
+        appendChildren(node.children, $el2);
+      } else {
+        for (let i = 0, len = node.children.length; i < len; ++i) {
+          $el2.appendChild(createElement(node.children[i]));
+        }
+      }
 
       return $el2;
     }
@@ -590,25 +613,6 @@ const microframe = (() => {
       setProps($el, node.props);
       addEventListeners($el, node.props);
     }
-
-    // Use requestIdleCallback to avoid blocking the main thread for large children arrays
-    const appendChildren = (children, parent) => {
-      let i = 0;
-      const len = children.length;
-      function processChunk(deadline) {
-        while (
-          i < len &&
-          (deadline.timeRemaining() > 0 || deadline.didTimeout)
-        ) {
-          parent.appendChild(createElement(children[i]));
-          i++;
-        }
-        if (i < len) {
-          requestIdleCallback(processChunk);
-        }
-      }
-      requestIdleCallback(processChunk);
-    };
 
     if (node.children.length > 100) {
       appendChildren(node.children, $el);
