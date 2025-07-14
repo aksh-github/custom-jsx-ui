@@ -129,6 +129,8 @@ const microframe = (() => {
             await yieldToMain();
           }
         }
+
+        domList.length = 0;
       },
     };
   }
@@ -1133,6 +1135,7 @@ const microframe = (() => {
       patch.oldProps = null;
       // patch = null;
     }
+    patches = null;
   }
 
   function applyPatches(patches) {
@@ -1188,6 +1191,8 @@ const microframe = (() => {
           break;
       } // switch
     }
+
+    patches = null;
   }
 
   return {
