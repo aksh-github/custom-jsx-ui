@@ -140,6 +140,10 @@ function Dnd() {
     function mouseUp(e) {
       document.removeEventListener("mousemove", mouseMove);
     }
+
+    return () => {
+      card = null;
+    };
   }, []);
 
   return (

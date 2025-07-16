@@ -129,7 +129,7 @@ const Counter = () => {
     validate();
     // Perform the submit action
     console.log("submitted", t);
-    // sett("");
+    sett("");
   };
 
   const onInput = (e) => {

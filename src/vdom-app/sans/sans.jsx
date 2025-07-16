@@ -299,7 +299,7 @@ export function Sans(props) {
       console.log("cleanup for Sans");
       // setSearch("");
       // searchCtx.set("");
-      currentSearch = null;
+      currentSearch = chatIcon = txtEl = null;
     };
   }, []);
 

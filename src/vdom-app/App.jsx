@@ -1,10 +1,5 @@
 // import { createSignal } from "../utils/signal-complex";
-import {
-  h,
-  onCleanup,
-  SuspenseV2,
-  createElement,
-} from "../utils/vdom/vdom-lib";
+import { h, SuspenseV2, createElement } from "../utils/vdom/vdom-lib";
 import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
@@ -200,9 +195,11 @@ const Input = () => {
     e: "",
   });
 
-  onCleanup(() => {
-    console.log("unmount Input");
-  });
+  createEffect(() => {
+    return () => {
+      console.log("unmount Input");
+    };
+  }, []);
 
   return (
     <div>
@@ -248,7 +245,7 @@ function ComplexRoute(props) {
   const [holec, setHolec] = createState(0);
 
   createEffect(() => {
-    console.log("mount app", ref);
+    // console.log("mount app", ref);
     let wc = document.querySelector("hole-component");
 
     let intervalId = setInterval(() => {
@@ -273,6 +270,7 @@ function ComplexRoute(props) {
 
     return () => {
       ref = wc = null;
+      // arr.length = 0;
     };
   }, []);
 
