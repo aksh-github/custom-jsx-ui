@@ -870,7 +870,7 @@ const microframe = (() => {
         patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
       } else if (!isValid(newNode)) {
         // $parent.removeChild($parent.childNodes[index]);
-        const el = $parent.childNodes[index];
+        let el = $parent.childNodes[index];
 
         patches.push({
           p: $parent,
@@ -879,6 +879,7 @@ const microframe = (() => {
         });
 
         if (el?.nodeType === 1) {
+          el.style.display = "none";
           while (CTR < stk.length) {
             CTR++;
 
@@ -894,9 +895,10 @@ const microframe = (() => {
             // console.log(CTR, stk[CTR]);
           }
         }
+        el = null;
       } else if (changed(newNode, oldNode)) {
         if ($parent?.childNodes[index]) {
-          const el = $parent.childNodes[index];
+          let el = $parent.childNodes[index];
 
           patches.push({
             p: $parent,
@@ -905,6 +907,7 @@ const microframe = (() => {
           });
 
           if (el?.nodeType === 1) {
+            el.style.display = "none";
             while (CTR < stk.length) {
               CTR++;
 
@@ -938,6 +941,8 @@ const microframe = (() => {
               CTR += 1;
             }
           }
+
+          // el = null;
         } else {
           //special case Compo with Array manipulation or no type (parent) for updating
           if ($parent?.appendChild) {
