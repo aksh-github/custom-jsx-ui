@@ -328,6 +328,7 @@ const JsonForm = ({ setIsFormValid, setRequestObj, uiJson, onFormChange }) => {
             formRef = el;
 
             // console.log("el", el);
+            el = null;
           }}
           className={uiJson.form.className}
           onBlur={(e) => {

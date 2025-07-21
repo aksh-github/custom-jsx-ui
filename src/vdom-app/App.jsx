@@ -241,6 +241,7 @@ function ComplexRoute(props) {
 
   let ref = null;
   let _holec = 0;
+  let arr = [];
 
   const [holec, setHolec] = createState(0);
 
@@ -260,8 +261,10 @@ function ComplexRoute(props) {
       });
       // setHolec((prev) => {
       //   console.log(prev);
-      //   return holec + 2;
+      //
+      //   return prev + 2;
       // });
+
       if (_holec > 4) {
         clearInterval(intervalId);
         intervalId = null;
@@ -270,12 +273,17 @@ function ComplexRoute(props) {
 
     return () => {
       ref = wc = null;
-      // arr.length = 0;
+      arr = null;
+      clearInterval(intervalId);
     };
   }, []);
 
-  const arr = [];
-  for (let i = 0; i < 10000; ++i) arr.push(i);
+  createEffect(() => {
+    if (c % 2 === 0) arr = null;
+    else {
+      for (let i = 0; i < 1000; ++i) arr.push(i);
+    }
+  }, [c]);
 
   const Number = ({ n }) => {
     createEffect(() => {
@@ -453,7 +461,7 @@ export const SimpleRoute = () => {
         {(res) => {
           // console.log(res);
           return (
-            <div style={{ minHeight: "200px" }}>
+            <div className="simple-img">
               <img src={res} alt="pic" />
             </div>
           );
@@ -483,6 +491,35 @@ export const SimpleRoute = () => {
     </div>
   );
 };
+
+const Header = () => (
+  <ul className="nav">
+    <li>
+      <LinkV2 to="/">Complex</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/embed">Embed YT,MD</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/route2">Simple</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/topics">Topics</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/frag">Fragments</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/sans">Sanskrit</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/heavy">Heavy</LinkV2>
+    </li>
+    <li>
+      <LinkV2 to="/json-form">Dynamic JSON</LinkV2>
+    </li>
+  </ul>
+);
 
 export function App(props) {
   const [curPath, setCurPath] = createState({ url: window.location.pathname });
@@ -553,32 +590,7 @@ export function App(props) {
 
   return (
     <div>
-      <ul className="nav">
-        <li>
-          <LinkV2 to="/">Complex</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/embed">Embed YT,MD</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/route2">Simple</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/topics">Topics</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/frag">Fragments</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/sans">Sanskrit</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/heavy">Heavy</LinkV2>
-        </li>
-        <li>
-          <LinkV2 to="/json-form">Dynamic JSON</LinkV2>
-        </li>
-      </ul>
+      <Header />
       <hr />
 
       {(() => {

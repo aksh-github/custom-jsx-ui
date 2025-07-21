@@ -6,12 +6,12 @@ function SlowComponent(props) {
   const [largeArray, setLargeArray] = createState([]);
   const [ignore, setIgnore] = createState(false);
 
-  createEffect(() => {
-    console.log("updating SlowComponent");
-    setTimeout(() => {
-      setIgnore(true);
-    }, 1000);
-  }, [largeArray]);
+  // createEffect(() => {
+  //   console.log("updating SlowComponent");
+  //   setTimeout(() => {
+  //     setIgnore(true);
+  //   }, 1000);
+  // }, [largeArray]);
 
   createEffect(() => {
     console.log("mounting SlowComponent");
@@ -20,6 +20,8 @@ function SlowComponent(props) {
 
     return () => {
       console.log("unmounting SlowComponent");
+      largeArray.length = 0;
+      setLargeArray([]);
     };
   }, []);
 
@@ -116,14 +118,14 @@ function Dnd() {
       newY = 0,
       startX = 0,
       startY = 0;
-    card.addEventListener("mousedown", mouseDown);
+    // card.addEventListener("mousedown", mouseDown);
 
     function mouseDown(e) {
       startX = e.clientX;
       startY = e.clientY;
 
-      document.addEventListener("mousemove", mouseMove);
-      document.addEventListener("mouseup", mouseUp);
+      // document.addEventListener("mousemove", mouseMove);
+      // document.addEventListener("mouseup", mouseUp);
     }
 
     function mouseMove(e) {
@@ -152,7 +154,10 @@ function Dnd() {
       style={{ width: "500px", height: "500px", background: "coral" }}
     >
       <div
-        ref={(_c) => (card = _c)}
+        ref={(_c) => {
+          card = _c;
+          _c = null;
+        }}
         id="card"
         style={{
           border: "1px dotted black",

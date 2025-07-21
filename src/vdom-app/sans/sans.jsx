@@ -324,7 +324,10 @@ export function Sans(props) {
           <input
             value={search}
             // value={searchCtx.get()}
-            ref={(el) => (txtEl = el)}
+            ref={(el) => {
+              txtEl = el;
+              el = null;
+            }}
             type="search"
             name="search"
             placeholder="Search in English or Sanskrit..."
@@ -418,6 +421,7 @@ export function Sans(props) {
               }
               clearTimeout(t);
             }, 8000);
+            el = null;
           }}
           onClick={() => {
             console.log("chat icon clicked");
