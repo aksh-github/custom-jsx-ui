@@ -371,7 +371,7 @@ const SmartState = (() => {
     const get = () => {
       log("get in context", currComp);
 
-      if (updated) updateComps.add(currComp);
+      if (updated && currComp) updateComps.add(currComp);
 
       return st;
     };
