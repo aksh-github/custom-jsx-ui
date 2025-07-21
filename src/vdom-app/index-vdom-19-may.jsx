@@ -104,6 +104,10 @@ const Odd = () => {
   );
 };
 
+const Child = ({ ctr }) => {
+  return <p>{ctr}</p>;
+};
+
 const Counter = () => {
   const [count, setCount] = createState(0);
   const [t, sett] = createState("");
@@ -160,9 +164,10 @@ const Counter = () => {
       {count % 2 === 0 ? <Even /> : <Odd />}
       <hr />
       <form onSubmit={submit}>
-        <input value={t} onInput={onInput} onChange={onChange} />
+        <input value={t} onInput={onInput} />
         <button type="submit">Submit</button>
       </form>
+      <Child ctr={count} />
     </div>
   );
 };
