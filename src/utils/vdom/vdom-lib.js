@@ -63,6 +63,15 @@ function findMatchingObjects(json, key, value) {
   return matches;
 }
 
+function propsChanged(oldProps, newProps) {
+  const oldKeys = Object.keys(oldProps);
+  const newKeys = Object.keys(newProps);
+
+  if (oldKeys.length !== newKeys.length) return true;
+
+  return oldKeys.some((key) => oldProps[key] !== newProps[key]);
+}
+
 // end meta
 
 import {
@@ -119,18 +128,61 @@ const microframe = (() => {
         }
       },
       unRegisterAllEventListeners: async (node) => {
-        const domList = domListIterator(node);
+        // let domList = domListIterator(node);
 
-        for (let i = 0; i < domList.length; i++) {
-          eventListenerInst.unregisterEventListener(domList[i]);
-          domList[i] = null;
+        // for (let i = domList.length - 1; i > -1; i--) {
+        //   eventListenerInst.unregisterEventListener(domList[i]);
+        //   // domList[i] = null;
 
-          if (i % 50 === 0) {
-            await yieldToMain();
+        //   if (i % 50 === 0) {
+        //     await yieldToMain();
+        //   }
+        // }
+
+        // domList = node = null;
+
+        // new
+
+        // Use iteration instead of recursion
+        const nodeStack = [node];
+
+        while (nodeStack.length > 0) {
+          let current = nodeStack.pop();
+
+          if (!current) continue;
+
+          // if (
+          //   current.getAttribute &&
+          //   current.getAttribute("ignorenode") === "true"
+          // ) {
+          //   continue;
+          // }
+
+          // Clean up event listeners
+          eventListenerInst.unregisterEventListener(current);
+
+          // Add children to stack
+          if (current.childNodes) {
+            for (let i = current.childNodes.length - 1; i >= 0; i--) {
+              nodeStack.push(current.childNodes[i]);
+              if (i % 50 === 0) {
+                await yieldToMain();
+              }
+            }
           }
+
+          // Clear references
+          current.nodeValue = null;
+
+          current = null;
         }
 
-        domList.length = 0;
+        // Clear final references
+
+        node = null;
+        nodeStack.length = 0;
+
+        // end
       },
     };
   }
@@ -751,7 +803,7 @@ const microframe = (() => {
     // log(CompoIterator().get(old, "TextArea"));
 
     // log(oldCallStack, callStack);
-    log(funcCache);
+    // log(funcCache);
 
     log(performance.now());
 
@@ -781,7 +833,7 @@ const microframe = (() => {
       // console.log(patches);
       if (propsPatches) applyPropsPatches(propsPatches);
       if (patches) applyPatches(patches);
-      // patches = [];
+      patches = propsPatches = null;
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
 
@@ -879,7 +931,6 @@ const microframe = (() => {
         });
 
         if (el?.nodeType === 1) {
-          el.style.display = "none";
           while (CTR < stk.length) {
             CTR++;
 
@@ -907,7 +958,6 @@ const microframe = (() => {
           });
 
           if (el?.nodeType === 1) {
-            el.style.display = "none";
             while (CTR < stk.length) {
               CTR++;
 
@@ -942,7 +992,7 @@ const microframe = (() => {
             }
           }
 
-          // el = null;
+          el = null;
         } else {
           //special case Compo with Array manipulation or no type (parent) for updating
           if ($parent?.appendChild) {
@@ -1050,14 +1100,14 @@ const microframe = (() => {
           compareTill = CTR + fragChildLen + comparisonsReqd + 1;
         } else {
           comparisonsReqd += stk[CTR + 1]?.querySelectorAll("*").length || 0;
-          log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
+          // log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
           compareTill = CTR + comparisonsReqd + 1;
         }
       }
 
       const domNode = stk[CTR];
 
-      if (CTR === compareTill) {
+      if (CTR === compareTill + 1) {
         actualComparison = false;
         comparisonsReqd = 0;
         compareTill = 0;
@@ -1066,20 +1116,32 @@ const microframe = (() => {
       if (last !== domNode) {
         // updateProps(domNode, newNode.props, oldNode.props);
 
-        const nl = Object.keys(newNode.props).length;
-        const ol = Object.keys(oldNode.props).length;
+        // const nl = Object.keys(newNode.props).length;
+        // const ol = Object.keys(oldNode.props).length;
 
-        if (nl === ol && nl === 0) {
-        } else if (newNode.props.ignoreNode || newNode.props.ignoreLater) {
-          return;
-        } else {
-          // if (actualComparison)
-          propsPatches.push({
-            $target: domNode,
-            newProps: newNode.props,
-            oldProps: oldNode.props,
-          });
+        // if (nl === ol && nl === 0) {
+        // } else if (newNode.props.ignoreNode || newNode.props.ignoreLater) {
+        //   return;
+        // } else {
+        //   if (actualComparison)
+        //     propsPatches.push({
+        //       $target: domNode,
+        //       newProps: newNode.props,
+        //       oldProps: oldNode.props,
+        //     });
+        // }
+
+        if (newNode.props.ignoreNode) return;
+
+        if (actualComparison) {
+          if (propsChanged(oldNode.props, newNode.props))
+            propsPatches.push({
+              $target: domNode,
+              newProps: newNode.props,
+              oldProps: oldNode.props,
+            });
         }
+
         last = domNode;
       }
 
@@ -1111,7 +1173,7 @@ const microframe = (() => {
       }
 
       if (optiPossible) {
-        log("after for", domNode);
+        // log("after for", domNode);
         // domNode.appendChild(gdf);
 
         patches.push({
@@ -1127,7 +1189,7 @@ const microframe = (() => {
 
     updateElement($parent, newNode, oldNode, index);
 
-    stk = null;
+    stk = last = gdf = null;
 
     updateComps.clear();
     updateCtx.clear();
@@ -1163,35 +1225,44 @@ const microframe = (() => {
           patch.op = null;
           break;
         case "REMOVE":
-          patch.p.removeChild(patch.c);
+          eventListenerInst.unRegisterAllEventListeners(patch.c);
 
           if (patch.c?.nodeType === 1) {
-            requestIdleCallback(() => {
+            requestAnimationFrame(() => {
               // removeAllEventListeners(patch.c);
-              eventListenerInst.unRegisterAllEventListeners(patch.c);
+              patch.c.innerHTML = "";
+
+              patch.p.removeChild(patch.c);
 
               patch.c = null;
               patch.p = null;
               patch.op = null;
             });
+          } else {
+            patch.p.removeChild(patch.c);
           }
 
           break;
         case "REPLACE":
           // log(patch);
-          patch.p.replaceChild(patch.c[0], patch.c[1]);
+          // patch.p.replaceChild(patch.c[0], patch.c[1]);
+          patch.p.insertBefore(patch.c[0], patch.c[1]);
+          eventListenerInst.unRegisterAllEventListeners(patch.c[1]);
 
           if (patch.c[1]?.nodeType === 1) {
-            requestIdleCallback(() => {
+            // log(patch.c[1]);
+            requestAnimationFrame(() => {
               // removeAllEventListeners(patch.c[1]);
-
-              eventListenerInst.unRegisterAllEventListeners(patch.c[1]);
+              // patch.c[1].innerHTML = "";
+              patch.p.removeChild(patch.c[1]);
 
               // patch.c[1] = null;
-              patch.c = null;
+              patch.c[0] = patch.c[1] = null;
               patch.p = null;
               patch.op = null;
             });
+          } else {
+            patch.p.removeChild(patch.c[1]);
           }
 
           break;
@@ -1437,11 +1508,11 @@ function walkDom(start_element) {
 ///////////////
 // alternate 1 (non recursive) for walkDom // tested and works
 // inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
-function domListIterator(rootNode) {
+function domListIterator(_rootNode) {
   // pass rootNode if its not global
   // log(next);
-  let arr = [rootNode];
-  let next = rootNode;
+  let arr = [_rootNode];
+  let next = _rootNode;
 
   function iterChild() {
     while (next) {
@@ -1476,13 +1547,14 @@ function domListIterator(rootNode) {
 
       next = next.parentElement;
 
-      if (next === rootNode) {
+      if (next === _rootNode) {
         next = null;
       }
     }
   }
 
   iterChild();
+  next = _rootNode = null;
   return arr;
 }
 
