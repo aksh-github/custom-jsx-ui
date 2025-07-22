@@ -1133,7 +1133,9 @@ const microframe = (() => {
 
         if (newNode.props.ignoreNode) return;
 
-        if (actualComparison) {
+        // dont enable below condition
+        // if (actualComparison)
+        {
           if (propsChanged(oldNode.props, newNode.props))
             propsPatches.push({
               $target: domNode,
@@ -1230,7 +1232,7 @@ const microframe = (() => {
           if (patch.c?.nodeType === 1) {
             requestAnimationFrame(() => {
               // removeAllEventListeners(patch.c);
-              patch.c.innerHTML = "";
+              // patch.c.innerHTML = "";
 
               patch.p.removeChild(patch.c);
 
