@@ -253,10 +253,10 @@ export function Sans(props) {
   const [isLoaded, setIsLoaded] = createState(false);
   const [showWordDict, setShowWordDict] = createState(false);
   // currentSearch = createState("");
-  let txtEl = null;
   let chatIcon = null;
 
   const [search, setSearch] = createState("");
+  let timeoutId;
 
   createEffect(() => {
     console.log("mount for Sans");
@@ -299,7 +299,9 @@ export function Sans(props) {
       console.log("cleanup for Sans");
       // setSearch("");
       // searchCtx.set("");
-      currentSearch = chatIcon = txtEl = null;
+      currentSearch = chatIcon = null;
+      clearTimeout(timeoutId);
+      timeoutId = null;
     };
   }, []);
 
@@ -323,28 +325,19 @@ export function Sans(props) {
         <div style={{ textAlign: "center" }} className="search-box">
           <input
             value={search}
-            // value={searchCtx.get()}
-            ref={(el) => {
-              txtEl = el;
-              el = null;
-            }}
             type="search"
             name="search"
             placeholder="Search in English or Sanskrit..."
             onInput={(e) => {
-              setSearch(e.target.value?.trim());
+              clearTimeout(timeoutId);
+              timeoutId = setTimeout(() => {
+                // Call search function here
+                setSearch(e.target.value?.trim());
+              }, 500);
+
               // searchCtx.set(e.target.value);
             }}
           />
-          {/* <button
-            className="clear-search"
-            onClick={() => {
-              setSearch("");
-              txtEl?.focus();
-            }}
-          >
-            x
-          </button> */}
         </div>
 
         {/* <p>{search()}</p> */}
@@ -352,11 +345,14 @@ export function Sans(props) {
         <p className="tabs">
           <button
             onClick={() => {
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
               setCurrTab(TABS.VERBS);
+
+              setTimeout(() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: "smooth",
+                });
+              }, 0);
             }}
           >
             Verbs
