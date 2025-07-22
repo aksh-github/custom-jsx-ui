@@ -273,8 +273,12 @@ export function Sans(props) {
         // check if its latest data
         // load remote data ts
         fetch(`${env.VITE_BASEPATH}${env.VITE_TS}?ts=${Date.now()}`)
-          .then((res) => res.json())
           .then((res) => {
+            if (!res.ok) return;
+            return res.json();
+          })
+          .then((res) => {
+            if (!res) return;
             // console.log(res);
             // remoteDataTs = res
             let updateCount = 0;
