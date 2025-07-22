@@ -54,14 +54,7 @@ function SlowComponent(props) {
 }
 
 function CounterButton(props) {
-  return (
-    <button
-      onClick={props.onClick}
-      className="px-4 py-2 bg-neutral-700 text-white rounded hover:bg-neutral-600 border border-white/20"
-    >
-      Increase count
-    </button>
-  );
+  return <button onClick={props.onClick}>Increase count</button>;
 }
 
 function ColorPicker(props) {
