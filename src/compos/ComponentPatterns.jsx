@@ -150,9 +150,9 @@ export const ArrayWithFragments = (props) => {
 
   const [st, setSt] = createState(null);
 
-  // setTimeout(() => {
-  //   setSt("some value");
-  // }, 4000);
+  setTimeout(() => {
+    setSt("some value");
+  }, 4000);
 
   const Row = ({ n }) => <p>{n}</p>;
 
@@ -167,6 +167,7 @@ export const ArrayWithFragments = (props) => {
       {arr.map((el, idx) => {
         return <Row key={idx} n={el} />;
       })}
+      {st}
     </df>
   );
 };
