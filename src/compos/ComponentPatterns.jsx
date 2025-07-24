@@ -1,6 +1,6 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { createState, createEffect } from "../utils/simple-state";
+import { createState, createEffect, skipUpdate } from "../utils/simple-state";
 import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
 
 export const TextArea = () => {
@@ -282,12 +282,68 @@ packet-beta
   );
 };
 
+const SseComp = () => {
+  let zmdRef = null;
+  let data = "";
+  let scriptEl;
+
+  createEffect(() => {
+    let source = new EventSource("http://localhost:8000/events");
+
+    // build, attach script el
+    if (!scriptEl) {
+      scriptEl = document.createElement("script");
+      scriptEl.setAttribute("type", "text/markdown");
+      if (!zmdRef?.contains(scriptEl)) zmdRef.appendChild(scriptEl);
+    }
+
+    source.onmessage = (event) => {
+      const markdownData = event.data;
+      // console.log(event);
+
+      data += markdownData + "\n";
+      // console.log(data);
+      if (zmdRef && scriptEl) {
+        scriptEl.textContent = data;
+      }
+    };
+
+    source.onerror = (e) => {
+      console.log("Error occurred while connecting to SSE endpoint.", e);
+      source.close();
+    };
+
+    source.onopen = () => {
+      console.log("Connected to SSE endpoint.");
+    };
+
+    // Cleanup function
+    return () => {
+      console.log("Cleaning up SSE connection");
+      if (source) {
+        source.close();
+        source = null;
+      }
+      zmdRef = null;
+    };
+  }, []);
+
+  return (
+    <zero-md
+      ref={(el) => {
+        zmdRef = el;
+      }}
+    ></zero-md>
+  );
+};
+
 export const Embed = () => {
   const [yt, setYt] = createState("HwUyhqQCA5Q");
 
   return (
     <div>
       <h2>Embed</h2>
+      <SseComp />
       <input
         type="text"
         value={yt}
