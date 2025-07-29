@@ -794,6 +794,7 @@ const microframe = (() => {
     counter = 0; // v imp
 
     // log(performance.now());
+    console.time("TET");
 
     let current = curr(); // create latest vdom
     log(old, current);
@@ -805,7 +806,7 @@ const microframe = (() => {
     // log(oldCallStack, callStack);
     // log(funcCache);
 
-    log(performance.now());
+    // log(performance.now());
 
     // 1. call unmount before dom update
     // callUnmountAll();  // moved to setTimeout
@@ -819,7 +820,7 @@ const microframe = (() => {
     // updateElement(rootNode, current, old);
     wrapper(rootNode, current, old);
 
-    log(performance.now());
+    // log(performance.now());
 
     // log("===================");
 
@@ -845,6 +846,8 @@ const microframe = (() => {
       altFuncCache = { ...funcCache };
       // altFuncCache = structuredClone(funcCache);
       funcCache = {};
+
+      console.timeEnd("TET");
     }, 0);
     // requestAnimationFrame(() => {
     //   // 3. update dom

@@ -1,6 +1,23 @@
 import { createEffect, createState } from "../utils/simple-state";
+import { memo } from "../utils/vdom/memo";
 import { createElement, h } from "../utils/vdom/vdom-lib";
 // import "./App.css";
+
+const PixelComp = memo(({ largeArray }) => {
+  return largeArray.map((value) => (
+    <div
+      //   key={value}
+      className="w-2 h-2 bg-neutral-700"
+      style={{
+        backgroundColor: `rgb(${value % 255}, ${(value * 2) % 255}, ${
+          (value * 3) % 255
+        })`,
+        width: "10px",
+        height: "10px",
+      }}
+    ></div>
+  ));
+});
 
 function SlowComponent(props) {
   const [largeArray, setLargeArray] = createState([]);
@@ -36,7 +53,8 @@ function SlowComponent(props) {
       }}
       ignoreNode2={ignore}
     >
-      {largeArray.map((value) => (
+      <PixelComp largeArray={largeArray} />
+      {/* {largeArray.map((value) => (
         <div
           //   key={value}
           className="w-2 h-2 bg-neutral-700"
@@ -48,7 +66,7 @@ function SlowComponent(props) {
             height: "10px",
           }}
         ></div>
-      ))}
+      ))} */}
     </div>
   );
 }
