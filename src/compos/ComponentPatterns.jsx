@@ -1,7 +1,7 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
 import { createState, createEffect, skipUpdate } from "../utils/simple-state";
-import { h, onMount, onCleanup } from "../utils/vdom/vdom-lib";
+import { h } from "../utils/vdom/vdom-lib";
 
 export const TextArea = () => {
   // const [t, set] = atom("");
@@ -294,7 +294,7 @@ const SseComp = () => {
     if (!scriptEl) {
       scriptEl = document.createElement("script");
       scriptEl.setAttribute("type", "text/markdown");
-      if (!zmdRef?.contains(scriptEl)) zmdRef.appendChild(scriptEl);
+      zmdRef.appendChild(scriptEl);
     }
 
     source.onmessage = (event) => {

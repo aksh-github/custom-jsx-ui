@@ -7,13 +7,7 @@ import {
   createEffect,
   createContext,
 } from "../utils/simple-state";
-import {
-  h,
-  mount,
-  forceUpdate,
-  onMount,
-  onCleanup,
-} from "../utils/vdom/vdom-lib";
+import { h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 // import { navigoRouter } from "../utils/navigo-router";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";

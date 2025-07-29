@@ -1283,8 +1283,8 @@ const microframe = (() => {
   return {
     mount,
     forceUpdate,
-    onMount,
-    onCleanup,
+    // onMount,
+    // onCleanup,
     h,
     df,
     createElement,
@@ -1293,8 +1293,8 @@ const microframe = (() => {
 
 export const mount = microframe.mount;
 export const forceUpdate = microframe.forceUpdate;
-export const onMount = microframe.onMount;
-export const onCleanup = microframe.onCleanup;
+// export const onMount = microframe.onMount;
+// export const onCleanup = microframe.onCleanup;
 export const h = microframe.h;
 export const df = microframe.df;
 export const createElement = microframe.createElement;

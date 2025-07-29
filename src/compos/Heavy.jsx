@@ -1,5 +1,5 @@
 import { createEffect, createState } from "../utils/simple-state";
-import { createElement, h, onMount } from "../utils/vdom/vdom-lib";
+import { createElement, h } from "../utils/vdom/vdom-lib";
 // import "./App.css";
 
 function SlowComponent(props) {
