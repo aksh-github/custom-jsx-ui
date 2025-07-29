@@ -13,6 +13,7 @@ import { SimpleSwitch } from "../compos/Switch";
 import { registerRenderCallbackV2 } from "../utils/signal-v2";
 import { Sans } from "./sans/sans";
 import { TextArea } from "../compos/ComponentPatterns";
+import { memo } from "../utils/vdom/memo";
 
 // =======================
 
@@ -98,9 +99,10 @@ const Odd = () => {
   );
 };
 
-const Child = ({ ctr }) => {
+const Child = memo(({ ctr }) => {
+  console.log("Child executed");
   return <p>{ctr}</p>;
-};
+});
 
 const Counter = () => {
   const [count, setCount] = createState(0);
