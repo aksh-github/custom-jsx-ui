@@ -20,6 +20,7 @@ import JsonForm from "./dyn-json/jsonform";
 // import { Lazy } from "../utils/vdom/lazy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
+import { memo } from "../utils/vdom/memo";
 
 let routeHandler = Router();
 
@@ -232,6 +233,32 @@ const Input = () => {
 
 // ComplexRoute (route 1)
 
+const Number = ({ n }) => {
+  createEffect(() => {
+    console.log("mounting number");
+    return () => {
+      console.log("unmounting number");
+    };
+  }, []);
+  return (
+    <li>
+      <span>{n}</span>
+    </li>
+  );
+};
+
+const ArrayComp = memo(({ arr: _arr }) => {
+  return (
+    <ul className="long-list">
+      {_arr.map((n) => (
+        <Number n={n} />
+      ))}
+    </ul>
+  );
+});
+
+let arr = [];
+
 function ComplexRoute(props) {
   console.log("rendered App", props);
   // const [c, setc] = createSignal(0);
@@ -241,7 +268,6 @@ function ComplexRoute(props) {
 
   let ref = null;
   let _holec = 0;
-  let arr = [];
 
   const [holec, setHolec] = createState(0);
 
@@ -271,33 +297,26 @@ function ComplexRoute(props) {
       }
     }, 1000);
 
+    if (!arr) arr = [];
+
+    for (let i = 0; i < 10000; ++i) {
+      arr.push(i);
+    }
+
     return () => {
       ref = wc = null;
+      arr.length = 0;
       arr = null;
       clearInterval(intervalId);
     };
   }, []);
 
-  createEffect(() => {
-    if (c % 2 === 0) arr = null;
-    else {
-      for (let i = 0; i < 1000; ++i) arr.push(i);
-    }
-  }, [c]);
-
-  const Number = ({ n }) => {
-    createEffect(() => {
-      console.log("mounting number");
-      return () => {
-        console.log("unmounting number");
-      };
-    }, []);
-    return (
-      <li>
-        <span>{n}</span>
-      </li>
-    );
-  };
+  // createEffect(() => {
+  //   if (c % 2 === 0) arr = null;
+  //   else {
+  //     for (let i = 0; i < 10000; ++i) arr.push(i);
+  //   }
+  // }, [c]);
 
   const Master = () => (
     <div>
@@ -342,14 +361,7 @@ function ComplexRoute(props) {
       </div>
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
-      {c % 2 !== 0 ? (
-        <ul className="long-list">
-          {arr.map((n) => (
-            <Number n={n} />
-          ))}
-        </ul>
-      ) : // <Number n={10} />
-      null}
+      {c % 2 !== 0 ? <ArrayComp arr={arr} /> : null}
       <p>
         <LinkV2 to="/route2?q=some">Go next</LinkV2>
         <button
