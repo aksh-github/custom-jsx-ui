@@ -4,19 +4,31 @@ import { createElement, h } from "../utils/vdom/vdom-lib";
 // import "./App.css";
 
 const PixelComp = memo(({ largeArray }) => {
-  return largeArray.map((value) => (
+  return (
     <div
-      //   key={value}
-      className="w-2 h-2 bg-neutral-700"
+      //   className="flex flex-wrap overflow-scroll gap-1"
       style={{
-        backgroundColor: `rgb(${value % 255}, ${(value * 2) % 255}, ${
-          (value * 3) % 255
-        })`,
-        width: "10px",
-        height: "10px",
+        display: "flex",
+        flexWrap: "wrap",
+        // overflow: "scroll",
+        gap: "1px",
       }}
-    ></div>
-  ));
+    >
+      {largeArray.map((value) => (
+        <div
+          //   key={value}
+          className="box"
+          style={{
+            backgroundColor: `rgb(${value % 255}, ${(value * 2) % 255}, ${
+              (value * 3) % 255
+            })`,
+            width: "10px",
+            height: "10px",
+          }}
+        ></div>
+      ))}
+    </div>
+  );
 }, "PixelComp");
 
 function SlowComponent(props) {
@@ -42,33 +54,7 @@ function SlowComponent(props) {
     };
   }, []);
 
-  return (
-    <div
-      //   className="flex flex-wrap overflow-scroll gap-1"
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        // overflow: "scroll",
-        gap: "1px",
-      }}
-      ignoreNode2={ignore}
-    >
-      <PixelComp largeArray={largeArray} />
-      {/* {largeArray.map((value) => (
-        <div
-          //   key={value}
-          className="w-2 h-2 bg-neutral-700"
-          style={{
-            backgroundColor: `rgb(${value % 255}, ${(value * 2) % 255}, ${
-              (value * 3) % 255
-            })`,
-            width: "10px",
-            height: "10px",
-          }}
-        ></div>
-      ))} */}
-    </div>
-  );
+  return <PixelComp largeArray={largeArray} />;
 }
 
 function CounterButton(props) {
