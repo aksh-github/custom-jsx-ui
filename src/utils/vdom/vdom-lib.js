@@ -6,63 +6,6 @@ const $d = document;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
-// meta answer to locate obj in json and also gives path
-// on 17 nov 24
-
-// use it as
-// const matches = findMatchingObjects(vdomjson, "key", "value");
-
-function findMatchingObjects(json, key, value) {
-  const matches = [];
-
-  // Recursive function to traverse the JSON object
-  function traverse(obj, path) {
-    // Check if the object has the matching key-value pair
-    if (
-      Object.prototype.hasOwnProperty.call(obj, key) &&
-      isEqual(obj[key], value)
-    ) {
-      matches.push({ object: obj, path: path });
-    }
-
-    // Traverse child objects
-    Object.keys(obj).forEach((k) => {
-      if (typeof obj[k] === "object" && obj[k] !== null) {
-        traverse(obj[k], `${path}.${k}`);
-      } else if (Array.isArray(obj[k])) {
-        obj[k].forEach((item, index) => {
-          traverse(item, `${path}.${k}[${index}]`);
-        });
-      }
-    });
-  }
-
-  // Helper function for deep equality check
-  function isEqual(a, b) {
-    // Handle primitive types
-    if (a === b) return true;
-    if (a === null || b === null) return false;
-    if (typeof a !== "object" || typeof b !== "object") return false;
-
-    // Handle arrays
-    if (Array.isArray(a) && Array.isArray(b)) {
-      if (a.length !== b.length) return false;
-      return a.every((item, index) => isEqual(item, b[index]));
-    }
-
-    // Handle objects
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-    return keysA.every((key) => isEqual(a[key], b[key]));
-  }
-
-  // Start traversing from the root object
-  traverse(json, "$");
-
-  return matches;
-}
-
 function propsChanged(oldProps, newProps) {
   const oldKeys = Object.keys(oldProps);
   const newKeys = Object.keys(newProps);
@@ -101,118 +44,74 @@ const microframe = (() => {
   let curr = null;
   let old = null;
 
-  const eventListeners = new WeakMap();
+  const disposeNodes = async (node) => {
+    // let domList = domListIterator(node);
 
-  function EventListner() {
-    return {
-      // registerEventListener: (node, type, listener, options) => {
-      //   if (!eventListeners.has(node)) eventListeners.set(node, []);
+    // for (let i = domList.length - 1; i > -1; i--) {
+    //   eventListenerInst.unregisterEventListener(domList[i]);
+    //   // domList[i] = null;
 
-      //   entry.push({ type, listener, options });
-      // },
+    //   if (i % 50 === 0) {
+    //     await yieldToMain();
+    //   }
+    // }
 
-      // getEventListeners: (node) => entry || [],
-      unregisterEventListener: (node) => {
-        if (eventListeners.has(node)) {
-          const entry = eventListeners.get(node);
-          if (entry) {
-            entry.forEach((evt) => {
-              node.removeEventListener(
-                evt.replace("__", ""),
-                node[evt],
-                evt.options
-              );
-            });
-            eventListeners.delete(node);
+    // domList = node = null;
+
+    // new
+
+    // Use iteration instead of recursion
+    const nodeStack = [node];
+
+    while (nodeStack.length > 0) {
+      let current = nodeStack.pop();
+
+      if (!current) continue;
+
+      // if (
+      //   current.getAttribute &&
+      //   current.getAttribute("ignorenode") === "true"
+      // ) {
+      //   continue;
+      // }
+
+      // Clean up event listeners
+      // eventListenerInst.unregisterEventListener(current);
+      if (current && current._events) {
+        Object.keys(current._events).forEach((evt) => {
+          current.removeEventListener(evt, current._events[evt], true);
+        });
+        current._events = null;
+      }
+
+      // Add children to stack
+      if (current.childNodes) {
+        for (let i = current.childNodes.length - 1; i >= 0; i--) {
+          nodeStack.push(current.childNodes[i]);
+          if (i % 50 === 0) {
+            await yieldToMain();
           }
         }
-      },
-      unRegisterAllEventListeners: async (node) => {
-        // let domList = domListIterator(node);
+      }
 
-        // for (let i = domList.length - 1; i > -1; i--) {
-        //   eventListenerInst.unregisterEventListener(domList[i]);
-        //   // domList[i] = null;
+      // Clear references
+      current.nodeValue = null;
 
-        //   if (i % 50 === 0) {
-        //     await yieldToMain();
-        //   }
-        // }
+      current = null;
+    }
 
-        // domList = node = null;
+    // Clear final references
 
-        // new
+    node = null;
+    nodeStack.length = 0;
 
-        // Use iteration instead of recursion
-        const nodeStack = [node];
-
-        while (nodeStack.length > 0) {
-          let current = nodeStack.pop();
-
-          if (!current) continue;
-
-          // if (
-          //   current.getAttribute &&
-          //   current.getAttribute("ignorenode") === "true"
-          // ) {
-          //   continue;
-          // }
-
-          // Clean up event listeners
-          eventListenerInst.unregisterEventListener(current);
-
-          // Add children to stack
-          if (current.childNodes) {
-            for (let i = current.childNodes.length - 1; i >= 0; i--) {
-              nodeStack.push(current.childNodes[i]);
-              if (i % 50 === 0) {
-                await yieldToMain();
-              }
-            }
-          }
-
-          // Clear references
-          current.nodeValue = null;
-
-          current = null;
-        }
-
-        // Clear final references
-
-        node = null;
-        nodeStack.length = 0;
-
-        // end
-      },
-    };
-  }
-
-  const eventListenerInst = new EventListner();
-
-  function* stepGen(steps) {
-    while (true) yield* steps;
-  }
+    // end
+  };
 
   // mount n unmount
 
   let currMount = null,
     currUnmount = null;
-
-  function onMount(cb) {
-    throw new Error("onMount is deprecated, use createEffect instead");
-
-    // log(counter, cb);
-    if (altFuncCache[currComp]?.mount) return;
-    // currMount = cb;
-    mountFns.push(cb);
-    // if (!funcCache[currComp]) mountFns.push(cb);
-    // currMount = null;
-  }
-
-  function onCleanup(cb) {
-    // log(callStack[counter]);
-    currUnmount = cb;
-  }
 
   function callUnmountAll() {
     // log(suspenseCache);
@@ -272,21 +171,21 @@ const microframe = (() => {
 
       let rv = type(props, ...children);
 
-      if (altFuncCache) {
-        const exisng = altFuncCache[cacheKey];
-        // altFuncCache[cacheKey] = null;
-        if (exisng) {
-          // rv = exisng.fn;
-          currMount = true;
-          // exisng.mount = null;
-          currUnmount = exisng.unMount;
-        } else {
-          // to maintain order
-          // rv = type(props, ...children);
-          // _fn = type;
-          if (currMount) mountFns.push(currMount);
-        }
-      }
+      // if (altFuncCache) {
+      //   const exisng = altFuncCache[cacheKey];
+      //   // altFuncCache[cacheKey] = null;
+      //   if (exisng) {
+      //     // rv = exisng.fn;
+      //     currMount = true;
+      //     // exisng.mount = null;
+      //     currUnmount = exisng.unMount;
+      //   } else {
+      //     // to maintain order
+      //     // rv = type(props, ...children);
+      //     // _fn = type;
+      //     if (currMount) mountFns.push(currMount);
+      //   }
+      // }
 
       funcCache[cacheKey] = {
         fname: type.name,
@@ -538,31 +437,19 @@ const microframe = (() => {
       if (isEventProp(name)) {
         const extratedName = extractEventName(name);
 
-        if (!eventListeners.has($target))
-          eventListeners.set($target, new Set());
+        // if (!eventListeners.has($target))
+        //   eventListeners.set($target, new Set());
+        if (!$target._events) $target._events = {};
 
-        // for json based rendering, form and onblur this is reqd
-        // if (extratedName in $target || $target.tagName === "FORM")
-
-        // eventListenerInst.registerEventListener(
-        //   $target,
-        //   extratedName,
-        //   props[name]
-        // );
-        const evtName = `__${extratedName}`;
-        const entry = eventListeners.get($target);
-
-        if ($target[evtName]) {
-          $target.removeEventListener(extratedName, $target[evtName], true);
-          // setTimeout(() => {
-          //   const idx = entry.findIndex((_evt) => _evt == evtName);
-          //   if (idx !== -1) entry.splice(idx, 1);
-          // }, 0);
+        if ($target._events[`${extratedName}`]) {
+          $target.removeEventListener(
+            extratedName,
+            $target._events[`${extratedName}`],
+            true
+          );
         }
-        $target[evtName] = props[name];
+        $target._events[`${extratedName}`] = props[name];
         $target.addEventListener(extratedName, props[name], true);
-        entry.add(evtName);
-        // console.log(eventListeners);
       }
     });
   }
@@ -696,54 +583,6 @@ const microframe = (() => {
 
         // || (node1?.props && node1.props.forceUpdate)
       );
-  }
-
-  function CompoIterator() {
-    let temp = [];
-    let s = null;
-
-    function iterate(o) {
-      if (o?.$c) {
-        temp.push(o.$c);
-        if (o?.children) {
-          o.children.forEach((_o) => {
-            iterate(_o);
-          });
-        }
-        // log(o.$c);
-
-        // log(temp);
-        return [...temp];
-      } else if (o?.children) {
-        o.children.forEach((_o) => {
-          iterate(_o);
-        });
-      }
-    }
-
-    function get(o, name, par) {
-      if (o?.$c) {
-        // temp.push(o.$c);
-        if (o.$c === name && o.$p === par) {
-          s = o;
-        }
-        if (o?.children && !s) {
-          o.children.forEach((_o) => {
-            get(_o, name, par);
-          });
-        }
-        return s;
-      } else if (o?.children) {
-        o.children.forEach((_o) => {
-          get(_o, name, par);
-        });
-      }
-    }
-
-    return {
-      iterate: iterate,
-      get,
-    };
   }
 
   // moved top
@@ -1230,7 +1069,7 @@ const microframe = (() => {
           patch.op = null;
           break;
         case "REMOVE":
-          eventListenerInst.unRegisterAllEventListeners(patch.c);
+          disposeNodes(patch.c);
 
           if (patch.c?.nodeType === 1) {
             requestAnimationFrame(() => {
@@ -1252,7 +1091,8 @@ const microframe = (() => {
           // log(patch);
           // patch.p.replaceChild(patch.c[0], patch.c[1]);
           patch.p.insertBefore(patch.c[0], patch.c[1]);
-          eventListenerInst.unRegisterAllEventListeners(patch.c[1]);
+
+          disposeNodes(patch.c[1]);
 
           if (patch.c[1]?.nodeType === 1) {
             // log(patch.c[1]);
@@ -1305,98 +1145,6 @@ export const createElement = microframe.createElement;
 const suspenseCache = {};
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
-// export function Suspense(props, child) {
-//   // if already in cache then return
-//   const cached = suspenseCache[`${props?.cacheKey}`];
-//   if (cached) {
-//     if (cached.returnFn) {
-//       cached.compo(child?.props);
-//       return () => cached.returnFn(child?.props);
-//     } else {
-//       // return suspenseCache[`${props?.cacheKey}`](child?.props);
-//       return cached.callbackFn(cached.returnVal);
-//     }
-//   }
-
-//   // log(props);
-//   let returnVal;
-//   const [resolved, setResolved] = atom(false);
-
-//   // log("promise NOT resolved");
-
-//   if (props?.fetch?.then) {
-//     // case 1. if fetch prop is provided (it can be any promise)
-//     props.fetch.then((res) => {
-//       // log("promise resolved", res);
-//       // Suspense({ ...props, fetchCompleted: true }, res);
-//       returnVal = res;
-//       setResolved(true); // need so render is triggered
-//     });
-//   } else {
-//     // case 2. if child is a promise module
-//     child?.value
-//       ?.then((res) => {
-//         returnVal = res;
-//         // update suspense cache
-//         suspenseCache[`${props?.cacheKey}`] = res;
-
-//         setResolved(true); // need so render is triggered
-//       })
-//       .catch((e) => {
-//         // log(e);
-//         setResolved(true); // need so render is triggered
-//       });
-//   }
-
-//   return (props) => {
-//     if (resolved()) {
-//       if (props?.fetch?.then) {
-//         // case when child is render props
-
-//         suspenseCache[`${props?.cacheKey}`] = {
-//           callbackFn: props.children[0],
-//           returnVal,
-//         };
-
-//         return props.children[0](returnVal);
-//       } else {
-//         // case when child is normal component
-//         if (returnVal) {
-//           //cache the resolved compo
-
-//           const returnFn = returnVal(props?.children?.[0]?.props || {});
-
-//           suspenseCache[`${props?.cacheKey}`] = {
-//             compo: returnVal, // this is compo
-//             returnFn: returnFn,
-//           };
-
-//           log(suspenseCache[`${props?.cacheKey}`]);
-
-//           return returnFn(props?.children?.[0]?.props || {});
-//           // return h(returnVal({ ...props?.children?.[0]?.props }));
-//         } else {
-//           if (props?.errorFallback) return props?.errorFallback;
-//           else return h("div", {}, [null]);
-//         }
-//       }
-//     } else {
-//       if (props?.fallback) {
-//         // if (typeof props.fallback === "string") {
-//         //   return h("div", {}, [props.fallback]);
-//         //   // return {
-//         //   //   type: "div",
-//         //   //   children: [props.fallback],
-//         //   // };
-//         // } else {
-//         //   return props.fallback;
-//         // }
-//         return h("div", {}, [props.fallback]);
-//       } else return h("div", {}, [null]);
-//       // return props?.fallback;
-//     }
-//   };
-// }
 
 export function SuspenseV2(props, child) {
   // log(props);
@@ -1491,25 +1239,6 @@ function isWebComponent(element) {
   return element.tagName.includes("-");
 }
 
-// taken from: https://gist.github.com/umidjons/6865350
-
-function walkDom(start_element) {
-  let arr = []; // we can gather elements here
-  let loop = function (element) {
-    do {
-      // we can do something with element
-      if (element.nodeType == 1)
-        // do not include text nodes
-        arr.push(element);
-      if (element.hasChildNodes()) loop(element.firstChild);
-    } while ((element = element.nextSibling));
-  };
-  //loop(start_element);
-  arr.push(start_element);
-  loop(start_element.firstChild); // do not include siblings of start element
-  return arr;
-}
-
 ///////////////
 // alternate 1 (non recursive) for walkDom // tested and works
 // inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
@@ -1561,97 +1290,6 @@ function domListIterator(_rootNode) {
   iterChild();
   next = _rootNode = null;
   return arr;
-}
-
-///////////////
-// possible alternate 2 for walkDom
-// actually this doesn't work correctly further investigation reqd
-
-function* lazyDOMIterator(root, skip) {
-  let current = root;
-  while (current) {
-    yield current;
-    if (!skip(current) && current.children.length > 0) {
-      yield* lazyDOMIterator(current.children[0], skip);
-    }
-    current = current.nextElementSibling;
-  }
-}
-
-///////////////
-// possible alternate 3 (complex) for walkDom
-
-// https://blog.ag-grid.com/inside-fiber-an-in-depth-overview-of-the-new-reconciliation-algorithm-in-react/#general-algorithm
-// below code modified for dom iteration by me
-
-let startNode;
-let nextUnitOfWork;
-
-// how to use / call
-// setTimeout(() => {
-//   startNode = nextUnitOfWork = $d.querySelector("#root-vdom");
-//   log(performance.now());
-//   workLoop();
-//   log(performance.now());
-// }, 1000);
-
-function workLoop() {
-  while (nextUnitOfWork !== null) {
-    nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-  }
-}
-
-function performUnitOfWork(workInProgress) {
-  let next = beginWork(workInProgress);
-  if (next === null) {
-    next = completeUnitOfWork(workInProgress);
-  }
-  return next;
-}
-
-function beginWork(workInProgress) {
-  // log("work performed for ", workInProgress);
-  // return workInProgress.child;
-  return workInProgress.firstElementChild;
-}
-
-function completeUnitOfWork(workInProgress) {
-  while (true) {
-    // let returnFiber = workInProgress.return;
-    // let siblingFiber = workInProgress.sibling;
-    let siblingFiber = workInProgress.nextElementSibling;
-    let returnFiber = workInProgress.parentElement;
-
-    nextUnitOfWork = completeWork(workInProgress);
-
-    if (siblingFiber !== null) {
-      // If there is a sibling, return it
-      // to perform work for this sibling
-
-      // if we started here
-      if (workInProgress === startNode) {
-        // log("sibling block");
-        return null;
-      }
-
-      return siblingFiber;
-    } else if (returnFiber !== null) {
-      // If there's no more work in this returnFiber,
-      // continue the loop to complete the returnFiber.
-      workInProgress = returnFiber;
-
-      continue;
-    } else {
-      // We've reached the root.
-
-      return null;
-    }
-  }
-}
-
-function completeWork(workInProgress) {
-  // log("work completed for ", workInProgress);
-  return null;
 }
 
 function yieldToMain() {
