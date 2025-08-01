@@ -279,7 +279,8 @@ const SmartState = (() => {
       // clear data
       Object.keys(gs).forEach((_key) => {
         if (_key.startsWith(key)) {
-          gs[_key] = null;
+          if (Array.isArray(gs[_key])) gs[_key].length = 0;
+          else gs[_key] = null;
           delete gs[_key];
         }
         // console.log(gs);
