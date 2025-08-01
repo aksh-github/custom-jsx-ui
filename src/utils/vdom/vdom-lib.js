@@ -1147,6 +1147,10 @@ const suspenseCache = {};
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 
 export function SuspenseV2(props, child) {
+  if (!props?.cacheKey) {
+    throw new Error("Lazy component requires a unique cacheKey prop");
+  }
+
   // log(props);
   // let returnVal;
   const [returnVal, , setSpecialReturnVal] = createState(null);
