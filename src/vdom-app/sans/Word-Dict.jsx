@@ -14,8 +14,8 @@ export function WordDict({ toggle, onClose }) {
       <div id="chat-box" className={toggle ? "show" : ""}>
         <div className="chat-header">
           <h4>Chat Support</h4>
-          <button id="close-chat" onClick={onClose}>
-            ×
+          <button id="close-chat" onClick={onClose} aria-label="Close">
+            &#x2715;
           </button>
         </div>
         <div className="chat-body">
