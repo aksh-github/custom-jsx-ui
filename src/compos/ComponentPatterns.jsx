@@ -151,7 +151,7 @@ export const ArrayWithFragments = (props) => {
   const [st, setSt] = createState(null);
 
   setTimeout(() => {
-    setSt("some value");
+    setSt("dynamic delayed value");
   }, 4000);
 
   const Row = ({ n }) => <p>{n}</p>;

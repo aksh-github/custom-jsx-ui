@@ -463,7 +463,12 @@ export const SimpleRoute = () => {
       <SuspenseV2
         key="picurl"
         fallback={
-          <div className="lds-roller">
+          <div
+            style={{
+              minHeight: "200px",
+            }}
+            className="lds-roller"
+          >
             <div></div>
           </div>
         }
