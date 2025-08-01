@@ -4,10 +4,23 @@ import {
   skipUpdate,
   createEffect,
 } from "../../utils/simple-state";
-import { h } from "../../utils/vdom/vdom-lib";
+import { memo } from "../../utils/vdom/memo";
+import { h, SuspenseV2 } from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
-import { WordDict } from "./Word-Dict";
+import "./worddict.css";
+// import { WordDict } from "./Word-Dict";
+
+const DynamicWordDict = () => {
+  // return {
+  //   comp: () => import("./Word-Dict").then((mod) => mod.WordDict),
+  //   preload: () => import("./Word-Dict"),
+  // };
+  return import("./Word-Dict").then((mod) => {
+    console.log("in promise");
+    return mod.WordDict;
+  });
+};
 
 const env = import.meta.env;
 
@@ -248,7 +261,7 @@ function GenericTab({ prop, search: srch, dkey }) {
   );
 }
 
-export function Sans(props) {
+export function Sans() {
   const [currTab, setCurrTab] = createState(0);
   const [isLoaded, setIsLoaded] = createState(false);
   const [showWordDict, setShowWordDict] = createState(false);
@@ -404,10 +417,12 @@ export function Sans(props) {
       </Suspense> */}
 
       {showWordDict ? (
-        <WordDict
-          toggle={showWordDict}
-          onClose={() => setShowWordDict(false)}
-        />
+        <SuspenseV2 key="word-dict" cacheKey="word-dict">
+          <DynamicWordDict
+            toggle={showWordDict}
+            onClose={() => setShowWordDict(false)}
+          />
+        </SuspenseV2>
       ) : (
         <div
           id="chat-icon"
@@ -422,6 +437,10 @@ export function Sans(props) {
               clearTimeout(t);
             }, 8000);
             el = null;
+          }}
+          onMouseOver={(e) => {
+            // console.log("chat icon mouse over");
+            DynamicWordDict();
           }}
           onClick={() => {
             console.log("chat icon clicked");
