@@ -255,7 +255,7 @@ const ArrayComp = memo(({ arr: _arr }) => {
       ))}
     </ul>
   );
-});
+}, "ArrayComp");
 
 let arr = [];
 

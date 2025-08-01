@@ -1,13 +1,26 @@
-function memo(Component) {
-  let cachedProps;
-  let cachedComponent;
+import { createState } from "../simple-state";
 
+function memo(Component, _key) {
   return function MemoizedComponent(props) {
-    if (!cachedProps || !shallowEqual(cachedProps, props)) {
-      cachedProps = props;
-      cachedComponent = Component(props);
+    const key = props?.key || _key;
+
+    if (key === undefined || key === null) {
+      throw new Error(
+        "memo component requires a unique key as the second argument"
+      );
     }
-    return cachedComponent;
+
+    // let cached = cache[key];
+    const [cached, setCached] = createState(null);
+
+    if (!cached || !shallowEqual(cached.props, props)) {
+      setCached({
+        props,
+        component: Component(props),
+      });
+    }
+
+    return cached?.component || null;
   };
 }
 

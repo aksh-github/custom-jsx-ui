@@ -102,7 +102,7 @@ const Odd = () => {
 const Child = memo(({ ctr }) => {
   console.log("Child executed");
   return <p>{ctr}</p>;
-});
+}, "Child");
 
 const Counter = () => {
   const [count, setCount] = createState(0);
@@ -160,7 +160,7 @@ const Counter = () => {
       {count % 2 === 0 ? <Even /> : <Odd />}
       <hr />
       <form onSubmit={submit}>
-        <input value={t} onInput={onInput} />
+        <input value={t} onInput={onInput} onChange={onChange} />
         <button type="submit">Submit</button>
       </form>
       <Child ctr={count} />

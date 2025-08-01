@@ -17,7 +17,7 @@ const PixelComp = memo(({ largeArray }) => {
       }}
     ></div>
   ));
-});
+}, "PixelComp");
 
 function SlowComponent(props) {
   const [largeArray, setLargeArray] = createState([]);
