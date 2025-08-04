@@ -7,6 +7,13 @@ export default defineConfig(({ mode }) => {
   // target api url should be github (for local) or whatever server is used
 
   return {
+    resolve: {
+      alias: {
+        // "@vdom-lib": "/src/lib/vdom-lib.js",
+        // "@simple-state": "/src/lib/simple-state.js",
+        "@vdom-lib": "/src/utils/vdom/vdom-lib.js",
+      },
+    },
     esbuild: {
       jsxFactory: "h",
       jsxFragment: "df",
