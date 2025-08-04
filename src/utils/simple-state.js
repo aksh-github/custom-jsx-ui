@@ -53,7 +53,7 @@ function debounce(func, duration) {
 }
 
 export const updateComps = new Set();
-export const updateCtx = new Set();
+// export const updateCtx = new Set();
 
 let currComp = null;
 export const setCurrComp = (comp) => {

@@ -1134,6 +1134,9 @@ const microframe = (() => {
   };
 })();
 
+import { Lazy as lazy } from "./lazy";
+import { memo as _memo } from "./memo";
+
 export const mount = microframe.mount;
 export const forceUpdate = microframe.forceUpdate;
 // export const onMount = microframe.onMount;
@@ -1141,6 +1144,18 @@ export const forceUpdate = microframe.forceUpdate;
 export const h = microframe.h;
 export const df = microframe.df;
 export const createElement = microframe.createElement;
+
+// other helpful Components
+export const Lazy = lazy;
+export const memo = _memo;
+
+// state exports
+export const createState = _createState;
+export const createEffect = _createEffect;
+export const createContext = _createContext;
+export const skipUpdate = _skipUpdate;
+export const batch = _batch;
+export const smartRegisterCallback = _smartRegisterCallback;
 
 const suspenseCache = {};
 
@@ -1153,8 +1168,8 @@ export function SuspenseV2(props, child) {
 
   // log(props);
   // let returnVal;
-  const [returnVal, , setSpecialReturnVal] = createState(null);
-  const [resolved, , setResolved] = createState(false);
+  const [returnVal, , setSpecialReturnVal] = _createState(null);
+  const [resolved, , setResolved] = _createState(false);
 
   // log("promise NOT resolved");
 
