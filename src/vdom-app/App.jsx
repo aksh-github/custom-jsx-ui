@@ -1,5 +1,11 @@
 // import { createSignal } from "../utils/signal-complex";
-import { h, SuspenseV2, createElement } from "../utils/vdom/vdom-lib";
+import {
+  h,
+  SuspenseV2,
+  createElement,
+  Lazy,
+  memo,
+} from "../utils/vdom/vdom-lib";
 import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
@@ -20,7 +26,6 @@ import JsonForm from "./dyn-json/jsonform";
 // import { Lazy } from "../utils/vdom/lazy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
-import { memo } from "../utils/vdom/memo";
 
 let routeHandler = Router();
 
@@ -452,13 +457,19 @@ export const SimpleRoute = () => {
 
       <p>before</p>
 
-      <SuspenseV2
+      {/* <SuspenseV2
         key="textarea"
         cacheKey="textarea"
         fallback={<div>Loading TextArea...</div>}
       >
         <DynTextArea />
-      </SuspenseV2>
+      </SuspenseV2> */}
+
+      <Lazy
+        importFn={() => import("../compos/ComponentPatterns")}
+        resolve="TextArea"
+        fallback={<div>Loading TextArea...</div>}
+      />
 
       <SuspenseV2
         key="picurl"

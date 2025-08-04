@@ -19,14 +19,18 @@ function propsChanged(oldProps, newProps) {
 
 import {
   // atom,
-  createEffect,
-  createState,
+  createEffect as _createEffect,
+  createState as _createState,
+  createContext as _createContext,
+  skipUpdate as _skipUpdate,
+  batch as _batch,
+  smartRegisterCallback as _smartRegisterCallback,
   init,
   reset,
   setCurrComp,
   skipUpdate,
   updateComps,
-  updateCtx,
+  // updateCtx,
 } from "../simple-state";
 // publish as lib: https://www.youtube.com/watch?v=FITxnIDsMnw
 // import { diff, patch } from "./vdom-yt";
@@ -95,7 +99,8 @@ const microframe = (() => {
       }
 
       // Clear references
-      current.nodeValue = null;
+      // current.nodeValue = null;
+      current?.remove?.();
 
       current = null;
     }
@@ -354,7 +359,8 @@ const microframe = (() => {
       isEventProp(name) ||
       name === "fragChildLen" ||
       // name === "ignoreNode" ||
-      name === "fallback"
+      name === "fallback" ||
+      name === "importFn"
     );
   }
 
@@ -947,6 +953,13 @@ const microframe = (() => {
         }
       }
 
+      if (
+        newNode?.props?.importFn ||
+        (newNode?.props?.cacheKey && !newNode?.props?.fetch)
+      ) {
+        CTR += 1;
+      }
+
       const domNode = stk[CTR];
 
       if (CTR === compareTill + 1) {
@@ -1006,14 +1019,11 @@ const microframe = (() => {
         if (newLength > 100) {
           optiPossible = true;
           gdf = $d.createDocumentFragment();
-          log(
-            "have for loop custom component or see how this can be optimized"
-          );
+        log("have for loop custom component or see how this can be optimized");
         }
 
         for (let i = 0; i < newLength || i < oldLength; i++) {
           updateElement(domNode, newNode.children[i], oldNode.children[i], i);
-        }
       }
 
       if (optiPossible) {
@@ -1033,10 +1043,11 @@ const microframe = (() => {
 
     updateElement($parent, newNode, oldNode, index);
 
-    stk = last = gdf = null;
+    last = gdf = null;
+    stk.length = 0;
 
     updateComps.clear();
-    updateCtx.clear();
+    // updateCtx.clear();
 
     log(_C);
     _C = 0;
@@ -1069,46 +1080,26 @@ const microframe = (() => {
           patch.op = null;
           break;
         case "REMOVE":
-          disposeNodes(patch.c);
-
-          if (patch.c?.nodeType === 1) {
-            requestAnimationFrame(() => {
-              // removeAllEventListeners(patch.c);
-              // patch.c.innerHTML = "";
-
+          // if (patch.c.style) patch.c.style.visibility = "hidden";
               patch.p.removeChild(patch.c);
-
+          disposeNodes(patch.c).then(() => {
               patch.c = null;
               patch.p = null;
               patch.op = null;
             });
-          } else {
-            patch.p.removeChild(patch.c);
-          }
 
           break;
         case "REPLACE":
           // log(patch);
-          // patch.p.replaceChild(patch.c[0], patch.c[1]);
-          patch.p.insertBefore(patch.c[0], patch.c[1]);
-
-          disposeNodes(patch.c[1]);
-
-          if (patch.c[1]?.nodeType === 1) {
-            // log(patch.c[1]);
-            requestAnimationFrame(() => {
-              // removeAllEventListeners(patch.c[1]);
-              // patch.c[1].innerHTML = "";
-              patch.p.removeChild(patch.c[1]);
-
-              // patch.c[1] = null;
-              patch.c[0] = patch.c[1] = null;
+          patch.p.replaceChild(patch.c[0], patch.c[1]);
+          // patch.p.insertBefore(patch.c[0], patch.c[1]);
+          // patch.p.removeChild(patch.c[1]);
+          // if (patch.c[1].style) patch.c[1].style.visibility = "hidden";
+          disposeNodes(patch.c[1]).then(() => {
+            patch.c.length = 0;
               patch.p = null;
               patch.op = null;
             });
-          } else {
-            patch.p.removeChild(patch.c[1]);
-          }
 
           break;
         case "CONTENT":
