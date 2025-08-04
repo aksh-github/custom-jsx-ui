@@ -28,7 +28,6 @@ import {
   init,
   reset,
   setCurrComp,
-  skipUpdate,
   updateComps,
   // updateCtx,
 } from "../simple-state";
@@ -1002,28 +1001,43 @@ const microframe = (() => {
         last = domNode;
       }
 
-      if (newNode?.props?.cacheKey) {
-        //&& !newNode.children[0]?.props?.__cached
-        // doMain(newNode.children[0], oldNode.children[0]);
-        const isCached = newNode.children[0]?.props?.__cached;
-        const old = isCached ? oldNode.children[0] : null;
+      // if (newNode?.props?.cacheKey) {
+      //   //&& !newNode.children[0]?.props?.__cached
+      //   // doMain(newNode.children[0], oldNode.children[0]);
+      //   const isCached = newNode.children[0]?.props?.__cached;
+      //   const old = isCached ? oldNode.children[0] : null;
 
-        if (updateCompsSize && !isCached) actualComparison = true;
+      //   if (updateCompsSize && !isCached) actualComparison = true;
 
-        updateElement(stk[++CTR], newNode.children[0], old, 0);
-        return;
-      } else {
-        const newLength = newNode.children.length;
-        const oldLength = oldNode.children.length;
+      //   updateElement(stk[++CTR], newNode.children[0], old, 0);
+      //   return;
+      // } else {
+      //   const newLength = newNode.children.length;
+      //   const oldLength = oldNode.children.length;
 
-        if (newLength > 100) {
-          optiPossible = true;
-          gdf = $d.createDocumentFragment();
+      //   if (newLength > 100) {
+      //     optiPossible = true;
+      //     gdf = $d.createDocumentFragment();
+      //     log(
+      //       "have for loop custom component or see how this can be optimized"
+      //     );
+      //   }
+
+      //   for (let i = 0; i < newLength || i < oldLength; i++) {
+      //     updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+      //   }
+      // }
+      const newLength = newNode.children.length;
+      const oldLength = oldNode.children.length;
+
+      if (newLength > 100) {
+        optiPossible = true;
+        gdf = $d.createDocumentFragment();
         log("have for loop custom component or see how this can be optimized");
-        }
+      }
 
-        for (let i = 0; i < newLength || i < oldLength; i++) {
-          updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+      for (let i = 0; i < newLength || i < oldLength; i++) {
+        updateElement(domNode, newNode.children[i], oldNode.children[i], i);
       }
 
       if (optiPossible) {
@@ -1081,12 +1095,12 @@ const microframe = (() => {
           break;
         case "REMOVE":
           // if (patch.c.style) patch.c.style.visibility = "hidden";
-              patch.p.removeChild(patch.c);
+          patch.p.removeChild(patch.c);
           disposeNodes(patch.c).then(() => {
-              patch.c = null;
-              patch.p = null;
-              patch.op = null;
-            });
+            patch.c = null;
+            patch.p = null;
+            patch.op = null;
+          });
 
           break;
         case "REPLACE":
@@ -1097,9 +1111,9 @@ const microframe = (() => {
           // if (patch.c[1].style) patch.c[1].style.visibility = "hidden";
           disposeNodes(patch.c[1]).then(() => {
             patch.c.length = 0;
-              patch.p = null;
-              patch.op = null;
-            });
+            patch.p = null;
+            patch.op = null;
+          });
 
           break;
         case "CONTENT":

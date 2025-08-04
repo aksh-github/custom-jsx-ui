@@ -1,14 +1,9 @@
-import {
-  createState,
-  batch,
-  skipUpdate,
-  createEffect,
-} from "../../utils/simple-state";
-import { memo } from "../../utils/vdom/memo";
-import { h, SuspenseV2 } from "../../utils/vdom/vdom-lib";
+// import { memo } from "../../utils/vdom/memo";
+import { h, SuspenseV2, createEffect, createState } from "@vdom-lib"; // or from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
 import "./worddict.css";
+
 // import { WordDict } from "./Word-Dict";
 
 const DynamicWordDict = () => {

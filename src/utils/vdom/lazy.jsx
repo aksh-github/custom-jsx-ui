@@ -1,5 +1,4 @@
-import { createEffect, createState } from "../simple-state";
-import { h } from "@vdom-lib";
+import { h, createEffect, createState } from "@vdom-lib";
 
 export function Lazy({ importFn, fetchFn, fallback, ...props }) {
   const [Comp, , setCompSpl] = createState(null);

@@ -5,17 +5,15 @@ import {
   createElement,
   Lazy,
   memo,
+  createState,
+  batch,
+  skipUpdate,
+  createEffect,
 } from "../utils/vdom/vdom-lib";
 import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import {
-  createState,
-  batch,
-  skipUpdate,
-  createEffect,
-} from "../utils/simple-state";
 import { LinkV2, Router } from "../utils/router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";

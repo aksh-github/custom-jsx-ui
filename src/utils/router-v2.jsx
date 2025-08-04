@@ -1,5 +1,4 @@
-import { createContext, createState } from "./simple-state";
-import { h } from "./vdom/vdom-lib";
+import { h, createContext, createState } from "@vdom-lib";
 // import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
 // console.log(

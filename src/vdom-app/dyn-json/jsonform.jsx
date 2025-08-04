@@ -1,6 +1,4 @@
-// import React, { useEffect, useState } from "react";
-import { createState, createEffect } from "../../utils/simple-state";
-import { h, df } from "../../utils/vdom/vdom-lib";
+import { h, df, createState, createEffect } from "@vdom-lib";
 import { isFormValid, loadUI, setGlobalUIJson, validate } from "./utils";
 
 const Playground = () => {

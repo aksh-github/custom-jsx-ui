@@ -1,6 +1,5 @@
-import { createEffect, createState } from "../../utils/simple-state";
 import JsonForm from "./jsonform";
-import { h } from "../../utils/vdom/vdom-lib";
+import { h, createEffect, createState } from "../../utils/vdom/vdom-lib";
 import { loadUI } from "./utils";
 
 export const JsonFormConsumer = () => {

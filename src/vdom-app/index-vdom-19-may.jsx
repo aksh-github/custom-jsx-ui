@@ -1,19 +1,21 @@
 import { App } from "./App";
 import { registerRenderCallback } from "../utils/signal-complex";
+
 import {
-  // registerCallback,
+  h,
+  mount,
   smartRegisterCallback,
   createState,
   createEffect,
   createContext,
-} from "../utils/simple-state";
-import { h, mount, forceUpdate } from "../utils/vdom/vdom-lib";
+  memo,
+  forceUpdate,
+} from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 // import { navigoRouter } from "../utils/navigo-router";
-import { registerRenderCallbackV2 } from "../utils/signal-v2";
+// import { registerRenderCallbackV2 } from "../utils/signal-v2";
 import { Sans } from "./sans/sans";
 import { TextArea } from "../compos/ComponentPatterns";
-import { memo } from "../utils/vdom/memo";
 
 // =======================
 
@@ -168,7 +170,7 @@ const Counter = () => {
   );
 };
 
-mount(root, () => <Counter />);
+mount(root, () => <App />);
 // mount(root, () => <Sans />);
 
 function Svg() {

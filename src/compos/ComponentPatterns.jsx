@@ -1,7 +1,6 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { createState, createEffect, skipUpdate } from "../utils/simple-state";
-import { h } from "../utils/vdom/vdom-lib";
+import { h, createState, createEffect, skipUpdate } from "@vdom-lib";
 
 export const TextArea = () => {
   // const [t, set] = atom("");

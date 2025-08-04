@@ -1,6 +1,4 @@
-import { createEffect, createState } from "../utils/simple-state";
-import { memo } from "../utils/vdom/memo";
-import { createElement, h } from "../utils/vdom/vdom-lib";
+import { h, memo, createEffect, createState } from "@vdom-lib";
 // import "./App.css";
 
 const PixelComp = memo(({ largeArray }) => {
