@@ -1139,7 +1139,7 @@ const microframe = (() => {
   };
 })();
 
-import { Lazy as lazy } from "./lazy";
+import { Lazy as _lazy } from "./lazy";
 import { memo as _memo } from "./memo";
 
 export const mount = microframe.mount;
@@ -1151,7 +1151,7 @@ export const df = microframe.df;
 export const createElement = microframe.createElement;
 
 // other helpful Components
-export const Lazy = lazy;
+export const Lazy = _lazy;
 export const memo = _memo;
 
 // state exports
@@ -1166,97 +1166,97 @@ const suspenseCache = {};
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 
-export function SuspenseV2(props, child) {
-  if (!props?.cacheKey) {
-    throw new Error("Lazy component requires a unique cacheKey prop");
-  }
+// export function SuspenseV2(props, child) {
+//   if (!props?.cacheKey) {
+//     throw new Error("Lazy component requires a unique cacheKey prop");
+//   }
 
-  // log(props);
-  // let returnVal;
-  const [returnVal, , setSpecialReturnVal] = _createState(null);
-  const [resolved, , setResolved] = _createState(false);
+//   // log(props);
+//   // let returnVal;
+//   const [returnVal, , setSpecialReturnVal] = _createState(null);
+//   const [resolved, , setResolved] = _createState(false);
 
-  // log("promise NOT resolved");
+//   // log("promise NOT resolved");
 
-  createEffect(() => {
-    if (props?.fetch?.then) {
-      // case 1. if fetch prop is provided (it can be any promise)
-      props.fetch.then((res) => {
-        // log("promise resolved", res);
-        // Suspense({ ...props, fetchCompleted: true }, res);
-        // returnVal = res;
-        setSpecialReturnVal(res);
-        setResolved(true); // need so render is triggered
-      });
-    } else {
-      // case 2. if child is a promise module
-      child?.value
-        ?.then((res) => {
-          // returnVal = res;
-          setSpecialReturnVal(res);
-          // update suspense cache
-          // suspenseCache[`${props?.cacheKey}`] = res;
+//   createEffect(() => {
+//     if (props?.fetch?.then) {
+//       // case 1. if fetch prop is provided (it can be any promise)
+//       props.fetch.then((res) => {
+//         // log("promise resolved", res);
+//         // Suspense({ ...props, fetchCompleted: true }, res);
+//         // returnVal = res;
+//         setSpecialReturnVal(res);
+//         setResolved(true); // need so render is triggered
+//       });
+//     } else {
+//       // case 2. if child is a promise module
+//       child?.value
+//         ?.then((res) => {
+//           // returnVal = res;
+//           setSpecialReturnVal(res);
+//           // update suspense cache
+//           // suspenseCache[`${props?.cacheKey}`] = res;
 
-          setResolved(true); // need so render is triggered
-        })
-        .catch((e) => {
-          // log(e);
-          setResolved(true); // need so render is triggered
-        });
-    }
-  }, []);
+//           setResolved(true); // need so render is triggered
+//         })
+//         .catch((e) => {
+//           // log(e);
+//           setResolved(true); // need so render is triggered
+//         });
+//     }
+//   }, []);
 
-  // if already in cache then return
-  const ch = child || props.children[0];
-  const cached =
-    suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] ||
-    suspenseCache[`${props?.cacheKey}`];
-  if (cached) {
-    if (cached.compo) {
-      // cached.compo(child?.props);
-      // return () => cached.returnFn(child?.props);
-      return h(cached.compo, { ...child?.props, __cached: true });
-    } else {
-      // return suspenseCache[`${props?.cacheKey}`](child?.props);
-      if (cached.callbackFn) return cached.callbackFn(cached.returnVal);
-    }
-  }
+//   // if already in cache then return
+//   const ch = child || props.children[0];
+//   const cached =
+//     suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] ||
+//     suspenseCache[`${props?.cacheKey}`];
+//   if (cached) {
+//     if (cached.compo) {
+//       // cached.compo(child?.props);
+//       // return () => cached.returnFn(child?.props);
+//       return h(cached.compo, { ...child?.props, __cached: true });
+//     } else {
+//       // return suspenseCache[`${props?.cacheKey}`](child?.props);
+//       if (cached.callbackFn) return cached.callbackFn(cached.returnVal);
+//     }
+//   }
 
-  if (resolved) {
-    if (props?.fetch?.then) {
-      // case when child is render props pattern
+//   if (resolved) {
+//     if (props?.fetch?.then) {
+//       // case when child is render props pattern
 
-      suspenseCache[`${props?.cacheKey}`] = {
-        callbackFn: child || props.children[0],
-        returnVal,
-      };
+//       suspenseCache[`${props?.cacheKey}`] = {
+//         callbackFn: child || props.children[0],
+//         returnVal,
+//       };
 
-      return (child || props.children[0])(returnVal);
-    } else {
-      // case when child is normal component
-      if (returnVal) {
-        //cache the resolved compo
+//       return (child || props.children[0])(returnVal);
+//     } else {
+//       // case when child is normal component
+//       if (returnVal) {
+//         //cache the resolved compo
 
-        suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] = {
-          compo: returnVal, // this is compo
-        };
+//         suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] = {
+//           compo: returnVal, // this is compo
+//         };
 
-        // return h(returnVal, {
-        //   ...props?.children?.[0]?.props,
-        // });
-        return h(returnVal, { ...child?.props, __cached: true });
-      } else {
-        if (props?.errorFallback) return props?.errorFallback;
-        else return h("div", {}, [null]);
-      }
-    }
-  } else {
-    if (props?.fallback) {
-      return h("div", {}, [props.fallback]);
-    } else return h("div", {}, [null]);
-    // return props?.fallback;
-  }
-}
+//         // return h(returnVal, {
+//         //   ...props?.children?.[0]?.props,
+//         // });
+//         return h(returnVal, { ...child?.props, __cached: true });
+//       } else {
+//         if (props?.errorFallback) return props?.errorFallback;
+//         else return h("div", {}, [null]);
+//       }
+//     }
+//   } else {
+//     if (props?.fallback) {
+//       return h("div", {}, [props.fallback]);
+//     } else return h("div", {}, [null]);
+//     // return props?.fallback;
+//   }
+// }
 
 function isWebComponent(element) {
   // Check if the tag name includes a hyphen
