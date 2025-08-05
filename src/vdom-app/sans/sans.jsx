@@ -1,5 +1,5 @@
 // import { memo } from "../../utils/vdom/memo";
-import { h, SuspenseV2, createEffect, createState } from "@vdom-lib"; // or from "../../utils/vdom/vdom-lib";
+import { h, createEffect, createState, Lazy } from "@vdom-lib"; // or from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
 import "./worddict.css";
@@ -11,10 +11,11 @@ const DynamicWordDict = () => {
   //   comp: () => import("./Word-Dict").then((mod) => mod.WordDict),
   //   preload: () => import("./Word-Dict"),
   // };
-  return import("./Word-Dict").then((mod) => {
-    console.log("in promise");
-    return mod.WordDict;
-  });
+  return import("./Word-Dict");
+  // .then((mod) => {
+  //   console.log("in promise");
+  //   return mod.WordDict;
+  // });
 };
 
 const env = import.meta.env;
@@ -412,12 +413,19 @@ export function Sans() {
       </Suspense> */}
 
       {showWordDict ? (
-        <SuspenseV2 key="word-dict" cacheKey="word-dict">
-          <DynamicWordDict
-            toggle={showWordDict}
-            onClose={() => setShowWordDict(false)}
-          />
-        </SuspenseV2>
+        // <SuspenseV2 key="word-dict" cacheKey="word-dict">
+        //   <DynamicWordDict
+        //     toggle={showWordDict}
+        //     onClose={() => setShowWordDict(false)}
+        //   />
+        // </SuspenseV2>
+        <Lazy
+          importFn={DynamicWordDict}
+          resolve="WordDict"
+          fallback={<div>Loading Word Dict...</div>}
+          toggle={showWordDict}
+          onClose={() => setShowWordDict(false)}
+        />
       ) : (
         <div
           id="chat-icon"

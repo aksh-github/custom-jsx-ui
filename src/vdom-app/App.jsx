@@ -1,7 +1,6 @@
 // import { createSignal } from "../utils/signal-complex";
 import {
   h,
-  SuspenseV2,
   createElement,
   Lazy,
   memo,
@@ -18,10 +17,7 @@ import { LinkV2, Router } from "../utils/router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
-import { signal } from "../utils/signal-v2";
 import Heavy from "../compos/Heavy";
-import JsonForm from "./dyn-json/jsonform";
-// import { Lazy } from "../utils/vdom/lazy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
 
@@ -81,18 +77,20 @@ const DynCompoPromise = () => {
   // await new Promise((resolve, reject) => {
   //   setTimeout(() => resolve(10), 3000);
   // });
-  return import("../compos/ComponentPatterns").then((mod) => mod?.PropsDriven);
+  return import("../compos/ComponentPatterns");
+  // .then((mod) => mod?.PropsDriven);
 };
 
 const DynTextArea = () => {
-  return import("../compos/ComponentPatterns").then((mod) => mod?.TextArea);
+  return import("../compos/ComponentPatterns");
 };
 
 const SansCompoPromise = () => {
   // await new Promise((resolve, reject) => {
   //   setTimeout(() => resolve(10), 3000);
   // });
-  return import("./sans/sans").then((mod) => mod?.Sans);
+  return import("./sans/sans");
+  // .then((mod) => mod?.Sans);
 };
 
 const Topic = ({ topicId }) => <h3>{topicId}</h3>;
@@ -223,13 +221,18 @@ const Input = () => {
       />
       <p>{input.e}</p>
       {/* <TextArea /> */}
-      <SuspenseV2
+      {/* <SuspenseV2
         key="dyntext"
         cacheKey="dyntext"
         fallback={<div>Loading TextArea...</div>}
       >
         <DynTextArea />
-      </SuspenseV2>
+      </SuspenseV2> */}
+      <Lazy
+        importFn={DynTextArea}
+        resolve="TextArea"
+        fallback={<div>Loading TextArea...</div>}
+      />
     </div>
   );
 };
@@ -467,9 +470,10 @@ export const SimpleRoute = () => {
         importFn={() => import("../compos/ComponentPatterns")}
         resolve="TextArea"
         fallback={<div>Loading TextArea...</div>}
+        key="TextArea"
       />
 
-      <SuspenseV2
+      <Lazy
         key="picurl"
         fallback={
           <div
@@ -481,27 +485,27 @@ export const SimpleRoute = () => {
             <div></div>
           </div>
         }
-        cacheKey="picurl"
-        fetch={getMyAwesomePic()}
+        // cacheKey="picurl"
+        fetchFn={getMyAwesomePic}
       >
         {(res) => {
-          // console.log(res);
+          console.log(res);
           return (
             <div className="simple-img">
               <img src={res} alt="pic" />
             </div>
           );
         }}
-      </SuspenseV2>
-      <SuspenseV2
-        key="dyncompo"
-        cacheKey="dyncompo"
-        fallback={<div>Loading...</div>}
+      </Lazy>
+      <Lazy
+        importFn={DynCompoPromise}
+        resolve="PropsDriven"
+        fallback={<div>Loading Props Driven...</div>}
+        key="PropsDriven"
+        n="This is a prop driven component"
         // fallback="Loading..."
         // errorFallback={<div>Something went wrong</div>}
-      >
-        <DynCompoPromise n="This will be loaded dynamically" />
-      </SuspenseV2>
+      />
 
       <p>after</p>
 
@@ -636,13 +640,19 @@ export function App(props) {
             return (
               <div>
                 <div>before text</div>
-                <SuspenseV2
+                {/* <SuspenseV2
                   delay={3000}
                   cacheKey={"awfp"}
                   fallback={<div>Loading...</div>}
                 >
                   <ArrayWithFragmentsPromise some={t} />
-                </SuspenseV2>
+                </SuspenseV2> */}
+                <Lazy
+                  importFn={ArrayWithFragmentsPromise}
+                  resolve="ArrayWithFragments"
+                  fallback={<div>Loading Array with Fragments...</div>}
+                  some={t}
+                />
 
                 <div>after text</div>
               </div>
@@ -651,13 +661,11 @@ export function App(props) {
           case "/sans":
             // return <Sans />;
             return (
-              <SuspenseV2
-                key={"sans"}
-                cacheKey={"sans"}
+              <Lazy
+                importFn={SansCompoPromise}
+                resolve="Sans"
                 fallback={<p>Loading Sanskrit...</p>}
-              >
-                <SansCompoPromise />
-              </SuspenseV2>
+              />
             );
           case "/heavy":
             return <Heavy />;
