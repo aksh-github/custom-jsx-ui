@@ -1,13 +1,14 @@
-import { h, createEffect, createState } from "@vdom-lib";
+/** @jsx h */
+import { h, createEffect, createState } from "./vdom-lib";
 
-export function Lazy({ importFn, fetchFn, fallback, ...props }) {
+export function Lazy({ importFn, fetchFn, fallback, ...props }, child) {
   const [Comp, , setCompSpl] = createState(null);
   const [res, , setResSpl] = createState(null);
 
   createEffect(() => {
     if (importFn) {
       importFn().then((mod) => {
-        console.log("Lazy component loaded:", mod);
+        // console.log("Lazy component loaded:", mod);
         setCompSpl(mod[props.resolve] || mod.default || mod);
       });
     } else {
@@ -18,7 +19,8 @@ export function Lazy({ importFn, fetchFn, fallback, ...props }) {
   }, []);
 
   if (!Comp && !res) {
+    // return { type: "div", props: {}, children: [fallback] };
     return <div>{fallback}</div>;
   }
-  return Comp ? <Comp {...props} __lazy /> : res;
+  return Comp ? <Comp {...props} __lazy /> : child(res);
 }
