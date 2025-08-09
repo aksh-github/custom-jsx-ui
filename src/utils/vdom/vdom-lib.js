@@ -638,9 +638,10 @@ const microframe = (() => {
     counter = 0; // v imp
 
     // log(performance.now());
-    console.time("TET");
+    console.time("TETVD");
 
     let current = curr(); // create latest vdom
+    console.timeEnd("TETVD");
     log(old, current);
     // const oldStack = CompoIterator().iterate(old);
     // const currStack = CompoIterator().iterate(current);
@@ -660,6 +661,8 @@ const microframe = (() => {
     // 2. calculate diff
     patches = [];
     propsPatches = [];
+
+    console.time("TET");
 
     // updateElement(rootNode, current, old);
     wrapper(rootNode, current, old);
