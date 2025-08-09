@@ -240,12 +240,14 @@ const Input = () => {
 // ComplexRoute (route 1)
 
 const Number = ({ n }) => {
-  createEffect(() => {
-    console.log("mounting number");
-    return () => {
-      console.log("unmounting number");
-    };
-  }, []);
+  // if you have memoized comp in heirachy, createEffect is of no use
+  // createEffect(() => {
+  //   console.log("mounting number");
+  //   return () => {
+  //     console.log("unmounting number");
+  //   };
+  // }, []);
+
   return (
     <li>
       <span>{n}</span>
@@ -254,6 +256,12 @@ const Number = ({ n }) => {
 };
 
 const ArrayComp = memo(({ arr: _arr }) => {
+  // if you have memoized comp in heirachy, createEffect is of no use
+  // this is ok
+  createEffect(() => {
+    console.log("number changed");
+  }, [_arr]);
+
   return (
     <ul className="long-list">
       {_arr.map((n) => (
