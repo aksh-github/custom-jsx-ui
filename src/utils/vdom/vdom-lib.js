@@ -81,9 +81,9 @@ const microframe = (() => {
       // Clean up event listeners
       // eventListenerInst.unregisterEventListener(current);
       if (current && current._events) {
-        Object.keys(current._events).forEach((evt) => {
+        for (const evt in current._events) {
           current.removeEventListener(evt, current._events[evt], true);
-        });
+        }
         current._events = null;
       }
 
@@ -120,9 +120,9 @@ const microframe = (() => {
   function callUnmountAll() {
     // log(suspenseCache);
 
-    const keys = [];
+    const keysToReset = [];
 
-    Object.keys(altFuncCache).forEach((key) => {
+    for (const key in altFuncCache) {
       if (!funcCache[key]) {
         altFuncCache[key].unMount?.();
         altFuncCache[key].unMount = null;
@@ -135,10 +135,10 @@ const microframe = (() => {
         delete altFuncCache[key];
 
         // reset(key);
-        keys.push(key);
+        keysToReset.push(key);
       }
-    });
-    reset(keys);
+    }
+    reset(keysToReset);
   }
 
   function callMountAll() {
@@ -370,9 +370,9 @@ const microframe = (() => {
     } else if (name === "className") {
       $target.setAttribute("class", value);
     } else if (name === "style") {
-      Object.keys(value).forEach((sk) => {
+      for (const sk in value) {
         $target.style[sk] = value[sk];
-      });
+      }
     } else if (name === "ref") {
       value?.($target);
     } else if (name === "ignoreLater") {
@@ -408,9 +408,9 @@ const microframe = (() => {
   }
 
   function setProps($target, props) {
-    Object.keys(props).forEach((name) => {
+    for (const name in props) {
       setProp($target, name, props[name]);
-    });
+    }
   }
 
   function updateProp($target, name, newVal, oldVal) {
@@ -430,15 +430,15 @@ const microframe = (() => {
     //   console.log($target, newProps);
     // }
     const props = Object.assign({}, newProps, oldProps);
-    Object.keys(props).forEach((name) => {
+    for (const name in props) {
       if (name === "onSubmit")
         addEventListeners($target, { [name]: newProps[name] });
       else updateProp($target, name, newProps[name], oldProps[name]);
-    });
+    }
   }
 
   function addEventListeners($target, props) {
-    Object.keys(props).forEach((name) => {
+    for (const name in props) {
       if (isEventProp(name)) {
         const extratedName = extractEventName(name);
 
@@ -456,7 +456,7 @@ const microframe = (() => {
         $target._events[`${extratedName}`] = props[name];
         $target.addEventListener(extratedName, props[name], true);
       }
-    });
+    }
   }
 
   // vdom to dom
@@ -467,10 +467,10 @@ const microframe = (() => {
 
   const createAndAppendSVG = (tag, attrs, ...children) => {
     function setPropsNS($target, props) {
-      Object.keys(props).forEach((name) => {
+      for (const name in props) {
         // setProp($target, name, props[name]);
         $target.setAttributeNS(null, name, props[name]);
-      });
+      }
     }
 
     const element = $d.createElementNS($sns, "svg");
@@ -1081,7 +1081,7 @@ const microframe = (() => {
       patch.oldProps = null;
       // patch = null;
     }
-    patches = null;
+    patches.length = 0;
   }
 
   function applyPatches(patches) {
@@ -1128,7 +1128,7 @@ const microframe = (() => {
       } // switch
     }
 
-    patches = null;
+    patches.length = 0;
   }
 
   return {
