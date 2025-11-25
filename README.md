@@ -2,11 +2,10 @@
 - dom (using diff-dom lib) (needs some more work to fine tune)
 - virtual dom (my own) and component based like React, Jsx etc.
 
-Drawback: If the component order changes then compon miss happens and rerendering happens for rest of the components.
 
+#### master branch: Normal test components for both above approaches. (not maintained anymore)
 
-#### master branch: Normal test components for both above approaches.
+#### app/chat branch: Contain actual implementation of chat app (chat folder) along with master br content.  (not maintained much)
 
-#### app/chat branch: Contain actual implementation of chat app (chat folder) along with master br content.
-
-#### state-29dec24: Latest stable branch as of 27-jun-25
+**Latest Branch**
+#### 24jun25: Latest stable branch as of 27-Dec-25
