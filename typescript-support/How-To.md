@@ -19,5 +19,5 @@
 
 Refer the attached file here. You need to do following changes to your tsconfig file from this.
 - Under compilerOptions check baseUrl, jsx, comment vdom specific paths etc. (Same as used in types file above)
-- Outsider compilerOptions check include we have added lib folder.
+- Outsider compilerOptions check include we have added lib folder, check exclude also.
 
