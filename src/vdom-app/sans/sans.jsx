@@ -142,6 +142,8 @@ const wordFilter = (w) => {
   return flag;
 };
 
+const keyToExclude = ["updatedAt"];
+
 const UIObj = {
   [TABS.VERBS]: {
     title: "Verbs",
@@ -156,7 +158,11 @@ const UIObj = {
     jsonFile: env.VITE_WORDS, //"words.json",
     filterFunc: wordFilter,
     setDatacb: (data) =>
-      data["Everyday words"].concat(data["home"]).concat(data["eng other"]),
+      // data["Everyday words"].concat(data["home"]).concat(data["eng other"]),
+      Object.keys(data).reduce((acc, curr) => {
+        if (keyToExclude.includes(curr)) return acc;
+        return acc.concat(data[curr]);
+      }, []),
     RowComponent: WordRow,
     asList: true,
   },
@@ -293,7 +299,7 @@ export function Sans() {
             let updateCount = 0;
             Object.keys(globalState).forEach((key) => {
               if (globalState[key].ts < res[key]) {
-                console.log("update for", key);
+                console.log("update required for", key);
                 updateCount += 1;
               }
             });

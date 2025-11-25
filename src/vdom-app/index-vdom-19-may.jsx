@@ -170,8 +170,8 @@ const Counter = () => {
   );
 };
 
-mount(root, () => <App />);
-// mount(root, () => <Sans />);
+// mount(root, () => <App />);
+mount(root, () => <Sans />);
 
 function Svg() {
   return (
