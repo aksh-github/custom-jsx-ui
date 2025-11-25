@@ -407,24 +407,7 @@ export function Sans() {
       ) : (
         <p>Loading...</p>
       )}
-
-      {/* <Suspense
-        key={"tabs"}
-        cacheKey="tabs"
-        // fallback={<div>Loading...</div>}
-        fallback={<p>Loading...</p>}
-        fetch={loadData()}
-      >
-        {() => <Tabs currTab={currTab()} />}
-      </Suspense> */}
-
       {showWordDict ? (
-        // <SuspenseV2 key="word-dict" cacheKey="word-dict">
-        //   <DynamicWordDict
-        //     toggle={showWordDict}
-        //     onClose={() => setShowWordDict(false)}
-        //   />
-        // </SuspenseV2>
         <Lazy
           importFn={DynamicWordDict}
           resolve="WordDict"
