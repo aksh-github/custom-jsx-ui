@@ -298,7 +298,7 @@ export function Sans() {
             // remoteDataTs = res
             let updateCount = 0;
             Object.keys(globalState).forEach((key) => {
-              if (globalState[key].ts < res[key]) {
+              if (globalState[key].ts !== res[key]) {
                 console.log("update required for", key);
                 updateCount += 1;
               }
@@ -407,7 +407,7 @@ export function Sans() {
       ) : (
         <p>Loading...</p>
       )}
-      {showWordDict ? (
+      {/* {showWordDict ? (
         <Lazy
           importFn={DynamicWordDict}
           resolve="WordDict"
@@ -441,7 +441,7 @@ export function Sans() {
         >
           शब्दपाठ
         </div>
-      )}
+      )} */}
     </div>
   );
 }
