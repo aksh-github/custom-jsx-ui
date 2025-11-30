@@ -65,7 +65,7 @@ let currentSearch = null;
 
 const VerbRow = ({ row: verb }) => {
   return (
-    <div className="divrow">
+    <div className="divrow search-result-borders">
       <h3>
         {verb?.ev} {verb?.mv?.join(", ")}
       </h3>
@@ -108,7 +108,7 @@ const verbFilter = (w) => {
 
 const WordRow = ({ row: word }) => {
   return (
-    <li>
+    <li className="search-result-borders">
       <h3>{word?.ew}</h3>
       <p>{word?.sw?.join(", ")}</p>
       <p>{word?.mw?.join(", ")}</p>
