@@ -41,6 +41,7 @@
 
     .search-box {
       position: relative;
+      text-align: center;
       /* width: 200px; */
 
       input {

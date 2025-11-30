@@ -197,11 +197,11 @@ const loadData = (updateAvailable = false) => {
       // transform data
       data =
         UIObj[key].setDatacb && !data?.length
-          ? UIObj[key].setDatacb(data)
+          ? UIObj[key].setDatacb(data.data)
           : data;
 
       data?.shift?.();
-      data?.shift?.();
+      // data?.shift?.();
 
       if (updateReqd.includes(UIObj[key].dkey))
         // update local storage whenever possible
@@ -341,7 +341,7 @@ export function Sans() {
           </div>
         </div> */}
 
-        <div style={{ textAlign: "center" }} className="search-box">
+        <div className="search-box">
           <input
             value={search}
             type="search"
