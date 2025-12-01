@@ -28,13 +28,13 @@ const localStore = () => {
   const keyFormat = (window?.location?.host || "localhost") + ":sans:";
 
   return {
-    updateData: (_key, data) => {
+    updateData: (_key, hash, data) => {
       // localStorage.setItem("lastUpdated", Date.now());
       // console.log(keyFormat, _key, data);
       localStorage.setItem(
         keyFormat + _key,
         JSON.stringify({
-          ts: Date.now(),
+          hash,
           d: data,
         })
       );
@@ -53,9 +53,9 @@ const TABS = {
   WORDS: 1,
 };
 
-const globalState = {
-  words: { d: [], ts: 0 },
-  verbs: { d: [], ts: 0 },
+const dictionaryData = {
+  words: { d: [], hash: 0 },
+  verbs: { d: [], hash: 0 },
 };
 
 // const [filtered, setFiltered] = createState([]);
@@ -160,7 +160,8 @@ const UIObj = {
     setDatacb: (data) =>
       // data["Everyday words"].concat(data["home"]).concat(data["eng other"]),
       Object.keys(data).reduce((acc, curr) => {
-        if (keyToExclude.includes(curr)) return acc;
+        // if (keyToExclude.includes(curr)) return acc;
+        data[curr]?.shift?.();
         return acc.concat(data[curr]);
       }, []),
     RowComponent: WordRow,
@@ -168,76 +169,112 @@ const UIObj = {
   },
 };
 
-const loadData = (updateAvailable = false) => {
-  const { updateData, get } = localStore();
-
-  const promises = [],
-    updateReqd = [],
-    lazyUpdateReqd = [];
+const loadLocalData = () => {
+  const { get } = localStore();
+  let updateReqd = false;
 
   Object.keys(UIObj).forEach((key) => {
-    const data = get(`${UIObj[key].dkey}`);
+    const { dkey } = UIObj[key];
+    const gdata = get(dkey);
 
-    if (!data || updateAvailable) {
-      // data unavailable
-      promises.push(fetchData(UIObj[key].jsonFile));
-      updateReqd.push(UIObj[key].dkey);
+    if (gdata) {
+      const { hash, d } = gdata;
+
+      dictionaryData[`${UIObj[key].dkey}`].d = d;
+      dictionaryData[`${UIObj[key].dkey}`].hash = hash;
+      dictionaryData[`${UIObj[key].dkey}`].updateReqd = false;
     } else {
-      // data available
-      const { ts, d } = data;
-      promises.push(Promise.resolve({ ts, d: d || [] }));
+      dictionaryData[`${UIObj[key].dkey}`].updateReqd = true;
+      dictionaryData[`${UIObj[key].dkey}`].d = [];
+      dictionaryData[`${UIObj[key].dkey}`].hash = 0;
+    }
+  });
+
+  console.log(dictionaryData);
+
+  return updateReqd;
+};
+
+const loadRemoteHashData = () => {
+  return fetchData(`${env.VITE_TS}?ts=${Date.now()}`).then((hashData) => {
+    if (!hashData) return;
+    // console.log(res, dictionaryData);
+
+    Object.keys(hashData).forEach((key) => {
+      if (dictionaryData[key].hash !== hashData[key]) {
+        // console.log("update required for", key);
+        dictionaryData[key].updateReqd = true;
+        dictionaryData[key].hash = hashData[key];
+      } else {
+        dictionaryData[key].updateReqd = false;
+      }
+    });
+
+    return Promise.resolve({}); // some non empty value
+  });
+};
+
+const checkProcessUpdates = () => {
+  const promises = [];
+
+  Object.keys(UIObj).forEach((key) => {
+    const dkey = UIObj[key].dkey;
+    // console.log(dkey);
+
+    if (dictionaryData[`${dkey}`].updateReqd) {
+      console.log("update required for", dkey);
+      promises.push(fetchData(UIObj[key].jsonFile));
     }
   });
 
   return Promise.all(promises).then((res) => {
-    Object.keys(UIObj).forEach((key) => {
+    // console.log(res);
+    if (res?.length === 0) return;
+
+    const { updateData } = localStore();
+
+    res.forEach((item) => {
       // let data = await res[key].json();
-      let data = res[key]?.d || res[key]; // d is when local data is available
+      // console.log(data);
+      const dditem = dictionaryData[`${item.type}`];
+      if (dditem) {
+        const uio = Object.values(UIObj).find((it) => it.dkey === item.type);
 
-      // transform data
-      data =
-        UIObj[key].setDatacb && !data?.length
-          ? UIObj[key].setDatacb(data.data)
-          : data;
-
-      data?.shift?.();
-      // data?.shift?.();
-
-      if (updateReqd.includes(UIObj[key].dkey))
-        // update local storage whenever possible
+        dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
+        dditem.updateReqd = false;
+        // update local storage
         requestIdleCallback(() => {
-          updateData(`${UIObj[key].dkey}`, data);
-
-          updateReqd.splice(updateReqd.indexOf(UIObj[key].dkey), 1);
+          updateData(item.type, dditem.hash, dditem.d);
         });
-      // console.log(data);
-
-      // console.log(data);
-      globalState[`${UIObj[key].dkey}`].d = data;
-      globalState[`${UIObj[key].dkey}`].ts = res[key]?.ts || 0;
-      // console.log(`${UIObj[key].dkey}`, globalState[`${UIObj[key].dkey}`]);
-      // console.log(globalState);
+      }
     });
+
+    console.log("after update:", dictionaryData);
+
+    return Promise.resolve({}); // some non empty value
   });
 };
 
 const fetchData = (jsonFile) =>
   // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
-  fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => res.json());
+  fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => {
+    if (!res.ok) return;
+    return res.json();
+  });
 
 function GenericTab({ prop, search: srch, dkey }) {
   const TOP = 10;
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
   currentSearch = srch;
   const filtered = srch
-    ? globalState[`${dkey}`].d.filter(filterFunc)
-    : globalState[`${dkey}`].d.slice(0, TOP);
+    ? dictionaryData[`${dkey}`].d.filter(filterFunc)
+    : dictionaryData[`${dkey}`].d?.slice(0, TOP);
   // let filtered = [];
 
   // if (srch) {
-  //   filtered = globalState[`${dkey}`].d.filter(filterFunc);
+  //   filtered = dictionaryData[`${dkey}`].d.filter(filterFunc);
   // } else {
-  //   filtered = globalState[`${dkey}`].d.slice(0, TOP);
+  //   filtered = dictionaryData[`${dkey}`].d.slice(0, TOP);
   // }
 
   // console.log("exec", searchCtx.get());
@@ -276,43 +313,23 @@ export function Sans() {
   createEffect(() => {
     console.log("mount for Sans");
 
-    // alert("https://www.youtube.com/watch?v=b6iVByCOx8A");
+    // 1. check and load local data
+    const updateReqd = loadLocalData();
 
-    // setSearch("");
-    //
-    loadData()
-      .then(() => {
-        // console.log(globalState);
+    // 2. load remote hash data
+    loadRemoteHashData().then((res) => {
+      if (!res) {
+        console.log("something went wrong");
+      }
+
+      //3. load data
+      checkProcessUpdates().then((res) => {
+        if (!res) {
+          console.log("something wrong in update check");
+        }
         setIsLoaded(true);
-
-        // check if its latest data
-        // load remote data ts
-        fetch(`${env.VITE_BASEPATH}${env.VITE_TS}?ts=${Date.now()}`)
-          .then((res) => {
-            if (!res.ok) return;
-            return res.json();
-          })
-          .then((res) => {
-            if (!res) return;
-            // console.log(res);
-            // remoteDataTs = res
-            let updateCount = 0;
-            Object.keys(globalState).forEach((key) => {
-              if (globalState[key].ts !== res[key]) {
-                console.log("update required for", key);
-                updateCount += 1;
-              }
-            });
-
-            if (updateCount > 0) {
-              loadData(true);
-            }
-          });
-      })
-      .catch((err) => {
-        console.log(err);
-        isLoaded(true);
       });
+    });
 
     return () => {
       console.log("cleanup for Sans");
@@ -323,12 +340,6 @@ export function Sans() {
       timeoutId = null;
     };
   }, []);
-
-  // onCleanup(() => {
-  //   console.log("unmount for Sans");
-  //   skipUpdate(() => setSearch(""));
-  //   // setSearch("");
-  // });
 
   return (
     <div className="sans">
