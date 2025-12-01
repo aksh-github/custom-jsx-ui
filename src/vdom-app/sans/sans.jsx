@@ -227,32 +227,40 @@ const checkProcessUpdates = () => {
     }
   });
 
-  return Promise.all(promises).then((res) => {
-    // console.log(res);
-    if (res?.length === 0) return;
-
-    const { updateData } = localStore();
-
-    res.forEach((item) => {
-      // let data = await res[key].json();
-      // console.log(data);
-      const dditem = dictionaryData[`${item.type}`];
-      if (dditem) {
-        const uio = Object.values(UIObj).find((it) => it.dkey === item.type);
-
-        dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
-        dditem.updateReqd = false;
-        // update local storage
-        requestIdleCallback(() => {
-          updateData(item.type, dditem.hash, dditem.d);
-        });
-      }
+  if (promises.length === 0) {
+    return Promise.resolve({
+      alreadyUpdated: true,
     });
+  } else {
+    return Promise.all(promises).then((res) => {
+      // console.log(res);
+      if (res?.length === 0) return;
 
-    console.log("after update:", dictionaryData);
+      const { updateData } = localStore();
 
-    return Promise.resolve({}); // some non empty value
-  });
+      res.forEach((item) => {
+        // let data = await res[key].json();
+        // console.log(data);
+        const dditem = dictionaryData[`${item.type}`];
+        if (dditem) {
+          const uio = Object.values(UIObj).find((it) => it.dkey === item.type);
+
+          dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
+          dditem.updateReqd = false;
+          // update local storage
+          requestIdleCallback(() => {
+            updateData(item.type, dditem.hash, dditem.d);
+          });
+        }
+      });
+
+      console.log("after update:", dictionaryData);
+
+      return Promise.resolve({
+        updatedNow: true,
+      }); // some non empty value
+    });
+  }
 };
 
 const fetchData = (jsonFile) =>
