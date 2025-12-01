@@ -1,7 +1,12 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-const log = console.log;
-// const log = () => {};
+// const log = console.log;
+// const logt = console.time,
+//   logte = console.timeEnd;
+const noop = () => {};
+const log = noop,
+  logt = noop,
+  logte = noop;
 const $d = document;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
@@ -638,10 +643,10 @@ const microframe = (() => {
     counter = 0; // v imp
 
     // log(performance.now());
-    console.time("TETVD");
+    logt("TETVD");
 
     let current = curr(); // create latest vdom
-    console.timeEnd("TETVD");
+    logte("TETVD");
     log(old, current);
     // const oldStack = CompoIterator().iterate(old);
     // const currStack = CompoIterator().iterate(current);
@@ -662,7 +667,7 @@ const microframe = (() => {
     patches = [];
     propsPatches = [];
 
-    console.time("TET");
+    logt("TET");
 
     // updateElement(rootNode, current, old);
     wrapper(rootNode, current, old);
@@ -694,7 +699,7 @@ const microframe = (() => {
       // altFuncCache = structuredClone(funcCache);
       funcCache = {};
 
-      console.timeEnd("TET");
+      logte("TET");
     }, 0);
     // requestAnimationFrame(() => {
     //   // 3. update dom
