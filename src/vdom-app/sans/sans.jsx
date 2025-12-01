@@ -279,7 +279,9 @@ function GenericTab({ prop, search: srch, dkey }) {
 
   // console.log("exec", searchCtx.get());
 
-  const RR = filtered.map((d) => <RowComponent row={d} />);
+  const RR = filtered.map((d) =>
+    d?.ev || d?.ew ? <RowComponent row={d} /> : null
+  );
 
   return (
     <div>
