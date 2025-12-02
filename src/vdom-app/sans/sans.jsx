@@ -321,6 +321,16 @@ export function Sans() {
   let timeoutId;
 
   createEffect(() => {
+    console.log("tab changed to", currTab);
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }, 0);
+  }, [currTab]);
+
+  createEffect(() => {
     console.log("mount for Sans");
 
     // 1. check and load local data
@@ -386,23 +396,12 @@ export function Sans() {
           <button
             onClick={() => {
               setCurrTab(TABS.VERBS);
-
-              setTimeout(() => {
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
-              }, 0);
             }}
           >
             Verbs
           </button>
           <button
             onClick={() => {
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
               setCurrTab(TABS.WORDS);
             }}
           >
