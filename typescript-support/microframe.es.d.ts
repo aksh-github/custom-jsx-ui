@@ -12,7 +12,7 @@ declare module "@vdom-lib" {
   type State<T> = [T, (value: ValueOrFunction<T>) => void, () => void];
   export function createState<T>(initialValue: T): State<T>;
 
-  export function createEffect(fn: () => void): void;
+  export function createEffect(fn: () => void, deps: any[]): void;
   export function createContext<T>(value?: T): {
     Provider: any;
     Consumer: any;
@@ -21,5 +21,12 @@ declare module "@vdom-lib" {
   export function memo<T>(fn: T): T;
   export const forceUpdate: () => void;
   export default any;
-  export function Lazy(fn: (...args: any[]) => any): (...args: any[]) => any;
+
+  export interface LazyProps {
+    importFn: () => Promise<any>;
+    resolve?: string;
+    fallback?: any;
+    [key: string]: any; // Add this line to accept dynamic props
+  }
+  export function Lazy(props: LazyProps): (...args: any[]) => any;
 }
