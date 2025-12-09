@@ -88,6 +88,11 @@
       text-align: center;
     }
 
+    .data-ver {
+      text-align: right;
+      font-size: small;
+    }
+
     .info {
       padding: 10px;
       margin: 10px;

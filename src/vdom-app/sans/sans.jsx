@@ -4,6 +4,14 @@ import { h, createEffect, createState, Lazy } from "@vdom-lib"; // or from "../.
 import "./sans-style.css";
 import "./worddict.css";
 
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 // import { WordDict } from "./Word-Dict";
 
 const DynamicWordDict = () => {
@@ -180,7 +188,7 @@ const loadLocalData = () => {
     if (gdata) {
       const { hash, d } = gdata;
 
-      dictionaryData[`${UIObj[key].dkey}`].d = d;
+      dictionaryData[`${UIObj[key].dkey}`].d = shuffle(d);
       dictionaryData[`${UIObj[key].dkey}`].hash = hash;
       dictionaryData[`${UIObj[key].dkey}`].updateReqd = false;
     } else {
@@ -190,7 +198,7 @@ const loadLocalData = () => {
     }
   });
 
-  console.log(dictionaryData);
+  // console.log(dictionaryData);
 
   return updateReqd;
 };
@@ -254,7 +262,7 @@ const checkProcessUpdates = () => {
         }
       });
 
-      console.log("after update:", dictionaryData);
+      // console.log("after update:", dictionaryData);
 
       return Promise.resolve({
         updatedNow: true,
@@ -294,6 +302,7 @@ function GenericTab({ prop, search: srch, dkey }) {
   return (
     <div>
       <h2 className="title">{title}</h2>
+      <p className="data-ver">Data ver.: {dictionaryData[`${dkey}`]?.hash}</p>
       {filtered.length === 0 && srch ? (
         <p className="info">No results for your search: "{srch}"</p>
       ) : null}
@@ -321,7 +330,7 @@ export function Sans() {
   let timeoutId;
 
   createEffect(() => {
-    console.log("tab changed to", currTab);
+    // console.log("tab changed to", currTab);
     setTimeout(() => {
       window.scrollTo({
         top: 0,
