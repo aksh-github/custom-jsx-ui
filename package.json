@@ -8,7 +8,8 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "build-lib": "vite build --config lib-vite.config.js"
+    "build-vdom-lib": "vite build --config lib-vdom-vite.config.js",
+    "build-router-lib": "vite build --config lib-router-vite.config.js"
   },
   "author": "",
   "license": "ISC",
