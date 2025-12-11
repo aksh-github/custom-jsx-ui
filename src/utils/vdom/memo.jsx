@@ -1,4 +1,4 @@
-import { createState } from "./vdom-lib";
+import { createState, skipUpdate } from "@vdom-lib";
 
 function memo(Component, _key) {
   return function MemoizedComponent(props) {
@@ -14,13 +14,16 @@ function memo(Component, _key) {
     const [cached, setCached] = createState(null);
 
     if (!cached || !shallowEqual(cached.props, props)) {
-      setCached({
-        props,
-        component: Component(props),
+      skipUpdate(() => {
+        setCached({
+          props,
+          component: Component(props),
+        });
       });
     }
 
-    return cached?.component || null;
+    return cached?.component || Component(props);
+    // return cached?.component;
   };
 }
 
