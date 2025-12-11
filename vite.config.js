@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
         // "@vdom-lib": "/src/lib/vdom-lib.js",
         // "@simple-state": "/src/lib/simple-state.js",
         "@vdom-lib": "/src/utils/vdom/vdom-lib.js",
+        "@router-v2": "/src/utils/router-v2.jsx",
       },
     },
     esbuild: {

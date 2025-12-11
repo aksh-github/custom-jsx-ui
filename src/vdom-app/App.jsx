@@ -13,7 +13,7 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { LinkV2, Router } from "../utils/router-v2";
+import { LinkV2, Router } from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
@@ -444,7 +444,7 @@ export const SimpleRoute = () => {
   // const [arrState] = createState({ arr: ["10", "20"] });
 
   createEffect(() => {
-    console.log("Ref available in onMount for SimpleRoute", ref);
+    // console.log("Ref available in onMount for SimpleRoute", ref);
     return () => {
       console.log("unmount for SimpleRoute");
       ref = null;

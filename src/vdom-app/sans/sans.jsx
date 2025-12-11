@@ -177,6 +177,8 @@ const UIObj = {
   },
 };
 
+const TOP = 10;
+
 const loadLocalData = () => {
   const { get } = localStore();
   let updateReqd = false;
@@ -184,17 +186,21 @@ const loadLocalData = () => {
   Object.keys(UIObj).forEach((key) => {
     const { dkey } = UIObj[key];
     const gdata = get(dkey);
+    const dictData = dictionaryData[dkey];
 
     if (gdata) {
       const { hash, d } = gdata;
-
-      dictionaryData[`${UIObj[key].dkey}`].d = shuffle(d);
-      dictionaryData[`${UIObj[key].dkey}`].hash = hash;
-      dictionaryData[`${UIObj[key].dkey}`].updateReqd = false;
+      Object.assign(dictData, {
+        d: shuffle(d),
+        hash,
+        updateReqd: false,
+      });
     } else {
-      dictionaryData[`${UIObj[key].dkey}`].updateReqd = true;
-      dictionaryData[`${UIObj[key].dkey}`].d = [];
-      dictionaryData[`${UIObj[key].dkey}`].hash = 0;
+      Object.assign(dictData, {
+        updateReqd: true,
+        d: [],
+        hash: 0,
+      });
     }
   });
 
@@ -209,12 +215,14 @@ const loadRemoteHashData = () => {
     // console.log(res, dictionaryData);
 
     Object.keys(hashData).forEach((key) => {
-      if (dictionaryData[key].hash !== hashData[key]) {
+      const dictData = dictionaryData[key];
+
+      if (dictData.hash !== hashData[key]) {
         // console.log("update required for", key);
-        dictionaryData[key].updateReqd = true;
-        dictionaryData[key].hash = hashData[key];
+        dictData.updateReqd = true;
+        dictData.hash = hashData[key];
       } else {
-        dictionaryData[key].updateReqd = false;
+        dictData.updateReqd = false;
       }
     });
 
@@ -279,7 +287,6 @@ const fetchData = (jsonFile) =>
   });
 
 function GenericTab({ prop, search: srch, dkey }) {
-  const TOP = 10;
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
   currentSearch = srch;
   const filtered = srch
