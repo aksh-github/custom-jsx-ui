@@ -1,5 +1,4 @@
 import { App } from "./App copy";
-import { registerRenderCallback } from "../utils/signal-complex";
 
 import {
   h,
@@ -12,26 +11,13 @@ import {
   forceUpdate,
   Lazy,
 } from "../utils/vdom/vdom-lib";
-import { SimpleSwitch } from "../compos/Switch";
-// import { navigoRouter } from "../utils/navigo-router";
-// import { registerRenderCallbackV2 } from "../utils/signal-v2";
+
 // import { Sans } from "./sans/sans";
-import { TextArea } from "../compos/ComponentPatterns";
 import { RouterAdv, LinkV2, Router } from "@router-v2";
 
 // =======================
 
 // fresh extensive test
-
-const root = document.getElementById("root-vdom");
-// for non router
-// mount(root, () => <App some={2} />);
-
-// for signal
-// registerRenderCallback(forceUpdate);
-
-// for signal v2
-// registerRenderCallbackV2(forceUpdate);
 
 // for my state
 // registerCallback(forceUpdate);
@@ -178,6 +164,7 @@ const Counter = () => {
   );
 };
 
+const root = document.getElementById("root-vdom");
 mount(root, () => <RouteTest />);
 // mount(root, () => <Sans />);
 
