@@ -1,4 +1,4 @@
-import { App } from "./App";
+import { App } from "./App copy";
 import { registerRenderCallback } from "../utils/signal-complex";
 
 import {
@@ -10,12 +10,14 @@ import {
   createContext,
   memo,
   forceUpdate,
+  Lazy,
 } from "../utils/vdom/vdom-lib";
 import { SimpleSwitch } from "../compos/Switch";
 // import { navigoRouter } from "../utils/navigo-router";
 // import { registerRenderCallbackV2 } from "../utils/signal-v2";
-import { Sans } from "./sans/sans";
+// import { Sans } from "./sans/sans";
 import { TextArea } from "../compos/ComponentPatterns";
+import { RouterAdv, LinkV2, Router } from "@router-v2";
 
 // =======================
 
@@ -146,6 +148,12 @@ const Counter = () => {
     sett(value);
   };
 
+  const Decide = ({ count }) => {
+    return count % 2 === 0 ? <Even /> : <Odd />;
+    // return count % 2 === 0 ? <Even /> : "this is odd";
+    // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+  };
+
   return (
     <div>
       <h2>Counter: {count}</h2>
@@ -159,7 +167,7 @@ const Counter = () => {
       </p>
       <button onClick={() => setCount((count) => count + 1)}>Increment</button>
       <hr />
-      {count % 2 === 0 ? <Even /> : <Odd />}
+      <Decide count={count} />
       <hr />
       <form onSubmit={submit}>
         <input value={t} onInput={onInput} onChange={onChange} />
@@ -170,8 +178,8 @@ const Counter = () => {
   );
 };
 
-// mount(root, () => <App />);
-mount(root, () => <Sans />);
+mount(root, () => <Counter />);
+// mount(root, () => <Sans />);
 
 function Svg() {
   return (
@@ -239,4 +247,93 @@ function Captcha() {
     <svg width="24" height="24">
       <use xlink:href="#icon-download"></use>
     </svg> */
+}
+
+// Usage
+
+// const routeHandler = Router();
+
+function Home(props) {
+  // return (
+  //   // <h1>Home {props?.a}</h1>
+  //   <div>
+  //     <h1>Home {props?.a}</h1>
+  //     <button
+  //       onClick={() => {
+  //         routeHandler.navigator.go("/route2", { a: 10 });
+  //       }}
+  //     >
+  //       Go to Route 2
+  //     </button>
+  //   </div>
+  // );
+  console.log("This works for only static, changes won't reflect", props?.some);
+
+  const [st, setSt] = createState(null);
+
+  // setTimeout(() => {
+  //   setSt("dynamic delayed value");
+  // }, 4000);
+
+  const Row = ({ n }) => <p>{n}</p>;
+
+  const arr = [1000, 2000];
+  // return () => <p>10</p>;
+  return (
+    <div>
+      {/* <p>10</p>
+        <p>20</p> */}
+      {st}
+      <p>time is {props?.some}</p>
+      <button
+        onClick={() => {
+          // alert("prog'matic navigatiion to be implemented");
+          routeHandler.navigator.go("/route2", { a: 10 });
+        }}
+      >
+        Go to simple
+      </button>
+      {arr.map((el, idx) => {
+        return <Row key={idx} n={el} />;
+      })}
+      {st}
+    </div>
+  );
+}
+
+function About() {
+  return <h1>About</h1>;
+}
+
+function Header() {
+  return (
+    <p>
+      <LinkV2 to="/">Complex</LinkV2> | <LinkV2 to="/route2">About</LinkV2>
+    </p>
+  );
+}
+
+function RouteTest() {
+  return (
+    <div>
+      <Header />
+      {/* <hr /> */}
+      <RouterAdv
+        routeObj={{
+          "/": Home,
+          "/route2": {
+            render: () => (
+              <Lazy
+                importFn={() => import("./sans/sans")}
+                resolve="Sans"
+                fallback={<p>Loading Sanskrit...</p>}
+              />
+            ),
+          },
+          404: "Not found",
+        }}
+      />
+      <footer>some footer</footer>
+    </div>
+  );
 }

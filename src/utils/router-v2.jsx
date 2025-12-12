@@ -1,4 +1,5 @@
 import { h, createContext, createState } from "@vdom-lib";
+import { createEffect } from "./simple-state";
 // import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
 // console.log(
@@ -99,6 +100,7 @@ export function LinkV2(props, children) {
         const pathname = window.location.pathname;
         if (href === pathname) return;
         replace ? historyReplace(to) : historyPush(to);
+        setCurentPath(to);
       }}
     >
       {children}
@@ -110,6 +112,7 @@ export const routerContext = createContext(window.location.pathname);
 
 const { get: currPath, set: setCurrPath } = routerContext;
 
+// correct impl as of 11 Dec
 export function Router() {
   // const [currPath, setCurrPath] = atom(window.location.pathname);
   let onRouteChange;
@@ -149,57 +152,50 @@ export function Router() {
   };
 }
 
-export const SimpleSwitch = (pmain) => {
-  const [curPath, setCurPath] = createState(window.location.pathname);
+let routeHandler = Router();
 
-  console.log(pmain);
+export const RouterAdv = ({ routeObj, _curPath }) => {
+  const [curPath, setCurPath] = createState({ url: window.location.pathname });
 
-  const navigate = (abcd) => {
-    console.log(window.location.pathname, abcd);
-    if (curPath() !== window.location.pathname)
-      setCurPath(window.location.pathname);
+  const onRouteChange = (newPath, routeConfig) => {
+    console.log(newPath, routeConfig);
+    setCurPath(newPath);
+    // setCurPath(routerContext.get());
   };
 
-  onMount(() => {
-    window.addEventListener("popstate", navigate);
-    window.addEventListener("navigate", navigate);
-  });
+  createEffect(() => {
+    routeHandler.init(onRouteChange);
+    return () => {
+      routeHandler.cleanup();
+    };
+  }, []);
 
-  onCleanup(() => {
-    window.removeEventListener("popstate", navigate);
-    window.removeEventListener("navigate", navigate);
-  });
+  // const routeKeys = Object.keys(routeObj);
 
-  return (props) => {
-    console.log(props);
-    const { cond, children } = props;
-
-    let defaultc = null;
-    let match = null;
-
-    const selected = children?.find((c) => {
-      console.log(c);
-      const { value } = c;
-
-      if (value.path === undefined) defaultc = c;
-
-      match = matchPath(window.location.pathname, {
-        path: value.path,
-        exact: value.exact,
-      });
-      // return mp ? true : false;
-      return value.path === window.location.pathname;
-    });
-
-    console.log(selected);
-
-    return (selected || defaultc)?.value?.render({ match });
-  };
-};
-
-SimpleSwitch.Case = () => {
-  return (props) => {
-    const { path, render } = props;
-    return { render, path };
-  };
+  // for (let i = 0; i < routeKeys.length; i++) {
+  //   const path = routeKeys[i];
+  //   const match = matchPath(curPath?.url, {
+  //     path,
+  //     exact: true,
+  //   });
+  //   if (match) {
+  //     const Comp = routeObj[path];
+  //     console.log(Comp);
+  //     if (Comp && typeof Comp === "function") {
+  //       return <Comp match={match} />;
+  //     } else {
+  //       return Comp;
+  //     }
+  //   }
+  // }
+  const finalUrl = _curPath?.url || curPath?.url;
+  const Comp = routeObj[`${finalUrl}`];
+  if (Comp && typeof Comp === "function") {
+    return <Comp />;
+  } else {
+    return (
+      Comp?.render?.() ||
+      (routeObj["404"]?.render ? routeObj["404"].render() : routeObj["404"])
+    );
+  }
 };

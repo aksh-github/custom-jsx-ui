@@ -1,12 +1,12 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-// const log = console.log;
+const log = console.log;
 // const logt = console.time,
 //   logte = console.timeEnd;
 const noop = () => {};
-const log = noop,
-  logt = noop,
-  logte = noop;
+// const log = noop
+const logt = noop;
+const logte = noop;
 const $d = document;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
@@ -803,7 +803,56 @@ const microframe = (() => {
         }
         el = null;
       } else if (changed(newNode, oldNode)) {
-        if ($parent?.childNodes[index]) {
+        if (newNode?.type === "df" && oldNode?.type === "df") {
+          ++CTR;
+          const dNode = stk[CTR];
+          patches.push({
+            p: dNode.parentNode,
+            op: "REPLACE",
+            c: [createElement(newNode), dNode],
+          });
+
+          if (dNode?.nodeType === 1) {
+            while (CTR < stk.length) {
+              if (dNode.contains(stk[CTR])) {
+                // console.log("remove", stk[CTR]);
+                // stk.splice(CTR, 1);
+                CTR++;
+              } else {
+                // CTR--;
+                break;
+              }
+            }
+          }
+
+          CTR--;
+          // console.log(CTR, stk[CTR], stk);
+        } else if (newNode?.type && oldNode?.type) {
+          ++CTR;
+          const dNode = stk[CTR];
+          console.log("asymmetric", newNode, oldNode);
+
+          patches.push({
+            p: dNode.parentNode,
+            op: "REPLACE",
+            c: [createElement(newNode), dNode],
+          });
+
+          if (dNode?.nodeType === 1) {
+            while (CTR < stk.length) {
+              if (dNode.contains(stk[CTR])) {
+                // console.log("remove", stk[CTR]);
+                // stk.splice(CTR, 1);
+                CTR++;
+              } else {
+                // CTR--;
+                break;
+              }
+            }
+          }
+
+          CTR--;
+        } else if ($parent?.childNodes[index]) {
           let el = $parent.childNodes[index];
 
           patches.push({
@@ -932,10 +981,11 @@ const microframe = (() => {
       }
 
       if (actualComparison && comparisonsReqd === 0) {
-        log(newNode.props);
+        // log(newNode.props);
         // log(CTR, stk, newNode);
         const { fragChildLen } = newNode.props;
         if (fragChildLen) {
+          // CTR += 1;
           let qc = CTR + 1;
 
           for (let i = 0; i < fragChildLen; ++i) {
@@ -993,7 +1043,7 @@ const microframe = (() => {
         //     });
         // }
 
-        if (newNode.props.ignoreNode) return;
+        if (newNode?.props?.ignoreNode) return;
 
         // dont enable below condition
         // if (actualComparison)
@@ -1045,6 +1095,11 @@ const microframe = (() => {
       }
 
       for (let i = 0; i < newLength || i < oldLength; i++) {
+        // if (newNode.type === "df" && oldNode.type === "df") {
+        //   doMain(newNode.children[i], oldNode.children[i]);
+        // } else {
+        //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+        // }
         updateElement(domNode, newNode.children[i], oldNode.children[i], i);
       }
 

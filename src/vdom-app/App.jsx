@@ -20,8 +20,9 @@ import { SimpleSwitch } from "../compos/Switch";
 import Heavy from "../compos/Heavy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
+// import { Sans } from "./sans/sans";
 
-let routeHandler = Router();
+export const routeHandler = Router();
 
 // Type 1: Lazy import
 
@@ -232,6 +233,7 @@ const Input = () => {
         importFn={DynTextArea}
         resolve="TextArea"
         fallback={<div>Loading TextArea...</div>}
+        key="TextArea"
       />
     </div>
   );
@@ -660,6 +662,7 @@ export function App(props) {
                   resolve="ArrayWithFragments"
                   fallback={<div>Loading Array with Fragments...</div>}
                   some={t}
+                  key="ArrayWithFragments"
                 />
 
                 <div>after text</div>
@@ -668,11 +671,13 @@ export function App(props) {
 
           case "/sans":
             // return <Sans />;
+            console.log("sans");
             return (
               <Lazy
                 importFn={SansCompoPromise}
                 resolve="Sans"
                 fallback={<p>Loading Sanskrit...</p>}
+                key={"Sans"}
               />
             );
           case "/heavy":

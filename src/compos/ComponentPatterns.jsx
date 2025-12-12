@@ -1,6 +1,7 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
 import { h, createState, createEffect, skipUpdate } from "@vdom-lib";
+import { routeHandler } from "../vdom-app/App";
 
 export const TextArea = () => {
   // const [t, set] = atom("");
@@ -163,6 +164,14 @@ export const ArrayWithFragments = (props) => {
       <p>20</p> */}
       {st}
       <p>time is {props?.some}</p>
+      <button
+        onClick={() => {
+          // alert("prog'matic navigatiion to be implemented");
+          routeHandler.navigator.go("/sans", { a: 10 });
+        }}
+      >
+        Go to simple
+      </button>
       {arr.map((el, idx) => {
         return <Row key={idx} n={el} />;
       })}

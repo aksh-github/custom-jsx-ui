@@ -20,8 +20,8 @@ function memo(Component, _key) {
       });
     }
 
-    return cached?.component || Component(props);
-    // return cached?.component;
+    // return cached?.component || Component(props);
+    return cached?.component;
   };
 }
 
