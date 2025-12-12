@@ -169,7 +169,13 @@ const Field = (props) => {
   ) : null;
 };
 
-const JsonForm = ({ setIsFormValid, setRequestObj, uiJson, onFormChange }) => {
+const JsonForm = ({
+  setIsFormValid,
+  setRequestObj,
+  uiJson,
+  onFormChange,
+  usecaseChanged,
+}) => {
   // const [uiJson, setUiJson] = createState(null);
   const [formState, setFormState] = createState(null);
   const [formValid, setFormValid] = createState(false);
@@ -179,14 +185,16 @@ const JsonForm = ({ setIsFormValid, setRequestObj, uiJson, onFormChange }) => {
   createEffect(() => {
     console.log("uiJson changed");
     if (uiJson) {
-      setFormState(
-        uiJson.form?.fields.reduce((acc, field) => {
-          acc[field.name] = {
-            value: formState?.[field.name]?.value || field.defaultValue || "",
-            error: formState?.[field.name]?.error || field.error || "",
-          };
-          return acc;
-        }, {})
+      const newState = uiJson.form?.fields.reduce((acc, field) => {
+        acc[field.name] = {
+          value: formState?.[field.name]?.value || field.defaultValue || "",
+          error: formState?.[field.name]?.error || field.error || "",
+        };
+        return acc;
+      }, {});
+
+      setFormState((prevState) =>
+        usecaseChanged ? { ...newState } : { ...prevState, ...newState }
       );
       // setFormValid(isFormValid(initialState));
 

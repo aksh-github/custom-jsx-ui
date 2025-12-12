@@ -4,10 +4,13 @@ import { loadUI } from "./utils";
 
 export const JsonFormConsumer = () => {
   const [uiJson, setUiJson] = createState(null);
+  const [usecaseChanged, setUsecaseChanged] = createState(false);
 
   // vv imp func: this is all business logic
   const onFormChange = (formData, currrentValue) => {
     if (currrentValue?.name === "selectUsecase") {
+      setUsecaseChanged(true);
+
       // modify the form json based on the selected use case
       setUiJson((prevUiJson) => {
         return {
@@ -21,6 +24,8 @@ export const JsonFormConsumer = () => {
           },
         };
       });
+    } else {
+      setUsecaseChanged(false);
     }
   };
 
@@ -46,6 +51,7 @@ export const JsonFormConsumer = () => {
       setIsFormValid={() => {}}
       uiJson={uiJson}
       onFormChange={onFormChange}
+      usecaseChanged={usecaseChanged}
     />
   );
 };
