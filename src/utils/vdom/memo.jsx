@@ -14,11 +14,9 @@ function memo(Component, _key) {
     const [cached, setCached] = createState(null);
 
     if (!cached || !shallowEqual(cached.props, props)) {
-      skipUpdate(() => {
-        setCached({
-          props,
-          component: Component(props),
-        });
+      setCached({
+        props,
+        component: Component(props),
       });
     }
 
