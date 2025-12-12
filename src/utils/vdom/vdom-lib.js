@@ -181,20 +181,7 @@ const microframe = (() => {
       let rv = type(props, ...children);
 
       // if (altFuncCache) {
-      //   const exisng = altFuncCache[cacheKey];
-      //   // altFuncCache[cacheKey] = null;
-      //   if (exisng) {
-      //     // rv = exisng.fn;
-      //     currMount = true;
-      //     // exisng.mount = null;
-      //     currUnmount = exisng.unMount;
-      //   } else {
-      //     // to maintain order
-      //     // rv = type(props, ...children);
-      //     // _fn = type;
-      //     if (currMount) mountFns.push(currMount);
-      //   }
-      // }
+      // this is available in 24jun25 br in commented form
 
       funcCache[cacheKey] = {
         fname: type.name,
@@ -1027,21 +1014,7 @@ const microframe = (() => {
 
       if (last !== domNode) {
         // updateProps(domNode, newNode.props, oldNode.props);
-
-        // const nl = Object.keys(newNode.props).length;
-        // const ol = Object.keys(oldNode.props).length;
-
-        // if (nl === ol && nl === 0) {
-        // } else if (newNode.props.ignoreNode || newNode.props.ignoreLater) {
-        //   return;
-        // } else {
-        //   if (actualComparison)
-        //     propsPatches.push({
-        //       $target: domNode,
-        //       newProps: newNode.props,
-        //       oldProps: oldNode.props,
-        //     });
-        // }
+        // this is available in 24jun25 br in commented form
 
         if (newNode?.props?.ignoreNode) return;
 
@@ -1060,31 +1033,8 @@ const microframe = (() => {
       }
 
       // if (newNode?.props?.cacheKey) {
-      //   //&& !newNode.children[0]?.props?.__cached
-      //   // doMain(newNode.children[0], oldNode.children[0]);
-      //   const isCached = newNode.children[0]?.props?.__cached;
-      //   const old = isCached ? oldNode.children[0] : null;
+      // this is available in 24jun25 br in commented form
 
-      //   if (updateCompsSize && !isCached) actualComparison = true;
-
-      //   updateElement(stk[++CTR], newNode.children[0], old, 0);
-      //   return;
-      // } else {
-      //   const newLength = newNode.children.length;
-      //   const oldLength = oldNode.children.length;
-
-      //   if (newLength > 100) {
-      //     optiPossible = true;
-      //     gdf = $d.createDocumentFragment();
-      //     log(
-      //       "have for loop custom component or see how this can be optimized"
-      //     );
-      //   }
-
-      //   for (let i = 0; i < newLength || i < oldLength; i++) {
-      //     updateElement(domNode, newNode.children[i], oldNode.children[i], i);
-      //   }
-      // }
       const newLength = newNode.children.length;
       const oldLength = oldNode.children.length;
 
@@ -1230,96 +1180,7 @@ const suspenseCache = {};
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 
 // export function SuspenseV2(props, child) {
-//   if (!props?.cacheKey) {
-//     throw new Error("Lazy component requires a unique cacheKey prop");
-//   }
-
-//   // log(props);
-//   // let returnVal;
-//   const [returnVal, , setSpecialReturnVal] = _createState(null);
-//   const [resolved, , setResolved] = _createState(false);
-
-//   // log("promise NOT resolved");
-
-//   createEffect(() => {
-//     if (props?.fetch?.then) {
-//       // case 1. if fetch prop is provided (it can be any promise)
-//       props.fetch.then((res) => {
-//         // log("promise resolved", res);
-//         // Suspense({ ...props, fetchCompleted: true }, res);
-//         // returnVal = res;
-//         setSpecialReturnVal(res);
-//         setResolved(true); // need so render is triggered
-//       });
-//     } else {
-//       // case 2. if child is a promise module
-//       child?.value
-//         ?.then((res) => {
-//           // returnVal = res;
-//           setSpecialReturnVal(res);
-//           // update suspense cache
-//           // suspenseCache[`${props?.cacheKey}`] = res;
-
-//           setResolved(true); // need so render is triggered
-//         })
-//         .catch((e) => {
-//           // log(e);
-//           setResolved(true); // need so render is triggered
-//         });
-//     }
-//   }, []);
-
-//   // if already in cache then return
-//   const ch = child || props.children[0];
-//   const cached =
-//     suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] ||
-//     suspenseCache[`${props?.cacheKey}`];
-//   if (cached) {
-//     if (cached.compo) {
-//       // cached.compo(child?.props);
-//       // return () => cached.returnFn(child?.props);
-//       return h(cached.compo, { ...child?.props, __cached: true });
-//     } else {
-//       // return suspenseCache[`${props?.cacheKey}`](child?.props);
-//       if (cached.callbackFn) return cached.callbackFn(cached.returnVal);
-//     }
-//   }
-
-//   if (resolved) {
-//     if (props?.fetch?.then) {
-//       // case when child is render props pattern
-
-//       suspenseCache[`${props?.cacheKey}`] = {
-//         callbackFn: child || props.children[0],
-//         returnVal,
-//       };
-
-//       return (child || props.children[0])(returnVal);
-//     } else {
-//       // case when child is normal component
-//       if (returnVal) {
-//         //cache the resolved compo
-
-//         suspenseCache[`${ch?.$c}:${ch?.$p}:${ch?.key}`] = {
-//           compo: returnVal, // this is compo
-//         };
-
-//         // return h(returnVal, {
-//         //   ...props?.children?.[0]?.props,
-//         // });
-//         return h(returnVal, { ...child?.props, __cached: true });
-//       } else {
-//         if (props?.errorFallback) return props?.errorFallback;
-//         else return h("div", {}, [null]);
-//       }
-//     }
-//   } else {
-//     if (props?.fallback) {
-//       return h("div", {}, [props.fallback]);
-//     } else return h("div", {}, [null]);
-//     // return props?.fallback;
-//   }
-// }
+// This function is still available in 24jun25 br in commented form
 
 function isWebComponent(element) {
   // Check if the tag name includes a hyphen
