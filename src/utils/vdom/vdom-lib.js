@@ -790,7 +790,10 @@ const microframe = (() => {
         }
         el = null;
       } else if (changed(newNode, oldNode)) {
-        if (newNode?.type === "df" && oldNode?.type === "df") {
+        if (
+          (newNode?.type === "df" && oldNode?.type === "df") ||
+          (newNode?.type && oldNode?.type)
+        ) {
           ++CTR;
           const dNode = stk[CTR];
           patches.push({
@@ -814,31 +817,6 @@ const microframe = (() => {
 
           CTR--;
           // console.log(CTR, stk[CTR], stk);
-        } else if (newNode?.type && oldNode?.type) {
-          ++CTR;
-          const dNode = stk[CTR];
-          console.log("asymmetric", newNode, oldNode);
-
-          patches.push({
-            p: dNode.parentNode,
-            op: "REPLACE",
-            c: [createElement(newNode), dNode],
-          });
-
-          if (dNode?.nodeType === 1) {
-            while (CTR < stk.length) {
-              if (dNode.contains(stk[CTR])) {
-                // console.log("remove", stk[CTR]);
-                // stk.splice(CTR, 1);
-                CTR++;
-              } else {
-                // CTR--;
-                break;
-              }
-            }
-          }
-
-          CTR--;
         } else if ($parent?.childNodes[index]) {
           let el = $parent.childNodes[index];
 
