@@ -1,5 +1,5 @@
-import { h, createContext, createState } from "@vdom-lib";
-import { createEffect } from "./simple-state";
+import { h, createContext, createState, createEffect } from "@vdom-lib";
+
 // import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
 // console.log(
