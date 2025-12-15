@@ -170,7 +170,7 @@ export const ArrayWithFragments = (props) => {
           routeHandler.navigator.go("/sans", { a: 10 });
         }}
       >
-        Go to simple
+        Go to sans
       </button>
       {arr.map((el, idx) => {
         return <Row key={idx} n={el} />;
