@@ -1,4 +1,4 @@
-import { createState, skipUpdate } from "@vdom-lib";
+import { createState } from "./vdom-lib";
 
 function memo(Component, _key) {
   return function MemoizedComponent(props) {
