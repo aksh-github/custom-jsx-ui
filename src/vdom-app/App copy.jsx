@@ -13,7 +13,7 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { LinkV2, Router } from "@router-v2";
+import { LinkV2, Router, routerContext, routeHandler } from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
@@ -23,7 +23,7 @@ import { Embed } from "../compos/ComponentPatterns";
 import { RouterAdv } from "../utils/router-v2";
 // import { Sans } from "./sans/sans";
 
-export const routeHandler = Router();
+// export const routeHandler = Router();
 
 // Type 1: Lazy import
 
@@ -97,21 +97,21 @@ const SansCompoPromise = () => {
 
 const Topic = ({ topicId }) => <h3>{topicId}</h3>;
 
+const items = [
+  { name: "Props v. State", slug: "props-v-createState" },
+  { name: "Rendering with React", slug: "rendering" },
+  { name: "Components", slug: "components" },
+];
+
 const Topics = (props) => {
-  const items = [
-    { name: "Props v. State", slug: "props-v-createState" },
-    { name: "Rendering with React", slug: "rendering" },
-    { name: "Components", slug: "components" },
-  ];
-  // console.log(p);
-  // console.log(curPath.get());
-  const { basepath, match } = props;
+  console.log(routerContext.get());
+  const basepath = routerContext.get()?.pathname;
 
   const item = items.find(({ name, slug }) => {
-    return match?.url?.endsWith(slug);
+    return basepath?.endsWith(slug);
   });
 
-  console.log(item);
+  // console.log(item);
 
   return (
     <div>
@@ -123,20 +123,9 @@ const Topics = (props) => {
           </li>
         ))}
       </ul>
-      {/* {items.map(({ name, slug }) => (
-          <Route
-            key={name}
-            path={`${match.path}/${slug}`}
-            render={() => <Topic topicId={name} />}
-          />
-        ))}
-        <Route
-          exact
-          path={match.url}
-          render={() => <h3>Please select a topic.</h3>}
-        /> */}
+      <h3>Sub routes</h3>
 
-      <Topic topicId={(item?.name || "") + " on " + match.url} />
+      <Topic topicId={(item?.name || "") + " on " + basepath} />
     </div>
   );
 };
@@ -563,7 +552,9 @@ const Header = () => (
 );
 
 export function App(props) {
-  const [curPath, setCurPath] = createState({ url: window.location.pathname });
+  console.log(routerContext.get());
+  // const [curPath, setCurPath] = createState({ url: window.location.pathname });
+  const curPath = routerContext.get()?.pathname;
   // const [route, setRoute] = signal("route2");
   let footRef = null;
 
@@ -572,18 +563,16 @@ export function App(props) {
 
   // console.log(routerContext.get());
 
-  const onRouteChange = (newPath, routeConfig) => {
-    console.log(newPath, routeConfig);
-    setCurPath(newPath);
-    // setCurPath(routerContext.get());
-  };
-  // moved globally
-  // let routeHandler = Router();
+  // const onRouteChange = (newPath, routeConfig) => {
+  //   console.log(newPath, routeConfig);
+  //   setCurPath(newPath);
+  //   // setCurPath(routerContext.get());
+  // };
 
   let ct = 0;
 
   createEffect(() => {
-    routeHandler.init(onRouteChange);
+    // routeHandler.init(onRouteChange);
     if (footRef) {
       // const p = document.createElement("p");
       // p.textContent = footerTp();
@@ -616,22 +605,16 @@ export function App(props) {
     }
 
     return () => {
-      routeHandler.cleanup();
+      // routeHandler.cleanup();
       clearInterval(timer);
       timer = footRef = null;
     };
   }, []);
 
-  // onCleanup(() => {
-  //   routeHandler.cleanup();
-  //   clearInterval(timer);
-  //   timer = null;
-  // setFootRef(null);
-  // });
-
   return (
     <div>
       <Header />
+      <p>Current path: {curPath}</p>
       <hr />
 
       <RouterAdv
@@ -679,8 +662,8 @@ export function App(props) {
           "/json-form": JsonFormConsumer,
           404: {
             render: () => {
-              if (curPath?.url?.startsWith("/topics"))
-                return <Topics basepath="/topics" match={curPath} />;
+              if (curPath?.startsWith("/topics"))
+                return <Topics basepath="/topics" />;
               else return "Wrong path 404";
             },
           },

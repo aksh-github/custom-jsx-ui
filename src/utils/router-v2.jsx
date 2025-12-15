@@ -9,15 +9,15 @@ import { h, createContext, createState, createEffect } from "@vdom-lib";
 //   "check: https://codesandbox.io/s/build-own-react-router-v4-mpslz , https://www.youtube.com/watch?v=1knvu0a3k0w"
 // );
 
-const historyPush = (path) => {
-  window.history.pushState({}, null, path);
+const historyPush = (path, state) => {
+  window.history.pushState(state, null, path);
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
   // window.dispatchEvent(new Event("pushstate"));
 };
 
 const historyReplace = (path) => {
-  window.history.replaceState({}, null, path);
+  window.history.replaceState(state, null, path);
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
 };
@@ -27,8 +27,7 @@ const matchPath = (pathname, options) => {
 
   if (!path) {
     return {
-      path: null,
-      url: pathname,
+      pathname: pathname,
       isExact: true,
     };
   }
@@ -37,19 +36,18 @@ const matchPath = (pathname, options) => {
 
   if (!match) return null;
 
-  const url = match[0];
-  const isExact = pathname === url;
+  const _pathname = match[0];
+  const isExact = pathname === _pathname;
 
   if (exact && !isExact) return null;
 
   return {
-    path,
-    url,
+    pathname,
     isExact,
   };
 };
 
-const [currentPath, setCurentPath] = createState(window.location.pathname);
+// const [currentPath, setCurentPath] = createState(window.location.pathname);
 
 // export function Route() {
 //   //   const currentPath = createState(window.location.pathname);
@@ -100,7 +98,8 @@ export function LinkV2(props, children) {
         const pathname = window.location.pathname;
         if (href === pathname) return;
         replace ? historyReplace(to) : historyPush(to);
-        setCurentPath(to);
+        // setCurentPath(to);
+        routerContext.set({ pathname: to, ...routerContext.get() });
       }}
     >
       {children}
@@ -108,19 +107,32 @@ export function LinkV2(props, children) {
   );
 }
 
-export const routerContext = createContext(window.location.pathname);
+export const routerContext = createContext({
+  search: window.location.search,
+  hash: window.location.hash,
+  state: window.history.state,
+  pathname: window.location.pathname,
+});
 
-const { get: currPath, set: setCurrPath } = routerContext;
+// const { get: currPath, set: setCurrPath } = routerContext;
 
 // correct impl as of 11 Dec
 export function Router() {
-  // const [currPath, setCurrPath] = atom(window.location.pathname);
   let onRouteChange;
   const navigate = (abcd) => {
     console.log(window.location.pathname, abcd);
-    if (currPath() !== window.location.pathname) {
-      setCurrPath(window.location.pathname);
-      onRouteChange(matchPath(currPath(), {}), {
+
+    if (routerContext.get()?.pathname !== window.location.pathname) {
+      // setCurrPath(window.location.pathname);
+      const { pathname } = window.location;
+      routerContext.set({
+        ...matchPath(pathname, {}),
+        search: window.location.search,
+        hash: window.location.hash,
+        state: window.history.state,
+      });
+      onRouteChange({
+        ...matchPath(pathname, {}),
         search: window.location.search,
         hash: window.location.hash,
         state: window.history.state,
@@ -134,10 +146,11 @@ export function Router() {
       // window.addEventListener("pushstate", navigate);
       window.addEventListener("navigate", navigate);
       onRouteChange = cb || (() => {});
-      onRouteChange(matchPath(currPath(), {}), {
+      onRouteChange({
         search: window.location.search,
         hash: window.location.hash,
         state: window.history.state,
+        ...matchPath(routerContext.get()?.pathname, {}),
       });
     },
     cleanup: () => {
@@ -152,15 +165,18 @@ export function Router() {
   };
 }
 
-let routeHandler = Router();
+export const routeHandler = Router();
 
 export const RouterAdv = ({ routeObj, _curPath }) => {
-  const [curPath, setCurPath] = createState({ url: window.location.pathname });
+  const [curPath, setCurPath] = createState({
+    pathname: window.location.pathname,
+  });
 
-  const onRouteChange = (newPath, routeConfig) => {
-    console.log(newPath, routeConfig);
-    setCurPath(newPath);
-    // setCurPath(routerContext.get());
+  const onRouteChange = (routeConfig) => {
+    console.log(routeConfig);
+    // setCurPath(newPath);
+    setCurPath(routerContext.get());
+    routerContext.set(routeConfig);
   };
 
   createEffect(() => {
@@ -174,7 +190,7 @@ export const RouterAdv = ({ routeObj, _curPath }) => {
 
   // for (let i = 0; i < routeKeys.length; i++) {
   //   const path = routeKeys[i];
-  //   const match = matchPath(curPath?.url, {
+  //   const match = matchPath(curPath?.pathname, {
   //     path,
   //     exact: true,
   //   });
@@ -188,7 +204,7 @@ export const RouterAdv = ({ routeObj, _curPath }) => {
   //     }
   //   }
   // }
-  const finalUrl = _curPath?.url || curPath?.url;
+  const finalUrl = _curPath?.pathname || curPath?.pathname;
   const Comp = routeObj[`${finalUrl}`];
   if (Comp && typeof Comp === "function") {
     return <Comp />;
