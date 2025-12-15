@@ -551,6 +551,58 @@ const Header = () => (
   </ul>
 );
 
+const routeObj = {
+  "/": ComplexRoute,
+  "/embed": Embed,
+  "/frag": {
+    render: () => {
+      const t = Date.now();
+
+      return (
+        <div>
+          <div>before text</div>
+          {/* <SuspenseV2
+                  delay={3000}
+                  cacheKey={"awfp"}
+                  fallback={<div>Loading...</div>}
+                >
+                  <ArrayWithFragmentsPromise some={t} />
+                </SuspenseV2> */}
+          <Lazy
+            importFn={ArrayWithFragmentsPromise}
+            resolve="ArrayWithFragments"
+            fallback={<div>Loading Array with Fragments...</div>}
+            some={t}
+            key="awf"
+          />
+
+          <div>after text</div>
+        </div>
+      );
+    },
+  },
+  "/sans": {
+    render: () => (
+      <Lazy
+        importFn={() => import("./sans/sans")}
+        resolve="Sans"
+        fallback={<p>Loading Sanskrit...</p>}
+        key="sans"
+      />
+    ),
+  },
+  "/heavy": Heavy,
+  "/json-form": JsonFormConsumer,
+  404: {
+    render: () => {
+      if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
+      else return "Wrong path 404";
+    },
+  },
+  "/route2": SimpleRoute,
+  // "/topics": () => <Topics basepath="/topics" match={curPath} />,
+};
+
 export function App(props) {
   console.log(routerContext.get());
   // const [curPath, setCurPath] = createState({ url: window.location.pathname });
@@ -617,60 +669,7 @@ export function App(props) {
       <p>Current path: {curPath}</p>
       <hr />
 
-      <RouterAdv
-        routeObj={{
-          "/": ComplexRoute,
-          "/embed": Embed,
-          "/frag": {
-            render: () => {
-              const t = Date.now();
-
-              return (
-                <div>
-                  <div>before text</div>
-                  {/* <SuspenseV2
-                  delay={3000}
-                  cacheKey={"awfp"}
-                  fallback={<div>Loading...</div>}
-                >
-                  <ArrayWithFragmentsPromise some={t} />
-                </SuspenseV2> */}
-                  <Lazy
-                    importFn={ArrayWithFragmentsPromise}
-                    resolve="ArrayWithFragments"
-                    fallback={<div>Loading Array with Fragments...</div>}
-                    some={t}
-                    key="awf"
-                  />
-
-                  <div>after text</div>
-                </div>
-              );
-            },
-          },
-          "/sans": {
-            render: () => (
-              <Lazy
-                importFn={() => import("./sans/sans")}
-                resolve="Sans"
-                fallback={<p>Loading Sanskrit...</p>}
-                key="sans"
-              />
-            ),
-          },
-          "/heavy": Heavy,
-          "/json-form": JsonFormConsumer,
-          404: {
-            render: () => {
-              if (curPath?.startsWith("/topics"))
-                return <Topics basepath="/topics" />;
-              else return "Wrong path 404";
-            },
-          },
-          "/route2": SimpleRoute,
-          // "/topics": () => <Topics basepath="/topics" match={curPath} />,
-        }}
-      />
+      <RouterAdv routeObj={routeObj} />
 
       <footer
         ref={(_ref) => (footRef = _ref)}

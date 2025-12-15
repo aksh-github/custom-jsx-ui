@@ -173,7 +173,6 @@ export const RouterAdv = ({ routeObj }) => {
   });
 
   const onRouteChange = (routeConfig) => {
-    console.log(routeConfig);
     // setCurPath(newPath);
     setCurPath(routerContext.get());
     routerContext.set(routeConfig);
