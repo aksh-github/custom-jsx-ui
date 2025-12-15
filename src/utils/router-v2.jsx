@@ -99,7 +99,7 @@ export function LinkV2(props, children) {
         if (href === pathname) return;
         replace ? historyReplace(to) : historyPush(to);
         // setCurentPath(to);
-        routerContext.set({ pathname: to, ...routerContext.get() });
+        // routerContext.set({ pathname: to, ...routerContext.get() });
       }}
     >
       {children}
@@ -167,7 +167,7 @@ export function Router() {
 
 export const routeHandler = Router();
 
-export const RouterAdv = ({ routeObj, _curPath }) => {
+export const RouterAdv = ({ routeObj }) => {
   const [curPath, setCurPath] = createState({
     pathname: window.location.pathname,
   });
@@ -204,7 +204,7 @@ export const RouterAdv = ({ routeObj, _curPath }) => {
   //     }
   //   }
   // }
-  const finalUrl = _curPath?.pathname || curPath?.pathname;
+  const finalUrl = routerContext.get()?.pathname || curPath?.pathname;
   const Comp = routeObj[`${finalUrl}`];
   if (Comp && typeof Comp === "function") {
     return <Comp />;

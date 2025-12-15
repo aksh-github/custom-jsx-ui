@@ -670,7 +670,6 @@ export function App(props) {
           "/route2": SimpleRoute,
           // "/topics": () => <Topics basepath="/topics" match={curPath} />,
         }}
-        _curPath={curPath}
       />
 
       <footer
