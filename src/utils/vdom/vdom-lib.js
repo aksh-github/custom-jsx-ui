@@ -734,10 +734,10 @@ const microframe = (() => {
 
     let _C = 0;
 
-    // if (navigate.routeChange) {
-    //   updateComps.clear();
-    //   navigate.set(false);
-    // }
+    if (navigate.routeChange) {
+      updateComps.clear();
+      navigate.set(false);
+    }
 
     const updateCompsSize = updateComps.size;
     let currComp = null;
@@ -999,7 +999,10 @@ const microframe = (() => {
         // dont enable below condition
         // if (actualComparison)
         {
-          if (propsChanged(oldNode.props, newNode.props))
+          if (
+            oldNode.type === newNode.type &&
+            propsChanged(oldNode.props, newNode.props)
+          )
             propsPatches.push({
               $target: domNode,
               newProps: newNode.props,
