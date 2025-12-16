@@ -10,7 +10,7 @@ import { h, createContext, createState, createEffect } from "@vdom-lib";
 // );
 
 const historyPush = (path, state) => {
-  window.history.pushState(state, null, path);
+  window.history.pushState(state, "", path);
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
   // window.dispatchEvent(new Event("pushstate"));
@@ -24,8 +24,8 @@ const historyPush = (path, state) => {
   }
 };
 
-const historyReplace = (path) => {
-  window.history.replaceState(state, null, path);
+const historyReplace = (path, state) => {
+  window.history.replaceState(state, "", path);
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
   if (routerContext.get()?.pathname !== window.location.pathname) {
