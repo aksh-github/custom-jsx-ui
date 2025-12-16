@@ -14,7 +14,7 @@ import {
 
 // import { Sans } from "./sans/sans";
 import { RouterAdv, LinkV2 } from "@router-v2";
-import { routeInstance, routerContext, Switch } from "../utils/router-v2";
+import { routeInstance, routerContext } from "../utils/router-v2";
 
 // =======================
 
