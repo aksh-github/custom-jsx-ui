@@ -4,6 +4,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       external: ["@vdom-lib"],
+      output: {
+        globals: {
+          "@vdom-lib": "_vdomLib",
+        },
+      },
     },
     lib: {
       entry: "./src/utils/router-v2", // or vdom-ai.js if that's your main file
