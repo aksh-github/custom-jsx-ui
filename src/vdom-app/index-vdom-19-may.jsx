@@ -1,4 +1,4 @@
-import { App } from "./App copy";
+import { App } from "./App";
 
 import {
   h,
@@ -12,9 +12,9 @@ import {
   Lazy,
 } from "../utils/vdom/vdom-lib";
 
-import { Sans } from "./sans/sans";
+// import { Sans } from "./sans/sans";
 import { RouterAdv, LinkV2 } from "@router-v2";
-import { routerContext, Switch } from "../utils/router-v2";
+import { routeInstance, routerContext, Switch } from "../utils/router-v2";
 
 // =======================
 
@@ -172,8 +172,6 @@ mount(root, () => <App />);
 
 // Usage
 
-// const routeHandler = Router();
-
 function Home(props) {
   return (
     // <h1>Home {props?.a}</h1>
@@ -181,7 +179,7 @@ function Home(props) {
       <h1>Home {props?.a}</h1>
       <button
         onClick={() => {
-          routeHandler.navigator.go("/route2", { a: 10 });
+          routeInstance.navigator.go("/route2", { a: 10 });
         }}
       >
         Go to Route 2
@@ -204,9 +202,21 @@ function Header() {
   );
 }
 
+function RouteSwitch({ curPath }) {
+  switch (curPath) {
+    case "/":
+      return <Home />;
+
+    case "/counter":
+      return <Counter />;
+    default:
+      return "Not found 404";
+  }
+}
+
 function RouteTest() {
   console.log(routerContext.get());
-  const curPath = routerContext.get()?.pathname;
+  const curPath = routerContext.get()?.pathname || "/";
 
   return (
     <div>
@@ -227,18 +237,8 @@ function RouteTest() {
           404: "Not found",
         }}
       /> */}
-      <p>Route: {curPath}</p>
-      <Switch condition={curPath}>
-        <Switch.Case when={"/counter"}>
-          <div className="case-item">Route a: {curPath}</div>
-        </Switch.Case>
-        <Switch.Case when={"/"}>
-          <div className="case-item">Route d: {curPath}</div>
-        </Switch.Case>
-        <Switch.Default>
-          <div className="case-item">Default</div>
-        </Switch.Default>
-      </Switch>
+      <p>Current Route: {curPath}</p>
+      <RouteSwitch curPath={curPath} />
       <footer>some footer</footer>
     </div>
   );

@@ -202,31 +202,3 @@ export const RouterAdv = ({ routeObj }) => {
     );
   }
 };
-
-export const Switch = ({ condition }, children) => {
-  if (!children) {
-    return null;
-  }
-
-  const arrayOfChildren = Array.isArray(children) ? children : [children];
-  const matchedCase = arrayOfChildren.find(
-    (child) => child.props.when == condition
-  );
-  const defaultCases = arrayOfChildren.filter((child) => !child.props.when);
-
-  if (defaultCases?.length > 1) {
-    throw new Error("Only one <Switch.Default> is allowed");
-  }
-
-  const defaultCase = defaultCases[0];
-
-  return matchedCase ? matchedCase.props.children : defaultCase?.props.children;
-};
-
-Switch.Case = ({ when }, children) => {
-  return <df>{children}</df>;
-};
-
-Switch.Default = (props, children) => {
-  return <df>{children}</df>;
-};

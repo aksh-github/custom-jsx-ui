@@ -551,6 +551,63 @@ const Header = () => (
   </ul>
 );
 
+const RouteSwitch = ({ curPath }) => {
+  switch (curPath) {
+    // switch (route()) {
+    case "/route2":
+      return <SimpleRoute />;
+    case "/":
+      return <ComplexRoute />;
+    case "/embed":
+      return <Embed />;
+    // return <Ctr v={10} />;
+    case "/frag":
+      console.log("frag");
+      const t = Date.now();
+
+      return (
+        <div>
+          <div>before text</div>
+          {/* <SuspenseV2
+                  delay={3000}
+                  cacheKey={"awfp"}
+                  fallback={<div>Loading...</div>}
+                >
+                  <ArrayWithFragmentsPromise some={t} />
+                </SuspenseV2> */}
+          <Lazy
+            importFn={ArrayWithFragmentsPromise}
+            resolve="ArrayWithFragments"
+            fallback={<div>Loading Array with Fragments...</div>}
+            some={t}
+            key="ArrayWithFragments"
+          />
+
+          <div>after text</div>
+        </div>
+      );
+
+    case "/sans":
+      // return <Sans />;
+      console.log("sans");
+      return (
+        <Lazy
+          importFn={SansCompoPromise}
+          resolve="Sans"
+          fallback={<p>Loading Sanskrit...</p>}
+          key={"Sans"}
+        />
+      );
+    case "/heavy":
+      return <Heavy />;
+    case "/json-form":
+      return <JsonFormConsumer />;
+    default:
+      if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
+      else return "Wrong path 404";
+  }
+};
+
 export function App(props) {
   // const [curPath, setCurPath] = createState(window.location.pathname);
   console.log(routerContext.get());
@@ -607,64 +664,7 @@ export function App(props) {
     <div>
       <Header />
       <hr />
-
-      {(() => {
-        switch (curPath) {
-          // switch (route()) {
-          case "/route2":
-            return <SimpleRoute />;
-          case "/":
-            return <ComplexRoute />;
-          case "/embed":
-            return <Embed />;
-          // return <Ctr v={10} />;
-          case "/frag":
-            console.log("frag");
-            const t = Date.now();
-
-            return (
-              <div>
-                <div>before text</div>
-                {/* <SuspenseV2
-                  delay={3000}
-                  cacheKey={"awfp"}
-                  fallback={<div>Loading...</div>}
-                >
-                  <ArrayWithFragmentsPromise some={t} />
-                </SuspenseV2> */}
-                <Lazy
-                  importFn={ArrayWithFragmentsPromise}
-                  resolve="ArrayWithFragments"
-                  fallback={<div>Loading Array with Fragments...</div>}
-                  some={t}
-                  key="ArrayWithFragments"
-                />
-
-                <div>after text</div>
-              </div>
-            );
-
-          case "/sans":
-            // return <Sans />;
-            console.log("sans");
-            return (
-              <Lazy
-                importFn={SansCompoPromise}
-                resolve="Sans"
-                fallback={<p>Loading Sanskrit...</p>}
-                key={"Sans"}
-              />
-            );
-          case "/heavy":
-            return <Heavy />;
-          case "/json-form":
-            return <JsonFormConsumer />;
-          default:
-            if (curPath?.startsWith("/topics"))
-              return <Topics basepath="/topics" />;
-            else return "Wrong path 404";
-        }
-      })()}
+      <RouteSwitch curPath={curPath} />
 
       <footer
         ref={(_ref) => (footRef = _ref)}
