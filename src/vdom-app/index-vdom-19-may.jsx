@@ -12,8 +12,9 @@ import {
   Lazy,
 } from "../utils/vdom/vdom-lib";
 
-// import { Sans } from "./sans/sans";
-import { RouterAdv, LinkV2, Router } from "@router-v2";
+import { Sans } from "./sans/sans";
+import { RouterAdv, LinkV2 } from "@router-v2";
+import { routerContext, Switch } from "../utils/router-v2";
 
 // =======================
 
@@ -137,7 +138,8 @@ const Counter = () => {
   const Decide = ({ count }) => {
     // return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
-    return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+    // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+    return count % 2 === 0 ? "this is even" : <Odd />;
   };
 
   return (
@@ -165,12 +167,12 @@ const Counter = () => {
 };
 
 const root = document.getElementById("root-vdom");
-mount(root, () => <RouteTest />);
+mount(root, () => <App />);
 // mount(root, () => <Sans />);
 
 // Usage
 
-const routeHandler = Router();
+// const routeHandler = Router();
 
 function Home(props) {
   return (
@@ -191,17 +193,26 @@ function Home(props) {
 function Header() {
   return (
     <p>
-      <LinkV2 to="/">Complex</LinkV2> | <LinkV2 to="/route2">About</LinkV2>
+      <LinkV2 key="/" to="/">
+        Complex
+      </LinkV2>{" "}
+      |{" "}
+      <LinkV2 key="/counter" to="/counter">
+        Counter
+      </LinkV2>
     </p>
   );
 }
 
 function RouteTest() {
+  console.log(routerContext.get());
+  const curPath = routerContext.get()?.pathname;
+
   return (
     <div>
       <Header />
-      {/* <hr /> */}
-      <RouterAdv
+      <hr />
+      {/* <RouterAdv
         routeObj={{
           "/": Home,
           "/route2": {
@@ -215,7 +226,19 @@ function RouteTest() {
           },
           404: "Not found",
         }}
-      />
+      /> */}
+      <p>Route: {curPath}</p>
+      <Switch condition={curPath}>
+        <Switch.Case when={"/counter"}>
+          <div className="case-item">Route a: {curPath}</div>
+        </Switch.Case>
+        <Switch.Case when={"/"}>
+          <div className="case-item">Route d: {curPath}</div>
+        </Switch.Case>
+        <Switch.Default>
+          <div className="case-item">Default</div>
+        </Switch.Default>
+      </Switch>
       <footer>some footer</footer>
     </div>
   );

@@ -13,7 +13,7 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { LinkV2, Router, routerContext, routeHandler } from "@router-v2";
+import { LinkV2, routerContext, routeInstance } from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
@@ -22,8 +22,6 @@ import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
 import { RouterAdv } from "../utils/router-v2";
 // import { Sans } from "./sans/sans";
-
-// export const routeHandler = Router();
 
 // Type 1: Lazy import
 
@@ -104,11 +102,13 @@ const items = [
 ];
 
 const Topics = (props) => {
-  console.log(routerContext.get());
-  const basepath = routerContext.get()?.pathname;
+  // console.log(routerContext.get());
+  const { pathname } = routerContext.get();
+  // const basepath = routerContext.get()?.pathname;
+  const { basepath } = props;
 
   const item = items.find(({ name, slug }) => {
-    return basepath?.endsWith(slug);
+    return pathname?.endsWith(slug);
   });
 
   // console.log(item);
@@ -125,7 +125,7 @@ const Topics = (props) => {
       </ul>
       <h3>Sub routes</h3>
 
-      <Topic topicId={(item?.name || "") + " on " + basepath} />
+      <Topic topicId={(item?.name || "") + " on " + pathname} />
     </div>
   );
 };
@@ -373,7 +373,7 @@ function ComplexRoute(props) {
         <button
           onClick={() => {
             // alert("prog'matic navigatiion to be implemented");
-            routeHandler.navigator.go("/route2", { a: 10 });
+            routeInstance.navigator.go("/route2", { a: 10 });
           }}
         >
           Go to simple
@@ -594,7 +594,7 @@ const routeObj = {
   "/heavy": Heavy,
   "/json-form": JsonFormConsumer,
   404: {
-    render: () => {
+    render: (curPath) => {
       if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
       else return "Wrong path 404";
     },
@@ -624,7 +624,7 @@ export function App(props) {
   let ct = 0;
 
   createEffect(() => {
-    // routeHandler.init(onRouteChange);
+    // routeInstance.init(onRouteChange);
     if (footRef) {
       // const p = document.createElement("p");
       // p.textContent = footerTp();
@@ -657,7 +657,7 @@ export function App(props) {
     }
 
     return () => {
-      // routeHandler.cleanup();
+      // routeInstance.cleanup();
       clearInterval(timer);
       timer = footRef = null;
     };

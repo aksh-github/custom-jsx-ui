@@ -14,12 +14,28 @@ const historyPush = (path, state) => {
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
   // window.dispatchEvent(new Event("pushstate"));
+  if (routerContext.get()?.pathname !== window.location.pathname) {
+    routerContext.set({
+      search: window.location.search,
+      hash: window.location.hash,
+      state: window.history.state,
+      pathname: window.location.pathname,
+    });
+  }
 };
 
 const historyReplace = (path) => {
   window.history.replaceState(state, null, path);
   //   instances.forEach((instance) => instance.forceUpdate());
   window.dispatchEvent(new PopStateEvent("navigate"));
+  if (routerContext.get()?.pathname !== window.location.pathname) {
+    routerContext.set({
+      search: window.location.search,
+      hash: window.location.hash,
+      state: window.history.state,
+      pathname: window.location.pathname,
+    });
+  }
 };
 
 const matchPath = (pathname, options) => {
@@ -47,44 +63,6 @@ const matchPath = (pathname, options) => {
   };
 };
 
-// const [currentPath, setCurentPath] = createState(window.location.pathname);
-
-// export function Route() {
-//   //   const currentPath = createState(window.location.pathname);
-
-//   const navigate = (abcd) => {
-//     console.log(window.location.pathname, abcd);
-//     if (currentPath() !== window.location.pathname)
-//       setCurentPath(window.location.pathname);
-//   };
-
-//   onMount(() => {
-//     window.addEventListener("popstate", navigate);
-//     window.addEventListener("navigate", navigate);
-//   });
-
-//   onCleanup(() => {
-//     window.removeEventListener("popstate", navigate);
-//     window.removeEventListener("navigate", navigate);
-//   });
-
-//   return (props) => {
-//     const { path, exact, component, render } = props;
-
-//     const match = matchPath(window.location.pathname, { path, exact });
-
-//     if (!match) return null;
-
-//     if (component) return h(component, { match });
-
-//     console.log(props);
-
-//     if (render) return render({ match });
-
-//     return null;
-//   };
-// }
-
 export function LinkV2(props, children) {
   // console.log(props, children);
   const { to, replace } = props;
@@ -107,38 +85,38 @@ export function LinkV2(props, children) {
   );
 }
 
-export const routerContext = createContext({
-  search: window.location.search,
-  hash: window.location.hash,
-  state: window.history.state,
-  pathname: window.location.pathname,
-});
+const navigate = (navigationEvent) => {
+  console.log(window.location.pathname, navigationEvent);
+
+  if (routerContext.get()?.pathname !== window.location.pathname) {
+    // setCurrPath(window.location.pathname);
+    const { pathname } = window.location;
+    console.log({
+      ...matchPath(pathname, {}),
+      search: window.location.search,
+      hash: window.location.hash,
+      state: window.history.state,
+    });
+    routerContext.set({
+      ...matchPath(pathname, {}),
+      search: window.location.search,
+      hash: window.location.hash,
+      state: window.history.state,
+    });
+    // onRouteChange({
+    //   ...matchPath(pathname, {}),
+    //   search: window.location.search,
+    //   hash: window.location.hash,
+    //   state: window.history.state,
+    // });
+  }
+};
 
 // const { get: currPath, set: setCurrPath } = routerContext;
 
 // correct impl as of 11 Dec
-export function Router() {
+function Router() {
   let onRouteChange;
-  const navigate = (abcd) => {
-    console.log(window.location.pathname, abcd);
-
-    if (routerContext.get()?.pathname !== window.location.pathname) {
-      // setCurrPath(window.location.pathname);
-      const { pathname } = window.location;
-      routerContext.set({
-        ...matchPath(pathname, {}),
-        search: window.location.search,
-        hash: window.location.hash,
-        state: window.history.state,
-      });
-      onRouteChange({
-        ...matchPath(pathname, {}),
-        search: window.location.search,
-        hash: window.location.hash,
-        state: window.history.state,
-      });
-    }
-  };
 
   return {
     init: (cb) => {
@@ -165,7 +143,15 @@ export function Router() {
   };
 }
 
-export const routeHandler = Router();
+export const routerContext = createContext({
+  search: window.location.search,
+  hash: window.location.hash,
+  state: window.history.state,
+  pathname: window.location.pathname,
+});
+
+export const routeInstance = Router();
+routeInstance.init();
 
 export const RouterAdv = ({ routeObj }) => {
   const [curPath, setCurPath] = createState({
@@ -179,9 +165,9 @@ export const RouterAdv = ({ routeObj }) => {
   };
 
   createEffect(() => {
-    routeHandler.init(onRouteChange);
+    routeInstance.init(onRouteChange);
     return () => {
-      routeHandler.cleanup();
+      routeInstance.cleanup();
     };
   }, []);
 
@@ -210,7 +196,37 @@ export const RouterAdv = ({ routeObj }) => {
   } else {
     return (
       Comp?.render?.() ||
-      (routeObj["404"]?.render ? routeObj["404"].render() : routeObj["404"])
+      (routeObj["404"]?.render
+        ? routeObj["404"].render(finalUrl)
+        : routeObj["404"])
     );
   }
+};
+
+export const Switch = ({ condition }, children) => {
+  if (!children) {
+    return null;
+  }
+
+  const arrayOfChildren = Array.isArray(children) ? children : [children];
+  const matchedCase = arrayOfChildren.find(
+    (child) => child.props.when == condition
+  );
+  const defaultCases = arrayOfChildren.filter((child) => !child.props.when);
+
+  if (defaultCases?.length > 1) {
+    throw new Error("Only one <Switch.Default> is allowed");
+  }
+
+  const defaultCase = defaultCases[0];
+
+  return matchedCase ? matchedCase.props.children : defaultCase?.props.children;
+};
+
+Switch.Case = ({ when }, children) => {
+  return <df>{children}</df>;
+};
+
+Switch.Default = (props, children) => {
+  return <df>{children}</df>;
 };
