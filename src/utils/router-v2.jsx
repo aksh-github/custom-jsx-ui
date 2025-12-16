@@ -86,17 +86,17 @@ export function LinkV2(props, children) {
 }
 
 const navigate = (navigationEvent) => {
-  console.log(window.location.pathname, navigationEvent);
+  // console.log(window.location.pathname, navigationEvent);
 
   if (routerContext.get()?.pathname !== window.location.pathname) {
     // setCurrPath(window.location.pathname);
     const { pathname } = window.location;
-    console.log({
-      ...matchPath(pathname, {}),
-      search: window.location.search,
-      hash: window.location.hash,
-      state: window.history.state,
-    });
+    // console.log({
+    //   ...matchPath(pathname, {}),
+    //   search: window.location.search,
+    //   hash: window.location.hash,
+    //   state: window.history.state,
+    // });
     routerContext.set({
       ...matchPath(pathname, {}),
       search: window.location.search,
