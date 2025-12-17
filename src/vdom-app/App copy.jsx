@@ -13,7 +13,7 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { LinkV2, routerContext, routeInstance } from "@router-v2";
+import { LinkV2, routerContext, routerInstance } from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 import { SimpleSwitch } from "../compos/Switch";
@@ -373,7 +373,7 @@ function ComplexRoute(props) {
         <button
           onClick={() => {
             // alert("prog'matic navigatiion to be implemented");
-            routeInstance.navigator.go("/route2", { a: 10 });
+            routerInstance.navigator.go("/route2", { a: 10 });
           }}
         >
           Go to simple
@@ -624,7 +624,7 @@ export function App(props) {
   let ct = 0;
 
   createEffect(() => {
-    // routeInstance.init(onRouteChange);
+    // routerInstance.init(onRouteChange);
     if (footRef) {
       // const p = document.createElement("p");
       // p.textContent = footerTp();
@@ -657,7 +657,7 @@ export function App(props) {
     }
 
     return () => {
-      // routeInstance.cleanup();
+      // routerInstance.cleanup();
       clearInterval(timer);
       timer = footRef = null;
     };

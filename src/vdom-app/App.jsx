@@ -20,7 +20,7 @@ import { SimpleSwitch } from "../compos/Switch";
 import Heavy from "../compos/Heavy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
-import { routeInstance } from "../utils/router-v2";
+import { routerInstance } from "../utils/router-v2";
 // import { Sans } from "./sans/sans";
 
 // Type 1: Lazy import
@@ -373,7 +373,7 @@ function ComplexRoute(props) {
         <button
           onClick={() => {
             // alert("prog'matic navigatiion to be implemented");
-            routeInstance.navigator.go("/route2", { a: 10 });
+            routerInstance.navigator.go("/route2", { a: 10 });
           }}
         >
           Go to simple
@@ -609,12 +609,9 @@ const RouteSwitch = ({ curPath }) => {
 };
 
 export function App(props) {
-  // const [curPath, setCurPath] = createState(window.location.pathname);
-  console.log(routerContext.get());
+  // console.log(routerContext.get());
   const curPath = routerContext.get()?.pathname;
-  // const [route, setRoute] = signal("route2");
   let footRef = null;
-
   let [footerTp, setFooterTp] = createState(0);
   let timer = null;
 

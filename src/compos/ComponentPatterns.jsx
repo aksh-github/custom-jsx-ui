@@ -1,7 +1,7 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
 import { h, createState, createEffect, skipUpdate } from "@vdom-lib";
-import { routeInstance } from "../utils/router-v2";
+import { routerInstance } from "../utils/router-v2";
 
 export const TextArea = () => {
   // const [t, set] = atom("");
@@ -167,7 +167,7 @@ export const ArrayWithFragments = (props) => {
       <button
         onClick={() => {
           // alert("prog'matic navigatiion to be implemented");
-          routeInstance.navigator.go("/sans", { a: 10 });
+          routerInstance.navigator.go("/sans", { a: 10 });
         }}
       >
         Go to sans

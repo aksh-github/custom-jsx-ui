@@ -150,8 +150,8 @@ export const routerContext = createContext({
   pathname: window.location.pathname,
 });
 
-export const routeInstance = Router();
-routeInstance.init();
+export const routerInstance = Router();
+routerInstance.init();
 
 export const RouterAdv = ({ routeObj }) => {
   const [curPath, setCurPath] = createState({
@@ -165,9 +165,9 @@ export const RouterAdv = ({ routeObj }) => {
   };
 
   createEffect(() => {
-    routeInstance.init(onRouteChange);
+    routerInstance.init(onRouteChange);
     return () => {
-      routeInstance.cleanup();
+      routerInstance.cleanup();
     };
   }, []);
 

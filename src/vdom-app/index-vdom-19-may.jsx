@@ -14,7 +14,7 @@ import {
 
 // import { Sans } from "./sans/sans";
 import { RouterAdv, LinkV2 } from "@router-v2";
-import { routeInstance, routerContext } from "../utils/router-v2";
+import { routerInstance, routerContext } from "../utils/router-v2";
 
 // =======================
 
@@ -138,8 +138,8 @@ const Counter = () => {
   const Decide = ({ count }) => {
     // return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
-    // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
-    return count % 2 === 0 ? "this is even" : <Odd />;
+    return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+    // return count % 2 === 0 ? "this is even" : <Odd />;
   };
 
   return (
@@ -179,7 +179,7 @@ function Home(props) {
       <h1>Home {props?.a}</h1>
       <button
         onClick={() => {
-          routeInstance.navigator.go("/route2", { a: 10 });
+          routerInstance.navigator.go("/route2", { a: 10 });
         }}
       >
         Go to Route 2
@@ -221,7 +221,7 @@ function RouteTest() {
   return (
     <div>
       <Header />
-      <hr />
+      {/* <hr /> */}
       {/* <RouterAdv
         routeObj={{
           "/": Home,
@@ -239,7 +239,7 @@ function RouteTest() {
       /> */}
       <p>Current Route: {curPath}</p>
       <RouteSwitch curPath={curPath} />
-      <footer>some footer</footer>
+      {/* <footer>some footer</footer> */}
     </div>
   );
 }

@@ -44,7 +44,7 @@ export const routerContext: {
   set: (value: RouterLocation) => void;
 };
 
-export const routeInstance: RouterInstance;
+export const routerInstance: RouterInstance;
 
 export interface RouterAdvProps {
   routeObj: {
