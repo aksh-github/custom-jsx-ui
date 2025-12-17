@@ -381,7 +381,7 @@ export function Sans() {
 
       //3. load data
       checkProcessUpdates().then((res) => {
-        if (!res || res.allGood !== 2) {
+        if (!res) {
           console.log("** something wrong in checkProcessUpdates");
         }
         setIsLoaded(true);
