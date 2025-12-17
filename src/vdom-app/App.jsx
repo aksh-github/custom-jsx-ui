@@ -15,8 +15,6 @@ import HoleComponent from "../compos/web-compo";
 
 import { LinkV2, routerContext } from "@router-v2";
 
-// import { ArrayWithFragments } from "../compos/ComponentPatterns";
-import { SimpleSwitch } from "../compos/Switch";
 import Heavy from "../compos/Heavy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
