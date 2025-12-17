@@ -232,6 +232,7 @@ const loadRemoteHashData = () => {
 
 const checkProcessUpdates = () => {
   const promises = [];
+  let allGood = 0;
 
   Object.keys(UIObj).forEach((key) => {
     const dkey = UIObj[key].dkey;
@@ -257,34 +258,54 @@ const checkProcessUpdates = () => {
       res.forEach((item) => {
         // let data = await res[key].json();
         // console.log(data);
-        const dditem = dictionaryData[`${item.type}`];
-        if (dditem) {
-          const uio = Object.values(UIObj).find((it) => it.dkey === item.type);
+        if (item) {
+          const dditem = dictionaryData[`${item.type}`];
+          if (dditem) {
+            const uio = Object.values(UIObj).find(
+              (it) => it.dkey === item.type
+            );
 
-          dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
-          dditem.updateReqd = false;
-          // update local storage
-          requestIdleCallback(() => {
-            updateData(item.type, dditem.hash, dditem.d);
-          });
+            dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
+            dditem.updateReqd = false;
+            // update local storage
+            requestIdleCallback(() => {
+              updateData(item.type, dditem.hash, dditem.d);
+            });
+          }
+
+          ++allGood;
+        } else {
         }
       });
 
       // console.log("after update:", dictionaryData);
-
-      return Promise.resolve({
-        updatedNow: true,
-      }); // some non empty value
+      if (allGood === 2)
+        return Promise.resolve({
+          updatedNow: true,
+          allGood,
+        });
+      // some non empty value
+      else {
+        Promise.resolve({
+          updatedNow: false,
+          allGood,
+        });
+      }
     });
   }
 };
 
 const fetchData = (jsonFile) =>
   // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
-  fetch(`${env.VITE_BASEPATH}${jsonFile}`).then((res) => {
-    if (!res.ok) return;
-    return res.json();
-  });
+  fetch(`${env.VITE_BASEPATH}${jsonFile}`)
+    .then((res) => {
+      if (!res.ok) return;
+      return res.json();
+    })
+    .catch((e) => {
+      console.error("Something went wrong in reading: " + jsonFile);
+      console.error(e);
+    });
 
 function GenericTab({ prop, search: srch, dkey }) {
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
@@ -360,8 +381,8 @@ export function Sans() {
 
       //3. load data
       checkProcessUpdates().then((res) => {
-        if (!res) {
-          console.log("something wrong in update check");
+        if (!res || res.allGood !== 2) {
+          console.log("** something wrong in checkProcessUpdates");
         }
         setIsLoaded(true);
       });
