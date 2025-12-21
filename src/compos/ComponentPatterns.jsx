@@ -145,6 +145,8 @@ export const ArrayWithMap = () => {
 //   );
 // };
 
+const arr = [1000, 2000];
+
 export const ArrayWithFragments = (props) => {
   console.log("This works for only static, changes won't reflect", props?.some);
 
@@ -152,11 +154,14 @@ export const ArrayWithFragments = (props) => {
 
   setTimeout(() => {
     setSt("dynamic delayed value");
-  }, 4000);
+  }, 2000);
+
+  // setTimeout(() => {
+  //   setSt(null);
+  // }, 5000);
 
   const Row = ({ n }) => <p>{n}</p>;
 
-  const arr = [1000, 2000];
   // return () => <p>10</p>;
   return (
     <df>
