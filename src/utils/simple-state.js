@@ -321,15 +321,15 @@ const SmartState = (() => {
 
       lastComp = key.split("-")?.[0];
 
-      if (batchOp) {
-        if (lastComp) updateComps.add(lastComp);
-      } else if (isSkipping) {
+      if (isSkipping) {
       } else {
-        // updateComps.push(lastComp);
         if (lastComp) updateComps.add(lastComp);
-        reset();
 
-        throtUpdate();
+        if (!batchOp) {
+          reset();
+
+          throtUpdate();
+        }
       }
       lastComp = null;
 
@@ -391,15 +391,15 @@ const SmartState = (() => {
       if (temp === st) return;
 
       st = temp;
-      updated = true;
 
-      if (batchOp) {
-      } else if (isSkipping) {
+      if (isSkipping) {
       } else {
-        // updateComps.push(lastComp);
-        reset();
+        updated = true;
+        if (!batchOp) {
+          reset();
 
-        throtUpdate();
+          throtUpdate();
+        }
       }
     };
 
