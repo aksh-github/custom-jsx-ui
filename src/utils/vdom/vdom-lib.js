@@ -514,6 +514,13 @@ const microframe = (() => {
           return tnode;
         } else {
           return createElement(node.children[0]);
+          // const childLen = node.children.length;
+
+          // const $el2 = $d.createDocumentFragment();
+          // for (let i = 0; i < childLen; ++i) {
+          //   $el2.appendChild(createElement(node.children[i]));
+          // }
+          // return $el2;
         }
       } else
         return $d.createTextNode(node == null || node == undefined ? "" : node);
@@ -1025,6 +1032,32 @@ const microframe = (() => {
         log("have for loop custom component or see how this can be optimized");
       }
 
+      if (newLength + oldLength === 0) {
+      } else if (newLength === 0) {
+        // log(domNode, stk, CTR);
+        const toSkip = domNode.querySelectorAll("*").length;
+        CTR += toSkip;
+        stk.splice(CTR, CTR + toSkip);
+
+        patches.push({
+          p: domNode,
+          op: "REMOVEALL",
+        });
+      }
+      // else if (oldLength === 0) {
+      //   log("** APPEND: This is NOT BENEFICIAL");
+      //   const df = $d.createDocumentFragment();
+
+      //   for (let i = 0; i < newLength; ++i)
+      //     patches.push({
+      //       p: df,
+      //       op: "APPEND",
+      //       c: createElement(newNode.children[i]),
+      //     });
+
+      //   patches.push({ p: domNode, op: "APPEND", c: df });
+      // }
+      else {
       for (let i = 0; i < newLength || i < oldLength; i++) {
         // if (newNode.type === "df" && oldNode.type === "df") {
         //   doMain(newNode.children[i], oldNode.children[i]);
@@ -1032,6 +1065,7 @@ const microframe = (() => {
         //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
         // }
         updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+        }
       }
 
       if (optiPossible) {
@@ -1095,6 +1129,36 @@ const microframe = (() => {
             patch.p = null;
             patch.op = null;
           });
+
+          break;
+        case "REMOVEALL":
+          // if (patch.c.style) patch.c.style.visibility = "hidden";
+          if (patch.p.replaceChildren) {
+            let children = patch.p.childNodes;
+
+            for (let i = 0; i < children.length; ++i) {
+              let c = children[i];
+              disposeNodes(c).then(() => {
+                c = null;
+              });
+            }
+
+            children = null;
+
+            patch.p.replaceChildren();
+          } else {
+            const children = patch.p.childNodes;
+            for (let i = 0; i < children.length; ++i) {
+              let c = children[i];
+              patch.p.removeChild(c);
+              disposeNodes(c).then(() => {
+                c = null;
+              });
+            }
+          }
+
+          patch.p = null;
+          patch.op = null;
 
           break;
         case "REPLACE":
