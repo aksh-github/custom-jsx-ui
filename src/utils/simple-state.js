@@ -252,10 +252,11 @@ const SmartState = (() => {
     lastComp = fnLastComp = null;
     idx = fnIdx = 0;
 
-    // reset context update flag
-    Object.keys(gCtx).forEach((key) => {
-      gCtx[key]();
-    });
+    // reset context
+    ctxIdx = 0;
+    // Object.keys(gCtx).forEach((key) => {
+    //   gCtx[key]();
+    // });
 
     if (!keysArr) return;
 
@@ -363,16 +364,17 @@ const SmartState = (() => {
     let st = iv;
     let updated = false;
 
-    gCtx[ctxIdx] = () => {
-      updated = false;
-    };
-
-    ctxIdx++;
+    // ctxIdx++;
 
     const get = () => {
       log("get in context", currComp);
 
-      if (updated && currComp) updateComps.add(currComp);
+      // changed on 20 Dec
+      if (updated && currComp) {
+        updateComps.add(currComp);
+        updated = false;
+      }
+      // if (currComp) updateComps.add(currComp);
 
       return st;
     };
