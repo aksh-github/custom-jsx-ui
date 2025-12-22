@@ -728,8 +728,10 @@ const microframe = (() => {
     },
   };
 
-  window.addEventListener("popstate", () => navigate.set(true));
-  window.addEventListener("navigate", () => navigate.set(true));
+  if (window)
+    ["popstate", "navigate"].forEach((e) =>
+      window.addEventListener(e, () => navigate.set(!0))
+    );
 
   function wrapper($parent, newNode, oldNode, index = 0) {
     let stk = domListIterator(rootNode);
