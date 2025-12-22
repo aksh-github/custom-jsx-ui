@@ -1,5 +1,5 @@
-const log = console.log;
-// const log = () => {};
+// const log = console.log;
+const log = () => {};
 
 function _createEffect() {
   let prevDeps = [];
@@ -254,12 +254,14 @@ const SmartState = (() => {
 
     // reset context
     ctxIdx = 0;
-    // Object.keys(gCtx).forEach((key) => {
-    //   gCtx[key]();
-    // });
+    Object.entries(gCtx).forEach(([key, fn]) => {
+      fn();
+      delete gCtx[key];
+    });
 
     if (!keysArr) return;
 
+    // mount unmount etc
     keysArr.forEach((key) => {
       // call unmount
       for (const [_key, fn] of mountMap) {
@@ -280,8 +282,9 @@ const SmartState = (() => {
       // clear data
       Object.keys(gs).forEach((_key) => {
         if (_key.startsWith(key)) {
-          if (Array.isArray(gs[_key])) gs[_key].length = 0;
-          else gs[_key] = null;
+          // if (Array.isArray(gs[_key])) gs[_key].length = 0;
+          // else gs[_key] = null;
+
           delete gs[_key];
         }
         // console.log(gs);
@@ -326,7 +329,7 @@ const SmartState = (() => {
         if (lastComp) updateComps.add(lastComp);
 
         if (!batchOp) {
-          reset();
+          // reset();
 
           throtUpdate();
         }
@@ -372,7 +375,7 @@ const SmartState = (() => {
       // changed on 20 Dec
       if (updated && currComp) {
         updateComps.add(currComp);
-        updated = false;
+        // updated = false;
       }
       // if (currComp) updateComps.add(currComp);
 
@@ -395,8 +398,12 @@ const SmartState = (() => {
       if (isSkipping) {
       } else {
         updated = true;
+        gCtx[ctxIdx++] = () => {
+          updated = false;
+        };
+
         if (!batchOp) {
-          reset();
+          // reset();
 
           throtUpdate();
         }
