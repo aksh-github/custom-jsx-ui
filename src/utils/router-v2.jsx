@@ -196,9 +196,7 @@ export const RouterAdv = ({ routeObj }) => {
   } else {
     return (
       Comp?.render?.() ||
-      (routeObj["404"]?.render
-        ? routeObj["404"].render(finalUrl)
-        : routeObj["404"])
+      (routeObj["404"]?.render ? routeObj["404"].render() : routeObj["404"])
     );
   }
 };

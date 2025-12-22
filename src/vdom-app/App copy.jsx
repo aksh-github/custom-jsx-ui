@@ -594,7 +594,9 @@ const routeObj = {
   "/heavy": Heavy,
   "/json-form": JsonFormConsumer,
   404: {
-    render: (curPath) => {
+    render: () => {
+      // console.log(routerContext.get());
+      const curPath = routerContext.get()?.pathname;
       if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
       else return "Wrong path 404";
     },
@@ -604,7 +606,7 @@ const routeObj = {
 };
 
 export function App(props) {
-  console.log(routerContext.get());
+  // console.log(routerContext.get());
   // const [curPath, setCurPath] = createState({ url: window.location.pathname });
   const curPath = routerContext.get()?.pathname;
   // const [route, setRoute] = signal("route2");
