@@ -51,6 +51,28 @@
       zero-md {
         min-height: 500px;
       }
+
+      .typing {
+        font-size: 24px;
+        animation: typing 1s infinite;
+        width: 50px;
+        height: 50px;
+        background-color: blue;
+        display: inline-block;
+        margin: 5px;
+      }
+
+      @keyframes typing {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
     </style>
     <script
       type="module"
