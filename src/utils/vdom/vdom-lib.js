@@ -123,20 +123,13 @@ const microframe = (() => {
     currUnmount = null;
 
   function callUnmountAll() {
-    // log(suspenseCache);
-
     const keysToReset = [];
 
     for (const key in altFuncCache) {
       if (!funcCache[key]) {
         altFuncCache[key].unMount?.();
         altFuncCache[key].unMount = null;
-        if (suspenseCache[key]) {
-          suspenseCache[key] = null;
-          delete suspenseCache[key];
-        }
 
-        altFuncCache[key] = null;
         delete altFuncCache[key];
 
         // reset(key);
@@ -1221,8 +1214,6 @@ export const createContext = _createContext;
 export const skipUpdate = _skipUpdate;
 export const batch = _batch;
 export const smartRegisterCallback = _smartRegisterCallback;
-
-const suspenseCache = {};
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 
