@@ -21,77 +21,12 @@ import Heavy from "../compos/Heavy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
 import { RouterAdv } from "../utils/router-v2";
+import {
+  DynArrayWithFragments,
+  DynCompo,
+  DynTextArea,
+} from "../compos/DynamicExports";
 // import { Sans } from "./sans/sans";
-
-// Type 1: Lazy import
-
-// const LoadModule = (path) => import(path);
-
-// let ArrayWithFragments = null,
-//   resolved = false;
-// let _i = 0;
-// const LoadArrayWithFragments = () => {
-//   console.log("importing");
-//   const promise = LoadModule("../compos/ComponentPatterns?" + _i++)
-//     .then((mod) => {
-//       // ArrayWithFragments = mod.default;
-//       console.log(mod);
-//       resolved = true;
-//       ArrayWithFragments = mod.ArrayWithFragments;
-//     })
-//     .catch((e) => {
-//       console.log(e);
-//       ArrayWithFragments = () => <div>Something went wrong</div>;
-//     });
-// };
-// LoadArrayWithFragments();
-
-// Type 2: Load only when needed
-
-let _i = 0,
-  ArrayWithFragments = null;
-const ArrayWithFragmentsPromise = () => {
-  // if cond is not reqd strictly
-  if (ArrayWithFragments) {
-    return Promise.resolve(ArrayWithFragments);
-  }
-
-  return import("../compos/ComponentPatterns").then((mod) => {
-    ArrayWithFragments = mod.ArrayWithFragments;
-    // return ArrayWithFragments;
-    return ArrayWithFragments;
-  });
-  // .catch((e) => {
-  //   console.log(e);
-  // });
-};
-
-const photoURL = "https://picsum.photos/200"; // Gives pic of size 200x200
-const getMyAwesomePic = () => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => resolve(photoURL), 500);
-  });
-};
-
-const DynCompoPromise = () => {
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(() => resolve(10), 3000);
-  // });
-  return import("../compos/ComponentPatterns");
-  // .then((mod) => mod?.PropsDriven);
-};
-
-const DynTextArea = () => {
-  return import("../compos/ComponentPatterns");
-};
-
-const SansCompoPromise = () => {
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(() => resolve(10), 3000);
-  // });
-  return import("./sans/sans");
-  // .then((mod) => mod?.Sans);
-};
 
 const Topic = ({ topicId }) => <h3>{topicId}</h3>;
 
@@ -219,12 +154,7 @@ const Input = () => {
       >
         <DynTextArea />
       </SuspenseV2> */}
-      <Lazy
-        importFn={DynTextArea}
-        resolve="TextArea"
-        fallback={<div>Loading TextArea...</div>}
-        key="TextArea"
-      />
+      <DynTextArea />
     </div>
   );
 };
@@ -458,22 +388,9 @@ export const SimpleRoute = () => {
 
       <p>before</p>
 
-      {/* <SuspenseV2
-        key="textarea"
-        cacheKey="textarea"
-        fallback={<div>Loading TextArea...</div>}
-      >
-        <DynTextArea />
-      </SuspenseV2> */}
+      <DynTextArea />
 
-      <Lazy
-        importFn={() => import("../compos/ComponentPatterns")}
-        resolve="TextArea"
-        fallback={<div>Loading TextArea...</div>}
-        key="TextArea"
-      />
-
-      <Lazy
+      {/* <Lazy
         key="picurl"
         fallback={
           <div
@@ -496,28 +413,11 @@ export const SimpleRoute = () => {
             </div>
           );
         }}
-      </Lazy>
-      <Lazy
-        importFn={DynCompoPromise}
-        resolve="PropsDriven"
-        fallback={<div>Loading Props Driven...</div>}
-        key="PropsDriven"
-        n="This is a prop driven component"
-        // fallback="Loading..."
-        // errorFallback={<div>Something went wrong</div>}
-      />
+      </Lazy> */}
+
+      <DynCompo />
 
       <p>after</p>
-
-      {/* {data() ? (
-        <div>
-          <h3>This data will get erased after 7 seconds</h3>
-          {data()?.map((d) => {
-            const sv = d?.sv?.join(", ");
-            return <Row n={JSON.stringify(d)} />;
-          })}
-        </div>
-      ) : null} */}
     </div>
   );
 };
@@ -561,21 +461,7 @@ const routeObj = {
       return (
         <div>
           <div>before text</div>
-          {/* <SuspenseV2
-                  delay={3000}
-                  cacheKey={"awfp"}
-                  fallback={<div>Loading...</div>}
-                >
-                  <ArrayWithFragmentsPromise some={t} />
-                </SuspenseV2> */}
-          <Lazy
-            importFn={ArrayWithFragmentsPromise}
-            resolve="ArrayWithFragments"
-            fallback={<div>Loading Array with Fragments...</div>}
-            some={t}
-            key="awf"
-          />
-
+          <DynArrayWithFragments t={Date.now()} />
           <div>after text</div>
         </div>
       );
