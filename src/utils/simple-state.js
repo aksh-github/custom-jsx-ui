@@ -298,12 +298,12 @@ const SmartState = (() => {
       idx = 0;
     }
     const key = `${currComp}-${idx}`;
-    let st = gs[key] || iv;
-    let firstRun = gs[key] == undefined;
+    // let st = gs[key] || iv;
+    // let firstRun = gs[key] == undefined;
 
-    if (firstRun) gs[key] = st;
+    // if (firstRun) gs[key] = st;
 
-    // if (gs[key] == undefined) gs[key] = st;
+    if (gs[key] == undefined) gs[key] = iv;
 
     const get = () => {
       return gs[key];
@@ -355,7 +355,7 @@ const SmartState = (() => {
 
     idx++;
 
-    return [get(), set, specialSet];
+    return [gs[key], set, specialSet];
   };
 
   const context = (iv) => {
