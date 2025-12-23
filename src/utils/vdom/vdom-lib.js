@@ -481,15 +481,21 @@ const microframe = (() => {
   const appendChildren = (children, parent) => {
     let i = 0;
     const len = children.length;
+
     function processChunk(deadline) {
-      while (i < len && (deadline.timeRemaining() > 0 || deadline.didTimeout)) {
-        parent.appendChild(createElement(children[i]));
+      const fragment = document.createDocumentFragment();
+      while (i < len && deadline.timeRemaining() > 1) {
+        fragment.appendChild(createElement(children[i]));
         i++;
+      }
+      if (fragment.childNodes.length > 0) {
+        parent.appendChild(fragment);
       }
       if (i < len) {
         requestIdleCallback(processChunk);
       }
     }
+
     requestIdleCallback(processChunk);
   };
 
