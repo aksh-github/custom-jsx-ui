@@ -1,12 +1,12 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
 const log = console.log;
-// const logt = console.time,
-//   logte = console.timeEnd;
-const noop = () => {};
-// const log = noop
-const logt = noop;
-const logte = noop;
+const logt = console.time,
+  logte = console.timeEnd;
+// const noop = () => {};
+// const log = noop;
+// const logt = noop;
+// const logte = noop;
 const $d = document;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
@@ -981,7 +981,7 @@ const microframe = (() => {
         newNode?.props?.importFn ||
         (newNode?.props?.cacheKey && !newNode?.props?.fetch)
       ) {
-        CTR += 1;
+        // CTR += 1;
       }
 
       const domNode = stk[CTR];
@@ -1053,13 +1053,13 @@ const microframe = (() => {
       //   patches.push({ p: domNode, op: "APPEND", c: df });
       // }
       else {
-      for (let i = 0; i < newLength || i < oldLength; i++) {
-        // if (newNode.type === "df" && oldNode.type === "df") {
-        //   doMain(newNode.children[i], oldNode.children[i]);
-        // } else {
-        //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
-        // }
-        updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+        for (let i = 0; i < newLength || i < oldLength; i++) {
+          // if (newNode.type === "df" && oldNode.type === "df") {
+          //   doMain(newNode.children[i], oldNode.children[i]);
+          // } else {
+          //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+          // }
+          updateElement(domNode, newNode.children[i], oldNode.children[i], i);
         }
       }
 
