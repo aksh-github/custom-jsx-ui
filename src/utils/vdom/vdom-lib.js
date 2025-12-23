@@ -215,10 +215,10 @@ const microframe = (() => {
       //complex node
       if (rv?.type) {
         // rv is frag
-        if (rv.type === "df") {
-          // rv.props = { ...rv.props, _cc: rv?.children.length };
-          props = { ...props, fragChildLen: rv?.children.length };
-        }
+        // if (rv.type === "df") {
+        //   // rv.props = { ...rv.props, _cc: rv?.children.length };
+        //   props = { ...props, fragChildLen: rv?.children.length };
+        // }
 
         return {
           ...rv,
@@ -226,6 +226,8 @@ const microframe = (() => {
           $c: type.name,
           // children: rv.children,
           children: [rv],
+          // dont think its reqd
+          // fragChildLen: rv?.children.length || undefined,
           $p: curParent,
           key: props?.key,
           props: props || {},
@@ -285,17 +287,18 @@ const microframe = (() => {
 
     // frag case
     if (type === "df") {
-      let ct = 0;
-      for (let i = 0; i < children.length; ++i) {
-        if (children[i]?.type === "df") {
-          ct += children[i]?.props?.fragChildLen || 0;
-        } else {
-          ct += 1;
-        }
-      }
+      let ct = children.length;
+      // for (let i = 0; i < children.length; ++i) {
+      //   if (children[i]?.type === "df") {
+      //     ct += children[i]?.fragChildLen || 0;
+      //   } else {
+      //     ct += 1;
+      //   }
+      // }
       return {
         type,
-        props: { ...props, fragChildLen: ct },
+        props: props || {},
+        fragChildLen: ct,
         children,
       };
     } else
@@ -344,7 +347,8 @@ const microframe = (() => {
       name === "fragChildLen" ||
       // name === "ignoreNode" ||
       name === "fallback" ||
-      name === "importFn"
+      name === "importFn" ||
+      name === "error"
     );
   }
 
@@ -852,7 +856,7 @@ const microframe = (() => {
           }
 
           // additoinal logic for frag modify. This changed on 2-sep
-          const fragChildLen = oldNode?.props?.fragChildLen;
+          const fragChildLen = oldNode?.fragChildLen;
           // for frag case remove additional as well
           if (oldNode?.type === "df" && fragChildLen) {
             // for (let i = 1; i < fragChildLen; ++i) {
@@ -956,7 +960,7 @@ const microframe = (() => {
       if (actualComparison && comparisonsReqd === 0) {
         // log(newNode.props);
         // log(CTR, stk, newNode);
-        const { fragChildLen } = newNode.props;
+        const { fragChildLen } = newNode;
         if (fragChildLen) {
           // CTR += 1;
           let qc = CTR + 1;
@@ -983,12 +987,12 @@ const microframe = (() => {
         }
       }
 
-      if (
-        newNode?.props?.importFn ||
-        (newNode?.props?.cacheKey && !newNode?.props?.fetch)
-      ) {
-        // CTR += 1;
-      }
+      // if (
+      //   newNode?.props?.importFn ||
+      //   (newNode?.props?.cacheKey && !newNode?.props?.fetch)
+      // ) {
+      //   // CTR += 1;
+      // }
 
       const domNode = stk[CTR];
 
