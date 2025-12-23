@@ -221,8 +221,8 @@ function RouteTest() {
   return (
     <div>
       <Header />
-      {/* <hr /> */}
-      {/* <RouterAdv
+      <hr />
+      <RouterAdv
         routeObj={{
           "/": Home,
           "/route2": {
@@ -236,7 +236,7 @@ function RouteTest() {
           },
           404: "Not found",
         }}
-      /> */}
+      />
       <p>Current Route: {curPath}</p>
       <RouteSwitch curPath={curPath} />
       {/* <footer>some footer</footer> */}
