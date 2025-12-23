@@ -33,6 +33,8 @@ export function Lazy(
         })
         .catch((err) => {
           console.error(err);
+          suspenseCache[key] = null;
+          setErr("Something wrong!!");
           setCompSpl(null);
         });
     } else {
