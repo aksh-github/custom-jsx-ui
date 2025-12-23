@@ -33,7 +33,7 @@ export const TextArea = () => {
   };
 
   return (
-    <div style={{ backgroundColor: "beige" }}>
+    <section style={{ backgroundColor: "beige" }}>
       <button onClick={clear}>Clear</button>
       {/* <br />
         <span>{txt()}</span>
@@ -53,7 +53,7 @@ export const TextArea = () => {
         }}
         onInput={(e) => set(e.target.value)}
       />
-    </div>
+    </section>
   );
 };
 
