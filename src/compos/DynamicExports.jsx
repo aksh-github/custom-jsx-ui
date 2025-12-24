@@ -92,6 +92,7 @@ export const DynSans = () => (
     resolve="Sans"
     fallback={<p>Loading Sanskrit...</p>}
     key={"Sans"}
+    test={123}
     error={
       <div>
         <h1>Error</h1>

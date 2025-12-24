@@ -7,10 +7,7 @@ function Loader({ fallback }) {
   return fallback;
 }
 
-export function Lazy(
-  { key, importFn, fetchFn, fallback, clearOnUnmount, error, ...props },
-  child
-) {
+export function Lazy({ key, importFn, fallback, error, ...props }, child) {
   if (!importFn) throw Error("importFn is mandatory");
 
   const [Comp, , setCompSpl] = createState(suspenseCache[key]);
@@ -59,5 +56,7 @@ export function Lazy(
     // return { type: "div", props: {}, children: [fallback] };
     return <div>{fallback}</div>;
   }
-  return Comp ? <Comp {...props} __lazy /> : child(res);
+  // pass only relevant props
+  const { importFn: ifn, fallback: fb, error: er, resolve: re, ...p2 } = props;
+  return <Comp {...p2} key={key} />;
 }
