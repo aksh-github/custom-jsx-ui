@@ -666,7 +666,7 @@ const microframe = (() => {
 
     logt("TET");
 
-    // updateElement(rootNode, current, old);
+    // diffElement(rootNode, current, old);
     wrapper(rootNode, current, old);
 
     // log(performance.now());
@@ -757,7 +757,7 @@ const microframe = (() => {
     let comparisonsReqd = 0;
     let compareTill = 0;
 
-    function updateElement($parent, newNode, oldNode, index = 0) {
+    function diffElement($parent, newNode, oldNode, index = 0) {
       // if (!actualComparison && newNode?.type && oldNode?.type)
       //   return doMain(newNode, oldNode);
       if (!actualComparison && updateCompsSize) {
@@ -1067,9 +1067,9 @@ const microframe = (() => {
           // if (newNode.type === "df" && oldNode.type === "df") {
           //   doMain(newNode.children[i], oldNode.children[i]);
           // } else {
-          //   updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+          //   diffElement(domNode, newNode.children[i], oldNode.children[i], i);
           // }
-          updateElement(domNode, newNode.children[i], oldNode.children[i], i);
+          diffElement(domNode, newNode.children[i], oldNode.children[i], i);
         }
       }
 
@@ -1088,7 +1088,7 @@ const microframe = (() => {
       }
     }
 
-    updateElement($parent, newNode, oldNode, index);
+    diffElement($parent, newNode, oldNode, index);
 
     last = gdf = null;
     stk.length = 0;
