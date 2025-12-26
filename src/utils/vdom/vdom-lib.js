@@ -12,12 +12,19 @@ const $d = document;
 log("check https://github.com/pomber/incremental-rendering-demo");
 
 function propsChanged(oldProps, newProps) {
+  if (oldProps === newProps) return false;
+  if (!oldProps || !newProps) return true;
+
   const oldKeys = Object.keys(oldProps);
-  const newKeys = Object.keys(newProps);
+  if (oldKeys.length !== Object.keys(newProps).length) return true;
 
-  if (oldKeys.length !== newKeys.length) return true;
-
-  return oldKeys.some((key) => oldProps[key] !== newProps[key]);
+  for (let i = 0; i < oldKeys.length; i++) {
+    const key = oldKeys[i];
+    if (!(key in newProps) || oldProps[key] !== newProps[key]) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // end meta
@@ -772,8 +779,7 @@ const microframe = (() => {
       if (!isValid(oldNode)) {
         // if (oldNode?.type) {
         log("append: ");
-        // $parent.appendChild(createElement(newNode));
-        patches.push({ p: $parent, op: "APPEND", c: createElement(newNode) });
+        patches.push({ p: $parent, op: "APPEND", c: newNode });
       } else if (!isValid(newNode)) {
         // $parent.removeChild($parent.childNodes[index]);
         let el = $parent.childNodes[index];
@@ -814,7 +820,7 @@ const microframe = (() => {
           patches.push({
             p: dNode.parentNode,
             op: "REPLACE",
-            c: [createElement(newNode), dNode],
+            c: [newNode, dNode],
           });
 
           if (dNode?.nodeType === 1) {
@@ -838,7 +844,7 @@ const microframe = (() => {
           patches.push({
             p: $parent,
             op: "REPLACE",
-            c: [createElement(newNode), el],
+            c: [newNode, el],
           });
 
           if (el?.nodeType === 1) {
@@ -881,8 +887,7 @@ const microframe = (() => {
           //special case Compo with Array manipulation or no type (parent) for updating
           if ($parent?.appendChild) {
             // log("changed append: ");
-            const newEl = createElement(newNode);
-            if (newEl?.nodeName) {
+            if (newNode?.type) {
               // its dom node
               // log("use df");
               if (optiPossible) {
@@ -891,7 +896,7 @@ const microframe = (() => {
                 patches.push({
                   p: gdf,
                   op: "APPEND",
-                  c: newEl,
+                  c: newNode,
                 });
               } else {
                 // $parent.appendChild(newEl);
@@ -899,7 +904,7 @@ const microframe = (() => {
                 patches.push({
                   p: $parent,
                   op: "APPEND",
-                  c: newEl,
+                  c: newNode,
                 });
               }
             }
@@ -911,7 +916,7 @@ const microframe = (() => {
               patches.push({
                 p: $parent,
                 op: "CONTENT",
-                c: newEl?.textContent,
+                c: createElement(newNode)?.textContent,
               });
             }
           } else {
@@ -920,7 +925,7 @@ const microframe = (() => {
             patches.push({
               p: $parent?.parentNode,
               op: "APPEND",
-              c: createElement(newNode),
+              c: newNode,
             });
           }
         }
@@ -1090,7 +1095,7 @@ const microframe = (() => {
 
         patches.push({
           p: domNode,
-          op: "APPEND",
+          op: "APPENDDF",
           c: gdf,
         });
 
@@ -1132,8 +1137,11 @@ const microframe = (() => {
       const patch = patches.shift();
 
       switch (patch.op) {
-        case "APPEND":
+        case "APPENDDF":
           patch.p.appendChild(patch.c);
+          break;
+        case "APPEND":
+          patch.p.appendChild(createElement(patch.c));
           break;
 
         case "REMOVE":
@@ -1157,7 +1165,7 @@ const microframe = (() => {
           break;
 
         case "REPLACE":
-          patch.p.replaceChild(patch.c[0], patch.c[1]);
+          patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
           disposalPromises.push(disposeNodes(patch.c[1]));
           break;
 
