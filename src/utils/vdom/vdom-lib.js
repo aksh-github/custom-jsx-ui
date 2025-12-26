@@ -808,7 +808,7 @@ const microframe = (() => {
         }
         el = null;
         if (oldNode?.children) {
-          oldNode.children = oldNode.props = null;
+          old = oldNode.children = oldNode.props = null;
         }
       } else if (changed(newNode, oldNode)) {
         if (
@@ -931,7 +931,7 @@ const microframe = (() => {
         }
 
         if (oldNode?.children) {
-          oldNode.children = oldNode.props = null;
+          old = oldNode.children = oldNode.props = null;
         }
       } else if (newNode?.type) {
         doMain(newNode, oldNode);
@@ -1062,7 +1062,7 @@ const microframe = (() => {
         });
 
         if (oldNode?.children) {
-          oldNode.children = oldNode.props = null;
+          old = oldNode.children = oldNode.props = null;
         }
       }
       // else if (oldLength === 0) {
