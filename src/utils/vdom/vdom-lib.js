@@ -618,7 +618,7 @@ const microframe = (() => {
     old = curr(); // create latest vdom
     // log(performance.now());
     log(old);
-    log(funcCache);
+    // log(funcCache);
     // 1. set dom
     // rootNode.appendChild(createElement(old));
     if (rootNode.firstChild)
@@ -644,7 +644,7 @@ const microframe = (() => {
 
     let current = curr(); // create latest vdom
     logte("TETVD");
-    log(old, current);
+    // log(old, current);
     // const oldStack = CompoIterator().iterate(old);
     // const currStack = CompoIterator().iterate(current);
 
@@ -801,6 +801,9 @@ const microframe = (() => {
           }
         }
         el = null;
+        if (oldNode?.children) {
+          oldNode.children = oldNode.props = null;
+        }
       } else if (changed(newNode, oldNode)) {
         if (
           (newNode?.type === "df" && oldNode?.type === "df") ||
@@ -920,6 +923,10 @@ const microframe = (() => {
               c: createElement(newNode),
             });
           }
+        }
+
+        if (oldNode?.children) {
+          oldNode.children = oldNode.props = null;
         }
       } else if (newNode?.type) {
         doMain(newNode, oldNode);
@@ -1048,6 +1055,10 @@ const microframe = (() => {
           p: domNode,
           op: "REMOVEALL",
         });
+
+        if (oldNode?.children) {
+          oldNode.children = oldNode.props = null;
+        }
       }
       // else if (oldLength === 0) {
       //   log("** APPEND: This is NOT BENEFICIAL");
