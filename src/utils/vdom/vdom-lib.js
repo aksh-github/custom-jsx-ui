@@ -189,7 +189,7 @@ const microframe = (() => {
 
       currMount = currUnmount = null;
 
-      counter++;
+      // counter++;
 
       // callStack[callStack.length - 1].p = stack[stack.length - 2]?.n;
 
@@ -1115,80 +1115,59 @@ const microframe = (() => {
   }
 
   function applyPatches(patches) {
-    // log(patches);
+    const disposalPromises = [];
+
     while (patches.length) {
       const patch = patches.shift();
 
       switch (patch.op) {
         case "APPEND":
           patch.p.appendChild(patch.c);
-          patch.c = null;
-          patch.p = null;
-          patch.op = null;
           break;
+
         case "REMOVE":
-          // if (patch.c.style) patch.c.style.visibility = "hidden";
           patch.p.removeChild(patch.c);
-          disposeNodes(patch.c).then(() => {
-            patch.c = null;
-            patch.p = null;
-            patch.op = null;
-          });
-
+          disposalPromises.push(disposeNodes(patch.c));
           break;
+
         case "REMOVEALL":
-          // if (patch.c.style) patch.c.style.visibility = "hidden";
+          const childrenToDispose = Array.from(patch.p.childNodes);
+          disposalPromises.push(
+            Promise.all(childrenToDispose.map((c) => disposeNodes(c)))
+          );
+
           if (patch.p.replaceChildren) {
-            let children = patch.p.childNodes;
-
-            for (let i = 0; i < children.length; ++i) {
-              let c = children[i];
-              disposeNodes(c).then(() => {
-                c = null;
-              });
-            }
-
-            children = null;
-
             patch.p.replaceChildren();
           } else {
-            const children = patch.p.childNodes;
-            for (let i = 0; i < children.length; ++i) {
-              let c = children[i];
-              patch.p.removeChild(c);
-              disposeNodes(c).then(() => {
-                c = null;
-              });
+            while (patch.p.firstChild) {
+              patch.p.removeChild(patch.p.firstChild);
             }
           }
-
-          patch.p = null;
-          patch.op = null;
-
           break;
+
         case "REPLACE":
-          // log(patch);
           patch.p.replaceChild(patch.c[0], patch.c[1]);
-          // patch.p.insertBefore(patch.c[0], patch.c[1]);
-          // patch.p.removeChild(patch.c[1]);
-          // if (patch.c[1].style) patch.c[1].style.visibility = "hidden";
-          disposeNodes(patch.c[1]).then(() => {
-            patch.c.length = 0;
-            patch.p = null;
-            patch.op = null;
-          });
-
+          disposalPromises.push(disposeNodes(patch.c[1]));
           break;
+
         case "CONTENT":
           patch.p.textContent = patch.c;
-          patch.c = null;
-          patch.p = null;
-          patch.op = null;
           break;
-      } // switch
+      }
+
+      patch.p = patch.c = null;
     }
 
     patches.length = 0;
+
+    // Cleanup all references after all disposals complete
+    if (disposalPromises.length > 0) {
+      Promise.all(disposalPromises)
+        .catch((err) => log("Error during node disposal:", err))
+        .finally(() => {
+          disposalPromises.length = 0;
+        });
+    }
   }
 
   return {
