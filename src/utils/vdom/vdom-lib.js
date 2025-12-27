@@ -7,154 +7,23 @@ const logt = console.time,
 // const log = noop;
 // const logt = noop;
 // const logte = noop;
-const $d = document;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
-function propsChanged(oldProps, newProps) {
-  if (oldProps === newProps) return false;
-  if (!oldProps || !newProps) return true;
-
-  const oldKeys = Object.keys(oldProps);
-  if (oldKeys.length !== Object.keys(newProps).length) return true;
-
-  for (let i = 0; i < oldKeys.length; i++) {
-    const key = oldKeys[i];
-    if (!(key in newProps) || oldProps[key] !== newProps[key]) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // end meta
 
-import {
-  // atom,
-  createEffect as _createEffect,
-  createState as _createState,
-  createContext as _createContext,
-  skipUpdate as _skipUpdate,
-  batch as _batch,
-  smartRegisterCallback as _smartRegisterCallback,
-  init,
-  reset,
-  setCurrComp,
-  updateComps,
-  // updateCtx,
-} from "../simple-state";
 // publish as lib: https://www.youtube.com/watch?v=FITxnIDsMnw
 // import { diff, patch } from "./vdom-yt";
 
+let funcCache = {},
+  altFuncCache = {};
+
 const microframe = (() => {
-  let mountFns = [];
-  let funcCache = {},
-    altFuncCache = {};
-  let counter = 0;
   let currComp = null;
 
   let stack = [];
-
-  let rootNode = null;
-  let curr = null;
-  let old = null;
-
-  const disposeNodes = async (node) => {
-    // let domList = domListIterator(node);
-
-    // for (let i = domList.length - 1; i > -1; i--) {
-    //   eventListenerInst.unregisterEventListener(domList[i]);
-    //   // domList[i] = null;
-
-    //   if (i % 50 === 0) {
-    //     await yieldToMain();
-    //   }
-    // }
-
-    // domList = node = null;
-
-    // new
-
-    // Use iteration instead of recursion
-    const nodeStack = [node];
-
-    while (nodeStack.length > 0) {
-      let current = nodeStack.pop();
-
-      if (!current) continue;
-
-      // if (
-      //   current.getAttribute &&
-      //   current.getAttribute("ignorenode") === "true"
-      // ) {
-      //   continue;
-      // }
-
-      // Clean up event listeners
-      // eventListenerInst.unregisterEventListener(current);
-      if (current && current._events) {
-        for (const evt in current._events) {
-          current.removeEventListener(evt, current._events[evt], true);
-        }
-        current._events = null;
-      }
-
-      // Add children to stack
-      if (current.childNodes) {
-        for (let i = current.childNodes.length - 1; i >= 0; i--) {
-          nodeStack.push(current.childNodes[i]);
-          if (i % 50 === 0) {
-            await yieldToMain();
-          }
-        }
-      }
-
-      // Clear references
-      // current.nodeValue = null;
-      current?.remove?.();
-
-      current = null;
-    }
-
-    // Clear final references
-
-    node = null;
-    nodeStack.length = 0;
-
-    // end
-  };
-
-  // mount n unmount
-
   let currMount = null,
     currUnmount = null;
-
-  function callUnmountAll() {
-    const keysToReset = [];
-
-    for (const key in altFuncCache) {
-      if (!funcCache[key]) {
-        altFuncCache[key].unMount?.();
-        altFuncCache[key].unMount = null;
-
-        delete altFuncCache[key];
-
-        // reset(key);
-        keysToReset.push(key);
-      }
-    }
-    reset(keysToReset);
-  }
-
-  function callMountAll() {
-    while (mountFns?.length) {
-      // log(mountFns.pop());
-      mountFns.pop()();
-    }
-
-    // if (len)
-    init();
-  }
 
   // vdom
 
@@ -187,14 +56,12 @@ const microframe = (() => {
         fname: type.name,
         // fn: _fn,
         mount: true,
-        unMount: currUnmount,
+        unMount: null,
         p: curParent,
         key: props?.key,
       };
 
       // if (props?.key !== undefined) callStack[counter].key = props.key;
-
-      currMount = currUnmount = null;
 
       // counter++;
 
@@ -324,7 +191,46 @@ const microframe = (() => {
       };
   }
 
+  return {
+    h,
+    df,
+  };
+})();
+
+const dom = (() => {
+  // mount n unmount
+  let mountFns = [];
+
+  function callUnmountAll() {
+    const keysToReset = [];
+
+    for (const key in altFuncCache) {
+      if (!funcCache[key]) {
+        altFuncCache[key].unMount?.();
+        altFuncCache[key].unMount = null;
+
+        delete altFuncCache[key];
+
+        // reset(key);
+        keysToReset.push(key);
+      }
+    }
+    reset(keysToReset);
+  }
+
+  function callMountAll() {
+    while (mountFns?.length) {
+      // log(mountFns.pop());
+      mountFns.pop()();
+    }
+
+    // if (len)
+    init();
+  }
   // dom helpers
+  let rootNode = null;
+  let curr = null;
+  let old = null;
 
   function setBooleanProp($target, name, value) {
     if (value) {
@@ -457,6 +363,7 @@ const microframe = (() => {
 
   // vdom to dom
 
+  const $d = document;
   // SVG
 
   const $sns = "http://www.w3.org/2000/svg";
@@ -644,7 +551,7 @@ const microframe = (() => {
 
   // all delta updates
   function forceUpdate() {
-    counter = 0; // v imp
+    // counter = 0; // v imp
 
     // log(performance.now());
     logt("TETVD");
@@ -1189,13 +1096,90 @@ const microframe = (() => {
     }
   }
 
+  const disposeNodes = async (node) => {
+    // let domList = domListIterator(node);
+
+    // for (let i = domList.length - 1; i > -1; i--) {
+    //   eventListenerInst.unregisterEventListener(domList[i]);
+    //   // domList[i] = null;
+
+    //   if (i % 50 === 0) {
+    //     await yieldToMain();
+    //   }
+    // }
+
+    // domList = node = null;
+
+    // new
+
+    // Use iteration instead of recursion
+    const nodeStack = [node];
+
+    while (nodeStack.length > 0) {
+      let current = nodeStack.pop();
+
+      if (!current) continue;
+
+      // if (
+      //   current.getAttribute &&
+      //   current.getAttribute("ignorenode") === "true"
+      // ) {
+      //   continue;
+      // }
+
+      // Clean up event listeners
+      // eventListenerInst.unregisterEventListener(current);
+      if (current && current._events) {
+        for (const evt in current._events) {
+          current.removeEventListener(evt, current._events[evt], true);
+        }
+        current._events = null;
+      }
+
+      // Add children to stack
+      if (current.childNodes) {
+        for (let i = current.childNodes.length - 1; i >= 0; i--) {
+          nodeStack.push(current.childNodes[i]);
+          if (i % 50 === 0) {
+            await yieldToMain();
+          }
+        }
+      }
+
+      // Clear references
+      // current.nodeValue = null;
+      current?.remove?.();
+
+      current = null;
+    }
+
+    // Clear final references
+
+    node = null;
+    nodeStack.length = 0;
+
+    // end
+  };
+
+  function propsChanged(oldProps, newProps) {
+    if (oldProps === newProps) return false;
+    if (!oldProps || !newProps) return true;
+
+    const oldKeys = Object.keys(oldProps);
+    if (oldKeys.length !== Object.keys(newProps).length) return true;
+
+    for (let i = 0; i < oldKeys.length; i++) {
+      const key = oldKeys[i];
+      if (!(key in newProps) || oldProps[key] !== newProps[key]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   return {
     mount,
     forceUpdate,
-    // onMount,
-    // onCleanup,
-    h,
-    df,
     createElement,
   };
 })();
@@ -1203,25 +1187,32 @@ const microframe = (() => {
 import { Lazy as _lazy } from "./lazy";
 import { memo as _memo } from "./memo";
 
-export const mount = microframe.mount;
-export const forceUpdate = microframe.forceUpdate;
 // export const onMount = microframe.onMount;
 // export const onCleanup = microframe.onCleanup;
 export const h = microframe.h;
 export const df = microframe.df;
-export const createElement = microframe.createElement;
+
+export const mount = dom.mount;
+export const forceUpdate = dom.forceUpdate;
+export const createElement = dom.createElement;
 
 // other helpful Components
 export const Lazy = _lazy;
 export const memo = _memo;
 
-// state exports
-export const createState = _createState;
-export const createEffect = _createEffect;
-export const createContext = _createContext;
-export const skipUpdate = _skipUpdate;
-export const batch = _batch;
-export const smartRegisterCallback = _smartRegisterCallback;
+// state import exports
+
+import { init, reset, setCurrComp, updateComps } from "../simple-state";
+
+// export const createState = _createState;
+export {
+  createEffect,
+  createState,
+  createContext,
+  skipUpdate,
+  batch,
+  smartRegisterCallback,
+} from "../simple-state";
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 
