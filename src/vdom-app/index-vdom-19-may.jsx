@@ -15,6 +15,7 @@ import {
 // import { Sans } from "./sans/sans";
 import { RouterAdv, LinkV2 } from "@router-v2";
 import { routerInstance, routerContext } from "../utils/router-v2";
+import { PerfTest } from "../compos/PerfTest";
 
 // =======================
 
@@ -96,7 +97,7 @@ const Child = memo(({ ctr }) => {
 }, "Child");
 
 const Counter = () => {
-  const [count, setCount] = createState(0);
+  const [count, setCount] = createState(-1);
   const [t, sett] = createState("");
 
   console.log("Counter");

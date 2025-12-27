@@ -2,7 +2,7 @@
 
 import { h, createContext } from "../utils/vdom/vdom-lib";
 
-const SIZE = 10;
+const SIZE = 1000;
 
 const random = (max) => Math.round(Math.random() * SIZE) % max;
 
