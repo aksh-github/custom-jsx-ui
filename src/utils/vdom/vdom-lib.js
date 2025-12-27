@@ -39,7 +39,7 @@ const microframe = (() => {
 
     if (typeof type === "function") {
       curParent = stack[stack.length - 1]?.n;
-      // log("curr parent is", curParent, type.name);
+      // log("curre parent is", curParent, type.name);
       stack.push({ n: type?.name });
 
       const cacheKey = `${type.name}:${curParent}:${props?.key}`;
@@ -1177,6 +1177,75 @@ const dom = (() => {
     return false;
   }
 
+  function isWebComponent(element) {
+    // Check if the tag name includes a hyphen
+    return element.tagName.includes("-");
+  }
+
+  ///////////////
+  // alternate 1 (non recursive) for walkDom // tested and works
+  // inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
+  function domListIterator(_rootNode) {
+    // pass rootNode if its not global
+    // log(next);
+    let arr = [_rootNode];
+    let next = _rootNode;
+
+    function iterChild() {
+      while (next) {
+        // log(next);
+        // arr.push(next);
+        // const notToSkip = !next.getAttribute("ignorenode");
+        const notToSkip = !(
+          next?.getAttribute("ignorenode") ||
+          next.tagName === "IFRAME" ||
+          isWebComponent(next)
+        );
+
+        if (next.firstElementChild && notToSkip) {
+          next = next.firstElementChild;
+          // log(next);
+          arr.push(next);
+        } else {
+          iterSibling();
+        }
+      }
+    }
+
+    function iterSibling() {
+      while (next) {
+        if (next.nextElementSibling) {
+          next = next.nextElementSibling;
+
+          // log(next);
+          arr.push(next);
+          return;
+        }
+
+        next = next.parentElement;
+
+        if (next === _rootNode) {
+          next = null;
+        }
+      }
+    }
+
+    iterChild();
+    next = _rootNode = null;
+    return arr;
+  }
+
+  function yieldToMain() {
+    if (globalThis.scheduler?.yield) {
+      return scheduler.yield();
+    }
+
+    // Fall back to yielding with setTimeout.
+    return new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  }
+
   return {
     mount,
     forceUpdate,
@@ -1218,72 +1287,3 @@ export {
 
 // export function SuspenseV2(props, child) {
 // This function is still available in 24jun25 br in commented form
-
-function isWebComponent(element) {
-  // Check if the tag name includes a hyphen
-  return element.tagName.includes("-");
-}
-
-///////////////
-// alternate 1 (non recursive) for walkDom // tested and works
-// inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
-function domListIterator(_rootNode) {
-  // pass rootNode if its not global
-  // log(next);
-  let arr = [_rootNode];
-  let next = _rootNode;
-
-  function iterChild() {
-    while (next) {
-      // log(next);
-      // arr.push(next);
-      // const notToSkip = !next.getAttribute("ignorenode");
-      const notToSkip = !(
-        next?.getAttribute("ignorenode") ||
-        next.tagName === "IFRAME" ||
-        isWebComponent(next)
-      );
-
-      if (next.firstElementChild && notToSkip) {
-        next = next.firstElementChild;
-        // log(next);
-        arr.push(next);
-      } else {
-        iterSibling();
-      }
-    }
-  }
-
-  function iterSibling() {
-    while (next) {
-      if (next.nextElementSibling) {
-        next = next.nextElementSibling;
-
-        // log(next);
-        arr.push(next);
-        return;
-      }
-
-      next = next.parentElement;
-
-      if (next === _rootNode) {
-        next = null;
-      }
-    }
-  }
-
-  iterChild();
-  next = _rootNode = null;
-  return arr;
-}
-
-function yieldToMain() {
-  if (globalThis.scheduler?.yield) {
-    return scheduler.yield();
-  }
-
-  // Fall back to yielding with setTimeout.
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0);
-  });
-}
