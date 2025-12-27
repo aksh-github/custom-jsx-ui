@@ -98,7 +98,8 @@ const listReducer = (state, action) => {
       dataCtx.set(data);
       return { data: data, selected: 0 };
     case "ADD":
-      data = data.concat(buildData(SIZE));
+      const newData = dataCtx.get().slice(0);
+      data = newData.concat(buildData(SIZE));
       dataCtx.set(data);
       return { data: data, selected };
     case "UPDATE": {
