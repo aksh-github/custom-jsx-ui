@@ -13,14 +13,13 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { LinkV2, routerContext } from "@router-v2";
+import { LinkV2, routerContext, RouterAdv, routerInstance } from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
 import Heavy from "../compos/Heavy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
-import { RouterAdv, routerInstance } from "../utils/router-v2";
 import {
   DynArrayWithFragments,
   DynCompo,
