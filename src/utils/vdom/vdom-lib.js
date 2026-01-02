@@ -256,12 +256,11 @@ const dom = (() => {
 
   function isCustomProp(name) {
     return (
-      isEventProp(name) ||
-      name === "fragChildLen" ||
+      isEventProp(name) || name === "fragChildLen"
       // name === "ignoreNode" ||
-      name === "fallback" ||
-      name === "importFn" ||
-      name === "error"
+      // name === "fallback" ||
+      // name === "importFn" ||
+      // name === "error"
     );
   }
 
