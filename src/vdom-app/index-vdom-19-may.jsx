@@ -1,4 +1,4 @@
-import { App } from "./App copy";
+import { App } from "./App";
 
 import {
   h,
@@ -166,7 +166,7 @@ const Counter = () => {
 };
 
 const root = document.getElementById("root-vdom");
-mount(root, () => <Counter />);
+mount(root, () => <App type2="switch" />);
 // mount(root, () => <Sans />);
 
 // Usage
