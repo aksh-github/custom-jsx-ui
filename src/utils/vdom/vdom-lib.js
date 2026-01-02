@@ -47,7 +47,7 @@ const microframe = (() => {
       setCurrComp(cacheKey);
       currComp = cacheKey;
 
-      let rv = type(props, ...children);
+      let rv = type(props, children);
 
       // if (altFuncCache) {
       // this is available in 24jun25 br in commented form
