@@ -39,12 +39,17 @@ const TextAreaComp = () => {
   return import("../compos/ComponentPatterns");
 };
 
-const SansCompoPromise = () => {
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(() => resolve(10), 3000);
-  // });
-  return import("../vdom-app/sans/sans");
-  // .then((mod) => mod?.Sans);
+// const SansCompoPromise = () => {
+//   // return new Promise((resolve, reject) => {
+//   //   setTimeout(() => resolve(10), 3000);
+//   // });
+//   return import("../vdom-app/sans/sans");
+//   // .then((mod) => mod?.Sans);
+// };
+
+const SansCompoPromise = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 4000));
+  return await import("../vdom-app/sans/sans");
 };
 
 // 2. Util functions to use above promises

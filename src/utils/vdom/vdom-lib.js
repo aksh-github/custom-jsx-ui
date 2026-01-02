@@ -1,13 +1,12 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-const log = console.log;
-const logt = console.time,
-  logte = console.timeEnd;
-// const noop = () => {};
-// const log = noop;
-// const logt = noop;
-// const logte = noop;
-const $d = document;
+// const log = console.log;
+// const logt = console.time,
+//   logte = console.timeEnd;
+const noop = () => {};
+const log = noop;
+const logt = noop;
+const logte = noop;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
@@ -1021,8 +1020,7 @@ const microframe = (() => {
         if (newNode?.props?.ignoreNode) return;
 
         // dont enable below condition
-        // if (actualComparison)
-        {
+        if (actualComparison) {
           if (
             oldNode.type === newNode.type &&
             propsChanged(oldNode.props, newNode.props)

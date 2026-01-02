@@ -400,7 +400,7 @@ export function Sans() {
 
   return (
     <div className="sans">
-      <header className="sticky-header">
+      <header className="sticky-header" role="banner">
         <h1 className="main-head">संस्कृतकोष:</h1>
 
         {/* <div class="radar">
@@ -453,14 +453,14 @@ export function Sans() {
         <header style={{ backgroundColor: "bisque" }}>footer with skip</header>
       </Skip> */}
       {isLoaded ? (
-        <div className="search-wrapper">
+        <main className="search-wrapper" role="main">
           <GenericTab
             key={UIObj[currTab].dkey}
             dkey={UIObj[currTab].dkey}
             prop={currTab}
             search={search}
           />
-        </div>
+        </main>
       ) : (
         <p>Loading...</p>
       )}
