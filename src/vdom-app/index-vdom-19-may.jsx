@@ -1,4 +1,4 @@
-import { App } from "./App";
+import { App } from "./App copy";
 
 import {
   h,
@@ -96,6 +96,11 @@ const Child = memo(({ ctr }) => {
   return <p>{ctr}</p>;
 }, "Child");
 
+const style = {
+  backgroundColor: "lightblue",
+  padding: "10px",
+};
+
 const Counter = () => {
   const [count, setCount] = createState(-1);
   const [t, sett] = createState("");
@@ -137,23 +142,16 @@ const Counter = () => {
   };
 
   const Decide = ({ count }) => {
-    // return count % 2 === 0 ? <Even /> : <Odd />;
+    return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
-    return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+    // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
   };
 
   return (
     <div>
       <h2>Counter: {count}</h2>
-      <p
-        style={{
-          backgroundColor: "lightblue",
-          padding: "10px",
-        }}
-      >
-        {ctx.get()}
-      </p>
+      <p style={style}>{ctx.get()}</p>
       <button onClick={() => setCount((count) => count + 1)}>Increment</button>
       <hr />
       <Decide count={count} />
@@ -168,7 +166,7 @@ const Counter = () => {
 };
 
 const root = document.getElementById("root-vdom");
-mount(root, () => <App />);
+mount(root, () => <Counter />);
 // mount(root, () => <Sans />);
 
 // Usage
