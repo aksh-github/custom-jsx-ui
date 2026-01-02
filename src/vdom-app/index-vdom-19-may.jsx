@@ -166,7 +166,7 @@ const Counter = () => {
 };
 
 const root = document.getElementById("root-vdom");
-mount(root, () => <App type2="switch" />);
+mount(root, () => <App type="dyn" />);
 // mount(root, () => <Sans />);
 
 // Usage

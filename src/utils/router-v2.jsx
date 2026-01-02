@@ -1,11 +1,14 @@
 import { h, createContext, createState, createEffect } from "@vdom-lib";
 
+// const log = console.log;
+const log = () => {};
+
 // import { domv2, onMount, onCleanup } from "./dom/lib.v2";
 
-// console.log(
+// log(
 //   "check: https://github.com/nanojsx/nano/blob/master/src/components/router.ts"
 // );
-// console.log(
+// log(
 //   "check: https://codesandbox.io/s/build-own-react-router-v4-mpslz , https://www.youtube.com/watch?v=1knvu0a3k0w"
 // );
 
@@ -38,6 +41,37 @@ const historyReplace = (path, state) => {
   }
 };
 
+/**
+ * Converts path pattern to regex and extracts parameter names
+ * @param {string} path - Path pattern like "/users/:id" or "/posts/:postId/comments/:commentId"
+ * @returns {Object} - { regex, paramNames }
+ */
+const pathToRegex = (path) => {
+  const paramNames = [];
+
+  // Escape special regex characters except : and *
+  let regexPath = path
+    .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+    // Replace :param with capturing group
+    .replace(/:(\w+)/g, (_, paramName) => {
+      paramNames.push(paramName);
+      return "([^\\/]+)"; // Match anything except /
+    })
+    // Replace * with wildcard
+    .replace(/\*/g, "(.*)");
+
+  return {
+    regex: new RegExp(`^${regexPath}$`),
+    paramNames,
+  };
+};
+
+/**
+ * Matches a pathname against a route pattern and extracts parameters
+ * @param {string} pathname - Current URL pathname
+ * @param {Object} options - { exact, path }
+ * @returns {Object|null} - Match object with pathname, params, isExact or null
+ */
 const matchPath = (pathname, options) => {
   const { exact = false, path } = options;
 
@@ -49,7 +83,26 @@ const matchPath = (pathname, options) => {
     };
   }
 
-  const match = new RegExp(`^${path}`).exec(pathname);
+  // Check if path has dynamic segments
+  const hasDynamicSegments = path.includes(":") || path.includes("*");
+
+  if (!hasDynamicSegments) {
+    // Simple exact match for static paths
+    const isExact = pathname === path;
+    const match = exact ? isExact : pathname.startsWith(path);
+
+    if (!match) return null;
+
+    return {
+      pathname,
+      params: {},
+      isExact,
+    };
+  }
+
+  // Dynamic path matching
+  const { regex, paramNames } = pathToRegex(path);
+  const match = regex.exec(pathname);
 
   if (!match) return null;
 
@@ -73,7 +126,7 @@ const matchPath = (pathname, options) => {
 };
 
 export function LinkV2(props, children) {
-  // console.log(props, children);
+  // log(props, children);
   const { to, replace } = props;
 
   return (
@@ -95,12 +148,12 @@ export function LinkV2(props, children) {
 }
 
 const navigate = (navigationEvent) => {
-  // console.log(window.location.pathname, navigationEvent);
+  // log(window.location.pathname, navigationEvent);
 
   if (routerContext.get()?.pathname !== window.location.pathname) {
     // setCurrPath(window.location.pathname);
     const { pathname } = window.location;
-    // console.log({
+    // log({
     //   ...matchPath(pathname, {}),
     //   search: window.location.search,
     //   hash: window.location.hash,
@@ -195,7 +248,7 @@ export const RouterAdv = ({ routeObj }) => {
   //   });
   //   if (match) {
   //     const Comp = routeObj[path];
-  //     console.log(Comp);
+  //     log(Comp);
   //     if (Comp && typeof Comp === "function") {
   //       return <Comp match={match} />;
   //     } else {
@@ -214,3 +267,92 @@ export const RouterAdv = ({ routeObj }) => {
     );
   }
 };
+
+/**
+ * RouterSwitch component - renders only the first matching route
+ * Prevents multiple routes from rendering simultaneously
+ *
+ * Usage:
+ * <RouterSwitch>
+ * <Route path="/users/:id" component={UserProfile} />
+ * <Route path="/users" component={UserList} />
+ * <Route path="/docs/*" component={Docs} />
+ * <Route path="*" component={NotFound} />
+ * </RouterSwitch>
+ */
+export function RouterSwitch(props, children) {
+  const finalUrl = routerContext.get()?.pathname || window.location.pathname;
+
+  // Ensure children is an array
+  const childArray = Array.isArray(children) ? children : [children];
+
+  // Find first matching route
+  for (let i = 0; i < childArray.length; i++) {
+    const child = childArray[i];
+
+    // Skip non-Route children
+    if (!child || !child.props) return null;
+
+    const { path, exact = true } = child.props;
+
+    // Match wildcard or specific path
+    const match = path
+      ? matchPath(finalUrl, { path, exact })
+      : { pathname: finalUrl, params: {}, isExact: true }; // path="*" or no path
+
+    if (match) {
+      log("RouterSwitch matched:", path, match);
+
+      // log(props, child, children);
+      return child;
+      // const {
+      //   component: Component,
+      //   render,
+      //   children: routeChildren,
+      // } = child.props;
+      // // Priority: children > component > render
+      // if (routeChildren) {
+      //   return typeof routeChildren === "function"
+      //     ? routeChildren()
+      //     : routeChildren;
+      // }
+      // if (Component) {
+      //   return <Component match={match} params={match.params} />;
+      // }
+      // if (render) {
+      //   return render();
+      // }
+      // return null;
+    }
+  }
+
+  // No match found
+  return null;
+}
+
+/**
+ * Route component - wraps a component with path matching
+ * Used inside RouterSwitch to declaratively define routes
+ */
+export function Route(
+  { path, exact = true, component: Component, render },
+  children
+) {
+  const finalUrl = routerContext.get()?.pathname || window.location.pathname;
+
+  const match = matchPath(finalUrl, { path, exact });
+
+  if (!match) return null;
+
+  // Priority: component > render
+
+  if (Component) {
+    return <Component />;
+  }
+
+  if (render) {
+    return render();
+  }
+
+  return null;
+}

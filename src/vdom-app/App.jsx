@@ -13,7 +13,14 @@ import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
-import { LinkV2, routerContext, RouterAdv, routerInstance } from "@router-v2";
+import {
+  LinkV2,
+  routerContext,
+  RouterAdv,
+  routerInstance,
+  RouterSwitch,
+  Route,
+} from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
@@ -451,7 +458,7 @@ const Header = () => (
   </ul>
 );
 
-const RouteSwitch = ({ curPath }) => {
+const MyRouteSwitch = ({ curPath }) => {
   switch (curPath) {
     // switch (route()) {
     case "/route2":
@@ -592,16 +599,24 @@ export function App(props) {
     };
   }, []);
 
+  const Switch = ({ type, cp }) => {
+    switch (type) {
+      case "built-in":
+        return <BuiltInSwitch curPath={cp} />;
+      case "dyn":
+        return <RouterAdv routeObj={routeObj} />;
+      case "switch":
+      default:
+        return <MyRouteSwitch curPath={cp} />;
+    }
+  };
+
   return (
     <div>
       <Header />
       <hr />
 
-      {props?.type === "switch" ? (
-        <RouteSwitch curPath={curPath} />
-      ) : (
-        <RouterAdv routeObj={routeObj} />
-      )}
+      <Switch type={props.type} cp={curPath} />
 
       <footer
         ref={(_ref) => (footRef = _ref)}
@@ -611,5 +626,60 @@ export function App(props) {
       ></footer>
       <div>last element....</div>
     </div>
+  );
+}
+function BuiltInSwitch() {
+  return (
+    <RouterSwitch>
+      <Route path="/" component={ComplexRoute} />
+      <Route path="/route2" component={SimpleRoute} />
+      <Route path="/embed" exact={false} component={Embed} />
+      <Route
+        path="/frag"
+        exact={false}
+        render={() => {
+          const t = Date.now();
+
+          return (
+            <div>
+              <div>before text</div>
+              <DynArrayWithFragments t={Date.now()} />
+              <div>after text</div>
+            </div>
+          );
+        }}
+      />
+      <Route
+        path="/topics"
+        exact={false}
+        render={() => <Topics basepath="/topics" />}
+      />
+      <Route
+        path="/topics/*"
+        exact={false}
+        render={() => <Topics basepath="/topics" />}
+      />
+
+      <Route path="/heavy" component={Heavy} />
+      <Route path="/json-form" component={JsonFormConsumer} />
+      <Route
+        path="/sans"
+        exact={false}
+        render={() => (
+          <Lazy
+            importFn={() => import("./sans/sans")}
+            resolve="Sans"
+            fallback={<p>Loading Sanskrit...</p>}
+            key="sans"
+          />
+        )}
+      />
+      <Route
+        path="*"
+        render={() => {
+          return <h1>Not Found</h1>;
+        }}
+      />
+    </RouterSwitch>
   );
 }
