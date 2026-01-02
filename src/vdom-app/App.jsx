@@ -20,7 +20,7 @@ import { LinkV2, routerContext } from "@router-v2";
 import Heavy from "../compos/Heavy";
 import { JsonFormConsumer } from "./dyn-json/JsonFormConsumer";
 import { Embed } from "../compos/ComponentPatterns";
-import { routerInstance } from "../utils/router-v2";
+import { RouterAdv, routerInstance } from "../utils/router-v2";
 import {
   DynArrayWithFragments,
   DynCompo,
@@ -504,6 +504,46 @@ const RouteSwitch = ({ curPath }) => {
   }
 };
 
+const routeObj = {
+  "/": ComplexRoute,
+  "/embed": Embed,
+  "/frag": {
+    render: () => {
+      const t = Date.now();
+
+      return (
+        <div>
+          <div>before text</div>
+          <DynArrayWithFragments t={Date.now()} />
+          <div>after text</div>
+        </div>
+      );
+    },
+  },
+  "/sans": {
+    render: () => (
+      <Lazy
+        importFn={() => import("./sans/sans")}
+        resolve="Sans"
+        fallback={<p>Loading Sanskrit...</p>}
+        key="sans"
+      />
+    ),
+  },
+  "/heavy": Heavy,
+  "/json-form": JsonFormConsumer,
+  404: {
+    render: () => {
+      // console.log(routerContext.get());
+      const curPath = routerContext.get()?.pathname;
+      if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
+      else return "Wrong path 404";
+    },
+  },
+  "/route2": SimpleRoute,
+  // "/topics": () => <Topics basepath="/topics" match={curPath} />,
+};
+
 export function App(props) {
   // console.log(routerContext.get());
   const curPath = routerContext.get()?.pathname;
@@ -557,7 +597,12 @@ export function App(props) {
     <div>
       <Header />
       <hr />
-      <RouteSwitch curPath={curPath} />
+
+      {props?.type === "switch" ? (
+        <RouteSwitch curPath={curPath} />
+      ) : (
+        <RouterAdv routeObj={routeObj} />
+      )}
 
       <footer
         ref={(_ref) => (footRef = _ref)}

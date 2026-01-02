@@ -44,6 +44,7 @@ const matchPath = (pathname, options) => {
   if (!path) {
     return {
       pathname: pathname,
+      params: {},
       isExact: true,
     };
   }
@@ -57,9 +58,17 @@ const matchPath = (pathname, options) => {
 
   if (exact && !isExact) return null;
 
+  // Extract parameters from matches
+  const params = {};
+  paramNames.forEach((paramName, index) => {
+    params[paramName] = match[index + 1];
+  });
+
   return {
     pathname,
+    params,
     isExact,
+    path,
   };
 };
 
@@ -128,7 +137,11 @@ function Router() {
         search: window.location.search,
         hash: window.location.hash,
         state: window.history.state,
-        ...matchPath(routerContext.get()?.pathname, {}),
+        // ...matchPath(routerContext.get()?.pathname, {}),
+        ...matchPath(
+          routerContext.get()?.pathname || window.location.pathname,
+          {}
+        ),
       });
     },
     cleanup: () => {
@@ -148,6 +161,7 @@ export const routerContext = createContext({
   hash: window.location.hash,
   state: window.history.state,
   pathname: window.location.pathname,
+  params: {},
 });
 
 export const routerInstance = Router();
