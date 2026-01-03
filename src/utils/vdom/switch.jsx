@@ -1,6 +1,9 @@
 /** @jsx h */
 import { h } from "./vdom-lib";
 
+const CASE_TYPE = 0x2e3;
+const DEFAULT_TYPE = 0x2e4;
+
 /**
  * * Switch Component - Renders only the first matching child *
  * * @example * <Switch value={count}>
@@ -9,20 +12,20 @@ import { h } from "./vdom-lib";
  * * <Case when={2}><Counter /></Case>
  * * <Default component={NotFound} />
  * * </Switch> */
-export function Switch({ value }, children) {
+function Switch({ value }, children) {
   if (!Array.isArray(children)) {
     children = [children];
   }
   // Find the first matching Case or Default
   for (let child of children) {
     if (!child) continue;
-    const componentName = child.$c;
+    const componentName = child?.value?.$t;
     // Check if it's a Case component with matching value
-    if (componentName === "Case" && child.props?.when === value) {
+    if (componentName === CASE_TYPE && child.props?.when === value) {
       return renderCaseContent(child);
     }
     // // Check if it's a Default component
-    if (componentName === "Default") {
+    if (componentName === DEFAULT_TYPE) {
       return renderCaseContent(child);
     }
   }
@@ -61,7 +64,7 @@ function renderCaseContent(child) {
  * @param {Object} [props.renderProps] - Props to pass to render function
  */
 function Case(props, children) {
-  return { children };
+  return { $t: CASE_TYPE, children };
 }
 
 /**
@@ -74,7 +77,7 @@ function Case(props, children) {
  * @param {Object} [props.renderProps] - Props to pass to render function
  */
 function Default(props, children) {
-  return { children };
+  return { $t: DEFAULT_TYPE, children };
 }
 
 // Attach sub-components to Switch
@@ -82,4 +85,4 @@ Switch.Case = Case;
 Switch.Default = Default;
 
 // Still export individually for backwards compatibility
-export { Case, Default };
+export { Switch, Case, Default };
