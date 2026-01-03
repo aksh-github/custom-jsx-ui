@@ -1251,11 +1251,6 @@ const dom = (() => {
   };
 })();
 
-import { Lazy as _lazy } from "./lazy";
-import { memo as _memo } from "./memo";
-
-// export const onMount = microframe.onMount;
-// export const onCleanup = microframe.onCleanup;
 export const h = microframe.h;
 export const df = microframe.df;
 
@@ -1264,8 +1259,9 @@ export const forceUpdate = dom.forceUpdate;
 export const createElement = dom.createElement;
 
 // other helpful Components
-export const Lazy = _lazy;
-export const memo = _memo;
+export { Lazy } from "./lazy";
+export { memo } from "./memo";
+export { Switch, Case, Default } from "./switch";
 
 // state import exports
 
