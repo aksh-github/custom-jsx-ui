@@ -1,4 +1,5 @@
-// import { h } from "@vdom-lib";
+/** @jsx h */
+import { h } from "./vdom-lib";
 
 /**
  * * Switch Component - Renders only the first matching child *
