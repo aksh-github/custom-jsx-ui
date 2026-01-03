@@ -8,7 +8,8 @@ import {
   batch,
   skipUpdate,
   createEffect,
-} from "../utils/vdom/vdom-lib";
+  Switch,
+} from "@vdom-lib";
 import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
@@ -19,7 +20,7 @@ import {
   RouterAdv,
   routerInstance,
   RouterSwitch,
-  Route,
+  // Route,
 } from "@router-v2";
 
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
@@ -33,7 +34,7 @@ import {
   DynSans,
   DynTextArea,
 } from "../compos/DynamicExports";
-import { Case, Default, Switch } from "../utils/vdom/switch";
+// import { } from "../utils/vdom/switch";
 // import { Sans } from "./sans/sans";
 
 const Topic = ({ topicId }) => <h3>{topicId}</h3>;
@@ -612,9 +613,15 @@ export function App(props) {
     // }
     return (
       <Switch value={type}>
-        <Case when="built-in" render={() => <BuiltInSwitch curPath={cp} />} />
-        <Case when="dyn" render={() => <RouterAdv routeObj={routeObj} />} />
-        <Default render={() => <MyRouteSwitch curPath={cp} />} />
+        <Switch.Case
+          when="built-in"
+          render={() => <BuiltInSwitch curPath={cp} />}
+        />
+        <Switch.Case
+          when="dyn"
+          render={() => <RouterAdv routeObj={routeObj} />}
+        />
+        <Switch.Default render={() => <MyRouteSwitch curPath={cp} />} />
       </Switch>
     );
   };
@@ -639,40 +646,38 @@ export function App(props) {
 function BuiltInSwitch() {
   return (
     <RouterSwitch>
-      <Route path="/" component={ComplexRoute} />
-      <Route path="/route2" component={SimpleRoute} />
-      <Route path="/embed" exact={false} component={Embed} />
-      <Route
+      <RouterSwitch.Route path="/" component={ComplexRoute} />
+      <RouterSwitch.Route path="/route2" component={SimpleRoute} />
+      <RouterSwitch.Route path="/embed" component={Embed} />
+      <RouterSwitch.Route
         path="/frag"
-        exact={false}
         render={() => {
           const t = Date.now();
 
           return (
-            <div>
+            <section>
               <div>before text</div>
               <DynArrayWithFragments t={Date.now()} />
               <div>after text</div>
-            </div>
+            </section>
           );
         }}
       />
-      <Route
+      <RouterSwitch.Route
         path="/topics"
         exact={false}
         render={() => <Topics basepath="/topics" />}
       />
-      <Route
+      <RouterSwitch.Route
         path="/topics/*"
         exact={false}
         render={() => <Topics basepath="/topics" />}
       />
 
-      <Route path="/heavy" component={Heavy} />
-      <Route path="/json-form" component={JsonFormConsumer} />
-      <Route
+      <RouterSwitch.Route path="/heavy" component={Heavy} />
+      <RouterSwitch.Route path="/json-form" component={JsonFormConsumer} />
+      <RouterSwitch.Route
         path="/sans"
-        exact={false}
         render={() => (
           <Lazy
             importFn={() => import("./sans/sans")}
@@ -682,7 +687,7 @@ function BuiltInSwitch() {
           />
         )}
       />
-      <Route
+      <RouterSwitch.Route
         path="*"
         render={() => {
           return <h1>Not Found</h1>;

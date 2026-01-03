@@ -334,10 +334,7 @@ export function RouterSwitch(props, children) {
  * Route component - wraps a component with path matching
  * Used inside RouterSwitch to declaratively define routes
  */
-export function Route(
-  { path, exact = true, component: Component, render },
-  children
-) {
+function Route({ path, exact = true, component: Component, render }, children) {
   const finalUrl = routerContext.get()?.pathname || window.location.pathname;
 
   const match = matchPath(finalUrl, { path, exact });
@@ -356,3 +353,6 @@ export function Route(
 
   return null;
 }
+
+RouterSwitch.Route = Route;
+export { Route };

@@ -59,7 +59,7 @@ function renderCaseContent(child) {
  * @param {Object} [props.componentProps] - Props to pass to component
  * @param {Object} [props.renderProps] - Props to pass to render function
  */
-export function Case(props, children) {
+function Case(props, children) {
   return { children };
 }
 
@@ -72,6 +72,13 @@ export function Case(props, children) {
  * @param {Object} [props.componentProps] - Props to pass to component
  * @param {Object} [props.renderProps] - Props to pass to render function
  */
-export function Default(props, children) {
+function Default(props, children) {
   return { children };
 }
+
+// Attach sub-components to Switch
+Switch.Case = Case;
+Switch.Default = Default;
+
+// Still export individually for backwards compatibility
+export { Case, Default };
