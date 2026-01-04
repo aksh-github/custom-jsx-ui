@@ -1,12 +1,14 @@
 // this is implemented based on https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76
 
-// const log = console.log;
-// const logt = console.time,
-//   logte = console.timeEnd;
-const noop = () => {};
-const log = noop;
-const logt = noop;
-const logte = noop;
+const IS_PROD = import.meta.env.PROD;
+
+const log = console.log;
+const logt = console.time,
+  logte = console.timeEnd;
+// const noop = () => {};
+// const log = noop;
+// const logt = noop;
+// const logte = noop;
 
 log("check https://github.com/pomber/incremental-rendering-demo");
 
@@ -553,10 +555,10 @@ const dom = (() => {
     // counter = 0; // v imp
 
     // log(performance.now());
-    logt("TETVD");
+    if (!IS_PROD) logt("TETVD");
 
     let current = curr(); // create latest vdom
-    logte("TETVD");
+    if (!IS_PROD) logte("TETVD");
     // log(old, current);
     // const oldStack = CompoIterator().iterate(old);
     // const currStack = CompoIterator().iterate(current);
@@ -577,7 +579,7 @@ const dom = (() => {
     patches = [];
     propsPatches = [];
 
-    logt("TET");
+    if (!IS_PROD) logt("TET");
 
     // diffElement(rootNode, current, old);
     wrapper(rootNode, current, old);
@@ -609,7 +611,7 @@ const dom = (() => {
       // altFuncCache = structuredClone(funcCache);
       funcCache = {};
 
-      logte("TET");
+      if (!IS_PROD) logte("TET");
     }, 0);
     // requestAnimationFrame(() => {
     //   // 3. update dom
