@@ -103,7 +103,11 @@ const listReducer = (state, action) => {
       dataCtx.set(data);
       return { data: data, selected };
     case "UPDATE": {
-      const newData = dataCtx.get().slice(0);
+      const _d = dataCtx.get();
+
+      if (_d.length === 0) return { data: _d, selected };
+
+      const newData = _d.slice(0);
 
       for (let i = 0; i < newData.length; i += 10) {
         const r = newData[i];
