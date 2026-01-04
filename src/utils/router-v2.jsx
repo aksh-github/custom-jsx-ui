@@ -1,3 +1,4 @@
+/** @jsx h */
 import { h, createContext, createState, createEffect } from "@vdom-lib";
 
 // const log = console.log;
