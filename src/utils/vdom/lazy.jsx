@@ -7,11 +7,14 @@ function Loader({ fallback }) {
   return fallback;
 }
 
-export function Lazy({ key, importFn, fallback, error, ...props }, child) {
+export function Lazy(
+  { key, importFn, resolve, fallback, error, ...other },
+  child
+) {
   if (!importFn) throw Error("importFn is mandatory");
 
   const [Comp, , setCompSpl] = createState(suspenseCache[key]);
-  const [res, , setResSpl] = createState(null);
+  // const [res, , setResSpl] = createState(null);
   const [err, setErr] = createState(null);
 
   createEffect(() => {
@@ -19,8 +22,7 @@ export function Lazy({ key, importFn, fallback, error, ...props }, child) {
       importFn()
         .then((mod) => {
           // console.log("Lazy component loaded:", mod);
-          let C = (suspenseCache[key] =
-            mod[props.resolve] || mod.default || mod);
+          let C = (suspenseCache[key] = mod[resolve] || mod.default || mod);
           if (C && typeof C === "function") {
             setCompSpl(C);
           } else {
@@ -50,13 +52,20 @@ export function Lazy({ key, importFn, fallback, error, ...props }, child) {
 
   if (err) {
     return <div>{error}</div>;
+    // return render({ error: err, loading: false, data: null });
   }
 
-  if (!Comp && !res) {
-    // return { type: "div", props: {}, children: [fallback] };
+  // if (!Comp) {
+  //   // return <div>{error}</div>;
+  //   return render({ error: null, loading: true, data: null });
+  // }
+
+  // return render({ error: null, loading: false, data: Comp });
+
+  if (!Comp) {
     return <div>{fallback}</div>;
   }
   // pass only relevant props
-  const { importFn: ifn, fallback: fb, error: er, resolve: re, ...p2 } = props;
+  const { importFn: ifn, fallback: fb, error: er, resolve: re, ...p2 } = other;
   return <Comp {...p2} key={key} />;
 }

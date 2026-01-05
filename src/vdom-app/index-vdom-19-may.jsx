@@ -142,8 +142,8 @@ const Counter = () => {
   };
 
   const Decide = ({ count }) => {
-    return count % 2 === 0 ? <Even /> : <Odd />;
-    // return count % 2 === 0 ? <Even /> : "this is odd";
+    // return count % 2 === 0 ? <Even /> : <Odd />;
+    return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
   };
@@ -167,14 +167,14 @@ const Counter = () => {
 
 const root = document.getElementById("root-vdom");
 mount(root, () => <App type="dyn" />);
-// mount(root, () => <Sans />);
+// mount(root, () => <DynCompo />);
 
 // Usage
 
 function Home(props) {
   return (
     // <h1>Home {props?.a}</h1>
-    <div>
+    <section>
       <h1>Home {props?.a}</h1>
       <button
         onClick={() => {
@@ -183,7 +183,7 @@ function Home(props) {
       >
         Go to Route 2
       </button>
-    </div>
+    </section>
   );
 }
 
