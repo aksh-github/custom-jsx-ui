@@ -1,6 +1,35 @@
 declare module "@vdom-lib" {
-  export function h(...args: any[]): any;
-  export function mount(el: Element | null, fn: () => any): any;
+  export type ChildrenType = Array<VNodeOrPrimitive>;
+  export type StringOrNullable = string | null | undefined;
+  export type AnyProps = Record<string, any>;
+
+  export type VNode = {
+    type?: string;
+    props?: AnyProps;
+    children?: ChildrenType;
+    $c?: string;
+    $p?: string | undefined;
+    key?: string | number;
+    value?: unknown;
+    fragChildLen?: number;
+  };
+
+  export type VNodeOrPrimitive = VNode | string | number | null | undefined;
+
+  type HFunctionParams = {
+    type: StringOrNullable;
+    props: AnyProps;
+    children: ChildrenType;
+  };
+
+  export function h({
+    type,
+    props,
+    children,
+  }: HFunctionParams): VNodeOrPrimitive;
+
+  export function mount(el: HTMLElement | null, fn: () => any): any;
+
   export function smartRegisterCallback(
     cb: (...args: any[]) => any,
     ms?: number
@@ -14,8 +43,8 @@ declare module "@vdom-lib" {
 
   export function createEffect(fn: () => void, deps: any[]): void;
   export function createContext<T>(value?: T): {
-    get: Function;
-    set: Function;
+    get: () => T;
+    set: (value: ValueOrFunction<T>) => void;
   };
   export function memo<T>(fn: T): T;
   export const forceUpdate: () => void;
@@ -23,7 +52,8 @@ declare module "@vdom-lib" {
   export interface LazyProps {
     importFn: () => Promise<any>;
     resolve?: string;
-    fallback?: any;
+    fallback?: VNodeOrPrimitive;
+    error: VNodeOrPrimitive;
     [key: string]: any; // Add this line to accept dynamic props
   }
   export function Lazy(
@@ -37,7 +67,6 @@ declare module "@vdom-lib" {
   //   Default,
   // };
 
-  export type AnyProps = Record<string, any>;
   export type VNodeLike = {
     $t?: number;
     props?: AnyProps;
