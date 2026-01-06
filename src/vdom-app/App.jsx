@@ -423,6 +423,7 @@ export const SimpleRoute = () => {
           );
         }}
       </Lazy> */}
+      <img src="https://picsum.photos/200" alt="some pic" />
 
       <DynCompo />
 
