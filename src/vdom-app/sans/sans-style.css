@@ -3,6 +3,10 @@
   --primary-bg-color: burlywood;
 }
 
+body {
+  overflow-y: scroll;
+}
+
 .sans {
   /* padding: 0 1em; */
   color: var(--primary-text-color);
