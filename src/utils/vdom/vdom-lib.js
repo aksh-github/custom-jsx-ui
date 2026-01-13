@@ -199,6 +199,9 @@ const microframe = (() => {
   };
 })();
 
+export const h = microframe.h;
+export const df = microframe.df;
+
 const dom = (() => {
   // mount n unmount
   let mountFns = [];
@@ -559,7 +562,7 @@ const dom = (() => {
 
     let current = curr(); // create latest vdom
     if (!IS_PROD) logte("TETVD");
-    // log(old, current);
+    log(old, current);
     // const oldStack = CompoIterator().iterate(old);
     // const currStack = CompoIterator().iterate(current);
 
@@ -1253,9 +1256,6 @@ const dom = (() => {
   };
 })();
 
-export const h = microframe.h;
-export const df = microframe.df;
-
 export const mount = dom.mount;
 export const forceUpdate = dom.forceUpdate;
 export const createElement = dom.createElement;
@@ -1264,6 +1264,7 @@ export const createElement = dom.createElement;
 export { Lazy } from "./lazy";
 export { memo } from "./memo";
 export { Switch, Case, Default } from "./switch";
+export { VirtualList } from "./vlist";
 
 // state import exports
 

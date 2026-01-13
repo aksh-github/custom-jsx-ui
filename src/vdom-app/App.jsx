@@ -9,6 +9,7 @@ import {
   skipUpdate,
   createEffect,
   Switch,
+  VirtualList,
 } from "@vdom-lib";
 import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
@@ -186,7 +187,7 @@ const Number = ({ n }) => {
   );
 };
 
-const ArrayComp = memo(({ arr: _arr }) => {
+const ArrayCompMemo = memo(({ arr: _arr }) => {
   // if you have memoized comp in heirachy, createEffect is of no use
   // this is ok
   createEffect(() => {
@@ -200,9 +201,32 @@ const ArrayComp = memo(({ arr: _arr }) => {
       ))}
     </ul>
   );
-}, "ArrayComp");
+}, "ArrayCompMemo");
 
 let arr = [];
+
+const ArrayCompVirtual = ({ arr: _arr }) => {
+  // if you have memoized comp in heirachy, createEffect is of no use
+  // this is ok
+  createEffect(() => {
+    console.log("number changed");
+  }, [_arr]);
+
+  // Your custom render function for each item
+  const renderListItem = (item) => <Number n={item} />;
+
+  return (
+    <section>
+      <h3>Virtual List</h3>
+      <VirtualList
+        items={_arr}
+        renderItem={renderListItem}
+        itemHeight={35}
+        windowHeight={500}
+      />
+    </section>
+  );
+};
 
 function ComplexRoute(props) {
   console.log("rendered App", props);
@@ -306,7 +330,8 @@ function ComplexRoute(props) {
       </div>
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
-      {c % 2 !== 0 ? <ArrayComp arr={arr} /> : null}
+      {/* {c % 2 !== 0 ? <ArrayCompMemo arr={arr} /> : null} */}
+      {c % 2 !== 0 ? <ArrayCompVirtual arr={arr} /> : null}
       <p>
         <LinkV2 to="/route2?q=some">Go next</LinkV2>
         <button
