@@ -53,29 +53,10 @@ function renderCaseContent(child) {
   return child.value?.children?.[0] || null;
 }
 
-/**
- * Case Component - Represents a single case in a Switch
- *
- * @param {Object} props
- * @param {*} props.when - Value to match against Switch value
- * @param {Function} [props.component] - Component to render
- * @param {Function} [props.render] - Render function
- * @param {Object} [props.componentProps] - Props to pass to component
- * @param {Object} [props.renderProps] - Props to pass to render function
- */
 function Case(props, children) {
   return { $t: CASE_TYPE, children };
 }
 
-/**
- * Default Component - Fallback case in a Switch
- *
- * @param {Object} props
- * @param {Function} [props.component] - Component to render
- * @param {Function} [props.render] - Render function
- * @param {Object} [props.componentProps] - Props to pass to component
- * @param {Object} [props.renderProps] - Props to pass to render function
- */
 function Default(props, children) {
   return { $t: DEFAULT_TYPE, children };
 }
