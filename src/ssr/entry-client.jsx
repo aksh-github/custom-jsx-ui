@@ -1,5 +1,5 @@
 import { h, forceUpdate, hydrate, smartRegisterCallback } from "@vdom-lib";
-import { SsrApp } from "./App";
+import { SsrApp } from "./SsrApp";
 
 // mount(document.getElementById("root"), () => <App />);
 

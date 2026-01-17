@@ -1,7 +1,7 @@
 // import { renderToString } from "react-dom/server";
 
 import { renderToString, h, reset } from "@vdom-lib";
-import { SsrApp } from "./App";
+import { SsrApp } from "./SsrApp";
 
 export async function render(url) {
   console.log("Rendering for URL:", url);

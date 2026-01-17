@@ -8,6 +8,8 @@ import {
   forceUpdate,
   Switch,
 } from "@vdom-lib";
+import { Lazy } from "../utils/vdom/lazy";
+import { DynSans, DynTextArea } from "../compos/DynamicExports";
 
 // smartRegisterCallback(forceUpdate);
 
@@ -174,6 +176,7 @@ export const SsrApp = ({ currentUrl }) => {
         </Switch.Default>
       </Switch>
       <hr />
+      <DynTextArea />
       <form onSubmit={submit}>
         <input value={t} onInput={onInput} onChange={onChange} />
         <button type="submit">Submit</button>
