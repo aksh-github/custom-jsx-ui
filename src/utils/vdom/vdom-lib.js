@@ -116,7 +116,7 @@ const microframe = (() => {
         console.warn(
           "Your component named `",
           type.name,
-          "` is returning Array, manipulation to this Array is currently NOT supported and can lead to Unexpected behavior"
+          "` is returning Array, manipulation to this Array is currently NOT supported and can lead to Unexpected behavior",
         );
 
         //special case return value Array and may be no type  (parent)
@@ -188,6 +188,7 @@ const microframe = (() => {
           type?.includes("-") ||
           props?.ignoreNode ||
           type?.toLowerCase() === "iframe" ||
+          type?.toLowerCase() === "script" ||
           type?.toLowerCase() === "template"
             ? []
             : children,
@@ -367,7 +368,7 @@ if (typeof window !== "undefined") {
             $target.removeEventListener(
               extratedName,
               $target._events[`${extratedName}`],
-              true
+              true,
             );
           }
           $target._events[`${extratedName}`] = props[name];
@@ -441,7 +442,12 @@ if (typeof window !== "undefined") {
           // return tnode;
           if (!node.children) {
             const tnode = $d.createTextNode(
-              node?.value == null || node?.value == undefined ? "" : node?.value
+              // node?.value == null || node?.value == undefined
+              node?.value == null ||
+                node?.value == undefined ||
+                typeof node?.value === "boolean"
+                ? ""
+                : node?.value,
             );
             return tnode;
           } else {
@@ -456,7 +462,9 @@ if (typeof window !== "undefined") {
           }
         } else
           return $d.createTextNode(
-            node == null || node == undefined ? "" : node
+            node == null || node == undefined || typeof node === "boolean"
+              ? ""
+              : node,
           );
       }
 
@@ -573,7 +581,7 @@ if (typeof window !== "undefined") {
         root,
         NodeFilter.SHOW_COMMENT,
         null,
-        false
+        false,
       );
 
       const commentsToRemove = [];
@@ -706,7 +714,7 @@ if (typeof window !== "undefined") {
     };
 
     ["popstate", "navigate"].forEach((e) =>
-      window.addEventListener(e, () => navigate.set(!0))
+      window.addEventListener(e, () => navigate.set(!0)),
     );
 
     function wrapper($parent, newNode, oldNode, index = 0) {
@@ -1012,7 +1020,7 @@ if (typeof window !== "undefined") {
           optiPossible = true;
           gdf = $d.createDocumentFragment();
           log(
-            "have for loop custom component or see how this can be optimized"
+            "have for loop custom component or see how this can be optimized",
           );
         }
 
@@ -1119,7 +1127,7 @@ if (typeof window !== "undefined") {
           case "REMOVEALL":
             const childrenToDispose = Array.from(patch.p.childNodes);
             disposalPromises.push(
-              Promise.all(childrenToDispose.map((c) => disposeNodes(c)))
+              Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
             );
 
             if (patch.p.replaceChildren) {
@@ -1330,6 +1338,7 @@ export { Lazy } from "./lazy";
 export { memo } from "./memo";
 export { Switch, Case, Default } from "./switch";
 export { VirtualList } from "./vlist";
+export { loader } from "./loader";
 
 // state import exports
 
@@ -1345,6 +1354,7 @@ export {
   batch,
   smartRegisterCallback,
   reset,
+  setCurrComp, // only required for loader
 } from "../simple-state";
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
@@ -1397,7 +1407,7 @@ function serializeStyle(styleObj) {
       // Convert camelCase to kebab-case
       const cssKey = key.replace(
         /[A-Z]/g,
-        (match) => `-${match.toLowerCase()}`
+        (match) => `-${match.toLowerCase()}`,
       );
       return `${cssKey}:${value}`;
     })
