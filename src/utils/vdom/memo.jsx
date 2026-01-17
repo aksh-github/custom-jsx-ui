@@ -2,11 +2,15 @@ import { createState } from "./vdom-lib";
 
 function memo(Component, _key) {
   return function MemoizedComponent(props) {
+    if (typeof window === "undefined") {
+      return Component(props);
+    }
+
     const key = props?.key || _key;
 
     if (key === undefined || key === null) {
       throw new Error(
-        "memo component requires a unique key as the second argument"
+        "memo component requires a unique key as the second argument",
       );
     }
 
