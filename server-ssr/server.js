@@ -6,7 +6,7 @@ import express from "express";
 console.warn("Before running this ensure that you have already");
 console.log("*************");
 console.log(
-  " change index.html include client-entry.jsx and comment any other index.js etc files"
+  " change index.html include client-entry.jsx and comment any other index.js etc files",
 );
 console.log("In vite.config.js, enable SSR specific config");
 console.log(" npm run build:all ");
@@ -30,15 +30,15 @@ async function createServer() {
     app.use(
       "/assets",
       express.static(
-        path.resolve(__dirname, extraPath, "dist-ssr/client/assets")
-      )
+        path.resolve(__dirname, extraPath, "dist-ssr/client/assets"),
+      ),
     );
 
     // Load the built server module - FIX: Use pathToFileURL
     const serverPath = path.resolve(
       __dirname,
       extraPath,
-      "dist-ssr/server/entry-server.js"
+      "dist-ssr/server/entry-server.js",
     );
     renderModule = await import(pathToFileURL(serverPath).href);
   } else {
@@ -56,7 +56,11 @@ async function createServer() {
     const url = req.originalUrl;
 
     // Ignore browser diagnostic requests
-    if (url.includes("/.well-known/") || url.includes("/favicon.ico")) {
+    if (
+      url.includes("/.well-known/") ||
+      url.includes("/favicon.ico") ||
+      url.includes("/vite.svg")
+    ) {
       return res.status(204).end();
     }
 
@@ -69,7 +73,7 @@ async function createServer() {
         // Read built template
         template = fs.readFileSync(
           path.resolve(__dirname, extraPath, "dist-ssr/client/index.html"),
-          "utf-8"
+          "utf-8",
         );
         const result = await renderModule.render(url);
         appContent = result;
@@ -78,14 +82,14 @@ async function createServer() {
       } else {
         // Dev mode with HMR
         template = fs.readFileSync(
-          path.resolve(__dirname, "index.html"),
-          "utf-8"
+          path.resolve(__dirname, extraPath, "index.html"),
+          "utf-8",
         );
         template = await vite.transformIndexHtml(url, template);
 
         renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
         const stateModule = await vite.ssrLoadModule(
-          "/src/utils/simple-state.js"
+          "/src/utils/simple-state.js",
         );
         resetStateForServer = stateModule.reset;
 
@@ -112,7 +116,7 @@ async function createServer() {
     console.log(
       `Server running at http://localhost:5173 (${
         isProd ? "production" : "development"
-      })`
+      })`,
     );
   });
 }
