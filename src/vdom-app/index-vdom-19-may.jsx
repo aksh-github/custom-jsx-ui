@@ -10,12 +10,14 @@ import {
   memo,
   forceUpdate,
   Lazy,
-} from "../utils/vdom/vdom-lib";
+  loader,
+} from "@vdom-lib";
 
 // import { Sans } from "./sans/sans";
-import { RouterAdv, LinkV2 } from "@router-v2";
-import { routerInstance, routerContext } from "../utils/router-v2";
+import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
+
 import { PerfTest } from "../compos/PerfTest";
+import { SsrApp } from "../ssr/SsrApp";
 
 // =======================
 
@@ -142,8 +144,8 @@ const Counter = () => {
   };
 
   const Decide = ({ count }) => {
-    // return count % 2 === 0 ? <Even /> : <Odd />;
-    return count % 2 === 0 ? <Even /> : "this is odd";
+    return count % 2 === 0 ? <Even /> : <Odd />;
+    // return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
   };
@@ -165,17 +167,30 @@ const Counter = () => {
   );
 };
 
-const root = document.getElementById("root-vdom");
-mount(root, () => <App type="dyn" />);
-// mount(root, () => <DynCompo />);
+loader(someFetch);
+const Parent = (props, children) => {
+  console.log(props, children);
+};
+
+const root = document.getElementById("root");
+// mount(root, () => <App type="dyn" />);
+mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 
 // Usage
 
+function someFetch() {
+  return fetch("http://localhost:3000/");
+}
+
 function Home(props) {
+  const resource = loader(someFetch);
+  console.log("resource", resource);
+
   return (
     // <h1>Home {props?.a}</h1>
     <section>
       <h1>Home {props?.a}</h1>
+      <p>{resource.loading ? "Loading.." : JSON.stringify(resource.data)}</p>
       <button
         onClick={() => {
           routerInstance.navigator.go("/route2", { a: 10 });
@@ -183,6 +198,9 @@ function Home(props) {
       >
         Go to Route 2
       </button>
+      <Parent a={10}>
+        <p>this is child</p>
+      </Parent>
     </section>
   );
 }

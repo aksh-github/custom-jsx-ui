@@ -7,9 +7,11 @@ import {
   memo,
   forceUpdate,
   Switch,
+  loader,
 } from "@vdom-lib";
-import { Lazy } from "../utils/vdom/lazy";
+// import { Lazy } from "../utils/vdom/lazy";
 import { DynSans, DynTextArea } from "../compos/DynamicExports";
+// import { Sans } from "../vdom-app/sans/sans";
 
 // smartRegisterCallback(forceUpdate);
 
@@ -144,6 +146,7 @@ export const SsrApp = ({ currentUrl }) => {
       >
         {ctx.get()}
       </p>
+      <LoaderTest />
       <p>
         {null}
         {undefined}
@@ -182,7 +185,60 @@ export const SsrApp = ({ currentUrl }) => {
         <button type="submit">Submit</button>
       </form>
       <Child ctr={count} />
+
       <div ignoreNode={true}>this should be ignored</div>
+
+      <LoaderTest2 />
     </div>
   );
 };
+
+function someFetch() {
+  return fetch("http://localhost:3000/api/1");
+}
+
+function someFetch2() {
+  return fetch("http://localhost:3000/api/2");
+}
+
+loader(someFetch);
+
+export function LoaderTest(props) {
+  const resource = loader(someFetch);
+  console.log("resource", resource);
+
+  return (
+    // <h1>Home {props?.a}</h1>
+    <section>
+      <h1>Home {props?.a}</h1>
+      <p>{resource.loading ? "Loading.." : JSON.stringify(resource.data)}</p>
+      <button
+        onClick={() => {
+          routerInstance.navigator.go("/route2", { a: 10 });
+        }}
+      >
+        Go to Route 2
+      </button>
+    </section>
+  );
+}
+
+export function LoaderTest2(props) {
+  const resource = loader(someFetch2);
+  console.log("resource", resource);
+
+  return (
+    // <h1>Home {props?.a}</h1>
+    <section>
+      <h1>Home {props?.a}</h1>
+      <p>{resource.loading ? "Loading.." : JSON.stringify(resource.data)}</p>
+      <button
+        onClick={() => {
+          routerInstance.navigator.go("/route2", { a: 10 });
+        }}
+      >
+        Go to Route 2
+      </button>
+    </section>
+  );
+}
