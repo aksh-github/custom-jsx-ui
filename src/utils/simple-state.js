@@ -1,6 +1,9 @@
 // const log = console.log;
 const log = () => {};
 
+const isServer = typeof window === "undefined";
+const noop = () => {};
+
 function _createEffect() {
   let prevDeps = [];
   let cleanupFn;
@@ -60,8 +63,9 @@ export const setCurrComp = (comp) => {
   currComp = comp;
 };
 
-let throtUpdate = null;
-let forceUpdate = () => {};
+// let throtUpdate = isServer ? noop : null;
+let throtUpdate = noop;
+let forceUpdate = isServer ? noop : () => {};
 
 // SmartState 27-jun-25
 
@@ -93,10 +97,12 @@ const SmartState = (() => {
     forceUpdate();
   };
 
-  const registerCallback = (cb, duration = 100) => {
-    forceUpdate = cb;
-    throtUpdate = debounce(forceUpdate, duration);
-  };
+  const registerCallback = isServer
+    ? noop
+    : (cb, duration = 100) => {
+        forceUpdate = cb;
+        throtUpdate = debounce(forceUpdate, duration);
+      };
 
   const skipUpdate = (cb) => {
     isSkipping = true;
@@ -105,13 +111,15 @@ const SmartState = (() => {
   };
 
   // called for each component mount
-  const init = () => {
-    for (const [_key, fn] of mountMap) {
-      const umt = fn();
-      mountMap.set(_key, () => {});
-      if (umt) unMountMap.set(_key, umt);
-    }
-  };
+  const init = isServer
+    ? noop
+    : () => {
+        for (const [_key, fn] of mountMap) {
+          const umt = fn();
+          mountMap.set(_key, () => {});
+          if (umt) unMountMap.set(_key, umt);
+        }
+      };
 
   const reset = (keysArr) => {
     // gs = {};
@@ -125,40 +133,78 @@ const SmartState = (() => {
       delete gCtx[key];
     });
 
-    if (!keysArr) return;
-
-    // mount unmount etc
-    keysArr.forEach((key) => {
-      // call unmount
-      for (const [_key, fn] of mountMap) {
-        // console.log(_key);
-
-        if (_key === key) {
-          mountMap.delete(_key);
-
-          unMountMap.get(_key)?.();
-          unMountMap.delete(_key);
-        }
-      }
-      // if (unMountMap.has(key)) {
-      //   unMountMap.get(key)();
-      //   unMountMap.delete(key);
-      // }
+    if (isServer) {
+      mountMap.clear();
+      unMountMap.clear();
 
       // clear data
-      Object.keys(gs).forEach((_key) => {
-        if (_key.startsWith(key)) {
-          // if (Array.isArray(gs[_key])) gs[_key].length = 0;
-          // else gs[_key] = null;
-
-          delete gs[_key];
-        }
-        // console.log(gs);
+      Object.keys(gs).forEach((key) => {
+        delete gs[key];
       });
-    });
+
+      log("gs in reset", gs);
+    } else {
+      if (!keysArr) return;
+
+      // mount unmount etc
+      keysArr.forEach((key) => {
+        // call unmount
+        for (const [_key, fn] of mountMap) {
+          // console.log(_key);
+
+          if (_key === key) {
+            mountMap.delete(_key);
+
+            unMountMap.get(_key)?.();
+            unMountMap.delete(_key);
+          }
+        }
+        // if (unMountMap.has(key)) {
+        // unMountMap.get(key)();
+        // unMountMap.delete(key);
+        // }
+
+        // clear data
+        Object.keys(gs).forEach((_key) => {
+          if (_key.startsWith(key)) {
+            // if (Array.isArray(gs[_key])) gs[_key].length = 0;
+            // else gs[_key] = null;
+
+            delete gs[_key];
+          }
+          // console.log(gs);
+        });
+      });
+    }
   };
 
+  // const resetForServer = () => {
+  //   // gs = {};
+  //   lastComp = fnLastComp = null;
+  //   idx = fnIdx = 0;
+
+  //   // reset context
+  //   ctxIdx = 0;
+  //   Object.entries(gCtx).forEach(([key, fn]) => {
+  //     fn();
+  //     delete gCtx[key];
+  //   });
+
+  //   // clear
+
+  //   mountMap.clear();
+  //   unMountMap.clear();
+
+  //   // clear data
+  //   Object.keys(gs).forEach((key) => {
+  //     delete gs[key];
+  //   });
+
+  //   log("gs in resetForServer", gs);
+  // };
+
   const state = (iv) => {
+    log(gs);
     if (lastComp != currComp) {
       // lastComp = currComp;
       idx = 0;
@@ -279,37 +325,39 @@ const SmartState = (() => {
     return { get, set };
   };
 
-  const effect = (cb, deps) => {
-    if (fnLastComp != currComp) {
-      // lastComp = currComp;
-      fnIdx = 0;
-    }
+  const effect = isServer
+    ? noop
+    : (cb, deps) => {
+        if (fnLastComp != currComp) {
+          // lastComp = currComp;
+          fnIdx = 0;
+        }
 
-    // for mount only logic
-    if (deps?.length === 0) {
-      if (!mountMap.has(`${currComp}`)) {
-        mountMap.set(`${currComp}`, cb);
-      }
-      fnIdx = 0;
-      return;
-    }
+        // for mount only logic
+        if (deps?.length === 0) {
+          if (!mountMap.has(`${currComp}`)) {
+            mountMap.set(`${currComp}`, cb);
+          }
+          fnIdx = 0;
+          return;
+        }
 
-    const key = `${currComp}-fn-${fnIdx}`;
+        const key = `${currComp}-fn-${fnIdx}`;
 
-    if (!gs[key]) {
-      const fn = _createEffect();
-      gs[key] = fn;
-    }
-    const unMountFn = gs[key](cb, deps);
-    if (deps?.length === 0) {
-      gs[key] = () => {};
-      if (unMountFn) unMountMap.set(key, unMountFn);
-    }
+        if (!gs[key]) {
+          const fn = _createEffect();
+          gs[key] = fn;
+        }
+        const unMountFn = gs[key](cb, deps);
+        if (deps?.length === 0) {
+          gs[key] = () => {};
+          if (unMountFn) unMountMap.set(key, unMountFn);
+        }
 
-    if (fnLastComp != currComp) fnLastComp = currComp;
+        if (fnLastComp != currComp) fnLastComp = currComp;
 
-    fnIdx++;
-  };
+        fnIdx++;
+      };
 
   return {
     state,
@@ -327,6 +375,7 @@ export const createState = SmartState.state;
 export const createContext = SmartState.context;
 export const init = SmartState.init;
 export const reset = SmartState.reset;
+// export const resetForServer = SmartState.resetForServer;
 export const skipUpdate = SmartState.skipUpdate;
 export const batch = SmartState.batch;
 export const smartRegisterCallback = SmartState.registerCallback;

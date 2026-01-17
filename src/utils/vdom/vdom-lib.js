@@ -333,6 +333,10 @@ if (typeof window !== "undefined") {
         // if (isEventProp(name)) {
         //   if (name === "onSubmit") addEventListeners($target, { [name]: newVal });
         // }
+        const extratedName = extractEventName(name);
+
+        if ($target._events && $target._events[`${extratedName}`]) {
+        } else addEventListeners($target, { [name]: newVal });
       } else if (!oldVal || newVal !== oldVal) {
         setProp($target, name, newVal);
       }
@@ -559,8 +563,51 @@ if (typeof window !== "undefined") {
       funcCache = {};
     }
 
+    let hydrated = false;
+
     let patches = [],
       propsPatches = [];
+
+    function removeCommentsWithText(searchText, root = document.body) {
+      const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_COMMENT,
+        null,
+        false
+      );
+
+      const commentsToRemove = [];
+
+      while (walker.nextNode()) {
+        if (walker.currentNode.nodeValue.includes(searchText)) {
+          commentsToRemove.push(walker.currentNode);
+        }
+      }
+
+      // Remove after collecting (to avoid modifying DOM while traversing)
+      commentsToRemove.forEach((comment) => comment.remove());
+
+      return commentsToRemove.length;
+    }
+
+    function hydrate($root, initCompo) {
+      rootNode = $root;
+      curr = initCompo;
+      old = curr(); // create latest vdom
+      log(old);
+      // log(funcCache);
+      // callMountAll();
+
+      // Usage
+      const removedCount = removeCommentsWithText("|", rootNode);
+      log(`Removed ${removedCount} comments`);
+
+      callUnmountAll();
+
+      forceUpdate();
+
+      hydrated = true;
+    }
 
     // all delta updates
     function forceUpdate() {
@@ -679,7 +726,7 @@ if (typeof window !== "undefined") {
 
       const updateCompsSize = updateComps.size;
       let currComp = null;
-      let actualComparison = false;
+      let actualComparison = !hydrated ? true : false;
       let comparisonsReqd = 0;
       let compareTill = 0;
 
@@ -1262,6 +1309,7 @@ if (typeof window !== "undefined") {
     return {
       mount,
       forceUpdate,
+      hydrate,
       createElement,
     };
   };
@@ -1272,6 +1320,7 @@ if (typeof window !== "undefined") {
 }
 export const mount = dom.mount || noop;
 export const forceUpdate = dom.forceUpdate || noop;
+export const hydrate = dom.hydrate || noop;
 export const createElement = dom.createElement || noop;
 
 // end dom
@@ -1287,6 +1336,7 @@ export { VirtualList } from "./vlist";
 import { init, reset, setCurrComp, updateComps } from "../simple-state";
 
 // export const createState = _createState;
+
 export {
   createEffect,
   createState,
@@ -1294,9 +1344,164 @@ export {
   skipUpdate,
   batch,
   smartRegisterCallback,
+  reset,
 } from "../simple-state";
 
 // inspired by https://geekpaul.medium.com/lets-build-a-react-from-scratch-part-3-react-suspense-and-concurrent-mode-5da8c12aed3f
 
 // export function SuspenseV2(props, child) {
 // This function is still available in 24jun25 br in commented form
+
+// function escapeHtml(unsafe) {
+// if (typeof unsafe === "object")
+// console.log("escapeHtml called with:", unsafe);
+// return unsafe && unsafe.replace
+// ? unsafe
+// .replace(/&/g, "&amp;")
+// .replace(/</g, "&lt;")
+// .replace(/>/g, "&gt;")
+// .replace(/"/g, "&quot;")
+// .replace(/'/g, "&#039;")
+// : unsafe;
+// }
+
+function escapeHtml(unsafe) {
+  // Early return for null/undefined
+  if (unsafe == null) return "";
+
+  // Convert to string (handles numbers, booleans, etc.)
+  const str = String(unsafe);
+
+  // Fast path: if no special chars, return as-is
+  if (!/[&<>"']/.test(str)) return str;
+
+  // Use a single replace with lookup map for better performance
+  const escapeMap = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+
+  return str.replace(/[&<>"']/g, (char) => escapeMap[char]);
+}
+
+function serializeStyle(styleObj) {
+  if (typeof styleObj !== "object" || styleObj === null) {
+    return escapeHtml(String(styleObj));
+  }
+
+  return Object.entries(styleObj)
+    .map(([key, value]) => {
+      // Convert camelCase to kebab-case
+      const cssKey = key.replace(
+        /[A-Z]/g,
+        (match) => `-${match.toLowerCase()}`
+      );
+      return `${cssKey}:${value}`;
+    })
+    .join(";");
+}
+
+const DANGEROUS_TAGS = new Set([
+  "script",
+  "style",
+  "iframe",
+  "object",
+  "embed",
+]);
+
+export function renderToString(jsx) {
+  // console.log("renderToString called with:", jsx);
+
+  if (typeof jsx === "string" || typeof jsx === "number") {
+    return escapeHtml(jsx) + "<!--|-->";
+  } else if (jsx == null || typeof jsx === "boolean") {
+    return "";
+  } else if (Array.isArray(jsx)) {
+    return jsx.map((child) => renderToString(child)).join("");
+  } else if (typeof jsx === "object") {
+    if (typeof jsx.type === "string") {
+      if (jsx.type === "df") {
+        return renderToString(jsx.children);
+      }
+
+      // FIX: Block dangerous tags during SSR but continue rendering
+      let html = "";
+      let avoidChildren = false;
+      if (DANGEROUS_TAGS.has(jsx.type)) {
+        // console.warn(`⚠️ Blocked dangerous <${jsx.type}> tag during SSR`);
+        // return `<!-- Blocked: ${jsx.type} -->` + renderToString(jsx.children);
+        avoidChildren = true;
+      }
+
+      html = "<" + jsx.type;
+      for (const propName in jsx.props) {
+        if (
+          jsx.props.hasOwnProperty(propName)
+
+          // && propName !== "ref" &&
+          // propName !== "key" &&
+          // propName !== "fragChildLen" &&
+          // propName !== "ignoreNode"
+        ) {
+          const propValue = jsx.props[propName];
+
+          if (
+            propValue == null ||
+            propValue === false ||
+            propName.startsWith("on")
+          )
+            continue;
+
+          if (propName === "className") {
+            html += ` class="${escapeHtml(propValue)}"`;
+          } else if (propName === "style") {
+            html += ` style="${serializeStyle(propValue)}"`;
+          } else if (propValue === true) {
+            html += ` ${propName}`;
+          } else if (propName === "ignoreNode") {
+            html += ` ignorenode="true"`;
+            avoidChildren = true;
+          } else if (typeof propValue !== "function") {
+            if (
+              propName === "href" &&
+              String(propValue).startsWith("javascript:")
+            ) {
+              console.warn(`⚠️ Blocked dangerous attribute: ${propName}`);
+              continue;
+            }
+            html += ` ${propName}="${escapeHtml(propValue)}"`;
+          }
+        }
+      }
+      html += ">";
+      if (!avoidChildren) {
+        html += renderToString(jsx.children);
+        avoidChildren = false;
+      }
+      html += "</" + jsx.type + ">";
+      return html;
+    } else if (typeof jsx.type === "function") {
+      const Component = jsx.type;
+      const props = jsx.props;
+      const children = jsx.children;
+      const returnedJsx = Component(props, children);
+      return renderToString(returnedJsx);
+    } else {
+      // something like {'$c': 'Switch', value: 'this is 10 (some str)', props: { value: 10 }, '$p': 'SomeParent', type: undefined}
+
+      // is it required in below if? && typeof jsx.value !== "undefined"
+      if (jsx?.$c) {
+        return escapeHtml(jsx.value) + "<!--|-->";
+      } else {
+        console.log("Inner else Unknown jsx type:", jsx);
+        throw new Error("Not implemented.");
+      }
+    }
+  } else {
+    console.log("Outer else Unknown jsx type:", jsx);
+    throw new Error("Not implemented.");
+  }
+}
