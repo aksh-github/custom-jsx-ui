@@ -26,6 +26,11 @@ async function createServer() {
   let vite, renderModule, resetStateForServer;
 
   if (isProd) {
+    const compression = (await import("compression")).default;
+
+    console.log("compress used");
+
+    app.use(compression());
     // Production: serve pre-built assets
     app.use(
       "/assets",
@@ -67,7 +72,7 @@ async function createServer() {
     console.log("Handling request for:", url);
 
     try {
-      let template, appContent;
+      let template, appContent, headerContent;
 
       if (isProd) {
         // Read built template
@@ -75,8 +80,9 @@ async function createServer() {
           path.resolve(__dirname, extraPath, "dist-ssr/client/index.html"),
           "utf-8",
         );
-        const result = await renderModule.render(url);
-        appContent = result;
+        const { header, html } = await renderModule.render(url);
+        headerContent = header;
+        appContent = html;
 
         resetStateForServer = renderModule.reset;
       } else {
@@ -93,11 +99,14 @@ async function createServer() {
         );
         resetStateForServer = stateModule.reset;
 
-        const result = await renderModule.render(url);
-        appContent = result;
+        const { header, html } = await renderModule.render(url);
+        headerContent = header;
+        appContent = html;
       }
 
-      const html = template.replace(`<!--ssr-outlet-->`, appContent);
+      const html = template
+        .replace(`<!--ssr-outlet-->`, appContent)
+        .replace(`<!--ssr-header-->`, headerContent);
 
       if (resetStateForServer) {
         console.log("Reset state available");
