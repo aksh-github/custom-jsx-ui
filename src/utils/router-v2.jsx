@@ -1,6 +1,9 @@
 /** @jsx h */
 import { h, createContext, createState, createEffect } from "@vdom-lib";
 
+const isServer = typeof window === "undefined";
+const noop = () => {};
+
 // const log = console.log;
 const log = () => {};
 
@@ -13,34 +16,71 @@ const log = () => {};
 //   "check: https://codesandbox.io/s/build-own-react-router-v4-mpslz , https://www.youtube.com/watch?v=1knvu0a3k0w"
 // );
 
-const historyPush = (path, state) => {
-  window.history.pushState(state, "", path);
-  //   instances.forEach((instance) => instance.forceUpdate());
-  window.dispatchEvent(new PopStateEvent("navigate"));
-  // window.dispatchEvent(new Event("pushstate"));
-  if (routerContext.get()?.pathname !== window.location.pathname) {
-    routerContext.set({
-      search: window.location.search,
-      hash: window.location.hash,
-      state: window.history.state,
-      pathname: window.location.pathname,
-    });
+// SSR pathname - set from server
+let ssrPathname = "/";
+let ssrSearch = "";
+let ssrHash = "";
+
+// export const setSSRPathname = (pathname) => {
+//   ssrPathname = ssrUrl = pathname;
+// };
+
+// Parse URL to extract pathname, search, hash
+export const setSSRUrl = (url) => {
+  try {
+    // Handle full URL or path
+    const urlObj = new URL(url, "http://localhost");
+    ssrPathname = urlObj.pathname;
+    ssrSearch = urlObj.search;
+    ssrHash = urlObj.hash;
+  } catch (e) {
+    // Fallback: simple parsing
+    const hashIdx = url.indexOf("#");
+    const searchIdx = url.indexOf("?");
+
+    if (hashIdx > -1) {
+      ssrHash = url.slice(hashIdx);
+      url = url.slice(0, hashIdx);
+    }
+
+    if (searchIdx > -1) {
+      ssrSearch = url.slice(searchIdx);
+      ssrPathname = url.slice(0, searchIdx);
+    } else {
+      ssrPathname = url;
+    }
   }
 };
 
-const historyReplace = (path, state) => {
-  window.history.replaceState(state, "", path);
-  //   instances.forEach((instance) => instance.forceUpdate());
-  window.dispatchEvent(new PopStateEvent("navigate"));
-  if (routerContext.get()?.pathname !== window.location.pathname) {
-    routerContext.set({
-      search: window.location.search,
-      hash: window.location.hash,
-      state: window.history.state,
-      pathname: window.location.pathname,
-    });
-  }
-};
+const historyPush = isServer
+  ? noop
+  : (path, state) => {
+      window.history.pushState(state, "", path);
+      window.dispatchEvent(new PopStateEvent("navigate"));
+      if (routerContext.get()?.pathname !== window.location.pathname) {
+        routerContext.set({
+          search: window.location.search,
+          hash: window.location.hash,
+          state: window.history.state,
+          pathname: window.location.pathname,
+        });
+      }
+    };
+
+const historyReplace = isServer
+  ? noop
+  : (path, state) => {
+      window.history.replaceState(state, "", path);
+      window.dispatchEvent(new PopStateEvent("navigate"));
+      if (routerContext.get()?.pathname !== window.location.pathname) {
+        routerContext.set({
+          search: window.location.search,
+          hash: window.location.hash,
+          state: window.history.state,
+          pathname: window.location.pathname,
+        });
+      }
+    };
 
 /**
  * Converts path pattern to regex and extracts parameter names
@@ -130,50 +170,37 @@ export function LinkV2(props, children) {
   // log(props, children);
   const { to, replace } = props;
 
-  return (
-    <a
-      href={to}
-      onClick={(e) => {
+  const handleClick = isServer
+    ? noop
+    : (e) => {
         e.preventDefault();
         const href = e.target.getAttribute("href");
         const pathname = window.location.pathname;
         if (href === pathname) return;
         replace ? historyReplace(to) : historyPush(to);
-        // setCurentPath(to);
-        // routerContext.set({ pathname: to, ...routerContext.get() });
-      }}
-    >
+      };
+
+  return (
+    <a href={to} onClick={handleClick}>
       {children}
     </a>
   );
 }
 
-const navigate = (navigationEvent) => {
-  // log(window.location.pathname, navigationEvent);
+const navigate = isServer
+  ? noop
+  : (navigationEvent) => {
+      if (routerContext.get()?.pathname !== window.location.pathname) {
+        const { pathname } = window.location;
 
-  if (routerContext.get()?.pathname !== window.location.pathname) {
-    // setCurrPath(window.location.pathname);
-    const { pathname } = window.location;
-    // log({
-    //   ...matchPath(pathname, {}),
-    //   search: window.location.search,
-    //   hash: window.location.hash,
-    //   state: window.history.state,
-    // });
-    routerContext.set({
-      ...matchPath(pathname, {}),
-      search: window.location.search,
-      hash: window.location.hash,
-      state: window.history.state,
-    });
-    // onRouteChange({
-    //   ...matchPath(pathname, {}),
-    //   search: window.location.search,
-    //   hash: window.location.hash,
-    //   state: window.history.state,
-    // });
-  }
-};
+        routerContext.set({
+          ...matchPath(pathname, {}),
+          search: window.location.search,
+          hash: window.location.hash,
+          state: window.history.state,
+        });
+      }
+    };
 
 // const { get: currPath, set: setCurrPath } = routerContext;
 
@@ -182,27 +209,28 @@ function Router() {
   let onRouteChange;
 
   return {
-    init: (cb) => {
-      window.addEventListener("popstate", navigate);
-      // window.addEventListener("pushstate", navigate);
-      window.addEventListener("navigate", navigate);
-      onRouteChange = cb || (() => {});
-      onRouteChange({
-        search: window.location.search,
-        hash: window.location.hash,
-        state: window.history.state,
-        // ...matchPath(routerContext.get()?.pathname, {}),
-        ...matchPath(
-          routerContext.get()?.pathname || window.location.pathname,
-          {}
-        ),
-      });
-    },
-    cleanup: () => {
-      window.removeEventListener("popstate", navigate);
-      // window.removeEventListener("pushstate", navigate);
-      window.removeEventListener("navigate", navigate);
-    },
+    init: isServer
+      ? noop
+      : (cb) => {
+          window.addEventListener("popstate", navigate);
+          window.addEventListener("navigate", navigate);
+          onRouteChange = cb || (() => {});
+          onRouteChange({
+            search: window.location.search,
+            hash: window.location.hash,
+            state: window.history.state,
+            ...matchPath(
+              routerContext.get()?.pathname || window.location.pathname,
+              {},
+            ),
+          });
+        },
+    cleanup: isServer
+      ? noop
+      : () => {
+          window.removeEventListener("popstate", navigate);
+          window.removeEventListener("navigate", navigate);
+        },
     navigator: {
       go: historyPush,
       replace: historyReplace,
@@ -210,20 +238,37 @@ function Router() {
   };
 }
 
-export const routerContext = createContext({
-  search: window.location.search,
-  hash: window.location.hash,
-  state: window.history.state,
-  pathname: window.location.pathname,
-  params: {},
-});
+// SSR-safe context initialization
+const initialRouterState = isServer
+  ? {
+      search: ssrSearch,
+      hash: ssrHash,
+      state: null,
+      pathname: ssrPathname,
+      params: {},
+    }
+  : {
+      search: window.location.search,
+      hash: window.location.hash,
+      state: window.history.state,
+      pathname: window.location.pathname,
+      params: {},
+    };
+
+export const routerContext = createContext(initialRouterState);
 
 export const routerInstance = Router();
-routerInstance.init();
+
+if (!isServer) routerInstance.init();
 
 export const RouterAdv = ({ routeObj }) => {
+  // Set ssrPathname if provided (for SSR)
+  // if (isServer ) {
+  //   ssrPathname = ssrUrl;
+  // }
+
   const [curPath, setCurPath] = createState({
-    pathname: window.location.pathname,
+    pathname: isServer ? ssrPathname : window.location.pathname,
   });
 
   const onRouteChange = (routeConfig) => {
@@ -257,7 +302,10 @@ export const RouterAdv = ({ routeObj }) => {
   //     }
   //   }
   // }
-  const finalUrl = routerContext.get()?.pathname || curPath?.pathname;
+  const finalUrl = isServer
+    ? ssrPathname
+    : routerContext.get()?.pathname || curPath?.pathname;
+
   const Comp = routeObj[`${finalUrl}`];
   if (Comp && typeof Comp === "function") {
     return <Comp />;
@@ -282,7 +330,9 @@ export const RouterAdv = ({ routeObj }) => {
  * </RouterSwitch>
  */
 export function RouterSwitch(props, children) {
-  const finalUrl = routerContext.get()?.pathname || window.location.pathname;
+  const finalUrl = isServer
+    ? ssrPathname
+    : routerContext.get()?.pathname || window.location.pathname;
 
   // Ensure children is an array
   const childArray = Array.isArray(children) ? children : [children];
@@ -336,7 +386,9 @@ export function RouterSwitch(props, children) {
  * Used inside RouterSwitch to declaratively define routes
  */
 function Route({ path, exact = true, component: Component, render }, children) {
-  const finalUrl = routerContext.get()?.pathname || window.location.pathname;
+  const finalUrl = isServer
+    ? ssrPathname
+    : routerContext.get()?.pathname || window.location.pathname;
 
   const match = matchPath(finalUrl, { path, exact });
 
