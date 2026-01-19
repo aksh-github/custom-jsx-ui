@@ -1339,7 +1339,7 @@ export { Lazy } from "./lazy";
 export { memo } from "./memo";
 export { Switch, Case, Default } from "./switch";
 export { VirtualList } from "./vlist";
-export { loader } from "./loader";
+export { Loader } from "./loader";
 
 // state import exports
 

@@ -10,7 +10,6 @@ import {
   memo,
   forceUpdate,
   Lazy,
-  loader,
 } from "@vdom-lib";
 
 // import { Sans } from "./sans/sans";
@@ -167,23 +166,14 @@ const Counter = () => {
   );
 };
 
-loader(someFetch);
-const Parent = (props, children) => {
-  console.log(props, children);
-};
-
 const root = document.getElementById("root");
 // mount(root, () => <App type="dyn" />);
 mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 
 // Usage
 
-function someFetch() {
-  return fetch("http://localhost:3000/");
-}
-
 function Home(props) {
-  const resource = loader(someFetch);
+  const resource = []; // loader(someFetch);
   console.log("resource", resource);
 
   return (

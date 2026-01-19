@@ -7,10 +7,10 @@ import {
   memo,
   forceUpdate,
   Switch,
-  loader,
 } from "@vdom-lib";
 // import { Lazy } from "../utils/vdom/lazy";
 import { DynSans, DynTextArea } from "../compos/DynamicExports";
+import { Loader } from "../utils/vdom/loader";
 // import { Sans } from "../vdom-app/sans/sans";
 
 // smartRegisterCallback(forceUpdate);
@@ -86,6 +86,12 @@ const Child = memo(({ ctr }) => {
   return <p>{ctr}</p>;
 }, "Child");
 
+// const Parent = (props, children) => {
+//   console.log(props, children);
+//   children[0].props = { ...children[0].props, data: 100 };
+//   return children[0];
+// };
+
 export const SsrApp = ({ currentUrl }) => {
   const [count, setCount] = createState(0);
   const [t, sett] = createState("");
@@ -146,7 +152,6 @@ export const SsrApp = ({ currentUrl }) => {
       >
         {ctx.get()}
       </p>
-      <LoaderTest />
       <p>
         {null}
         {undefined}
@@ -188,7 +193,21 @@ export const SsrApp = ({ currentUrl }) => {
 
       <div ignoreNode={true}>this should be ignored</div>
 
-      <LoaderTest2 />
+      <Loader
+        promiseFn={someFetch}
+        loading="Loading..."
+        error="Error loading data"
+        key={"api/1"}
+        onLoad={(data) => <LoaderTest data={data} />}
+      />
+
+      <Loader
+        promiseFn={someFetch2}
+        loading="Loading..."
+        error="Error loading data"
+        key={"api/2"}
+        onLoad={(data) => <LoaderTest2 data={data} />}
+      />
     </div>
   );
 };
@@ -201,17 +220,17 @@ function someFetch2() {
   return fetch("http://localhost:3000/api/2");
 }
 
-loader(someFetch);
+someFetch().catch(() => {
+  console.log("this catch block is necc for SSR");
+});
 
 export function LoaderTest(props) {
-  const resource = loader(someFetch);
-  console.log("resource", resource);
-
+  console.log("LoaderTest props", props);
   return (
     // <h1>Home {props?.a}</h1>
     <section>
-      <h1>Home {props?.a}</h1>
-      <p>{resource.loading ? "Loading.." : JSON.stringify(resource.data)}</p>
+      <h1>LoaderTest</h1>
+      <p>{JSON.stringify(props?.data)}</p>
       <button
         onClick={() => {
           routerInstance.navigator.go("/route2", { a: 10 });
@@ -224,14 +243,11 @@ export function LoaderTest(props) {
 }
 
 export function LoaderTest2(props) {
-  const resource = loader(someFetch2);
-  console.log("resource", resource);
-
   return (
     // <h1>Home {props?.a}</h1>
     <section>
-      <h1>Home {props?.a}</h1>
-      <p>{resource.loading ? "Loading.." : JSON.stringify(resource.data)}</p>
+      <h1>LoaderTest2 {props?.a}</h1>
+      <p>{JSON.stringify(props?.data)}</p>
       <button
         onClick={() => {
           routerInstance.navigator.go("/route2", { a: 10 });
