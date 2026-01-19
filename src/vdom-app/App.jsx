@@ -11,7 +11,7 @@ import {
   Switch,
   VirtualList,
 } from "@vdom-lib";
-import HoleComponent from "../compos/web-compo";
+// import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
 // import Link from "./compos/Link";
 
@@ -580,7 +580,7 @@ const routeObj = {
 
 export function App(props) {
   // console.log(routerContext.get());
-  const curPath = routerContext.get()?.pathname;
+  const curPath = routerContext.get()?.pathname || props.url;
   let footRef = null;
   let [footerTp, setFooterTp] = createState(0);
   let timer = null;
@@ -602,8 +602,8 @@ export function App(props) {
         createElement(
           <div>
             <h1>Static Header</h1>Static content....
-          </div>
-        )
+          </div>,
+        ),
       );
 
       const wcd = footRef.querySelector("web-component div");

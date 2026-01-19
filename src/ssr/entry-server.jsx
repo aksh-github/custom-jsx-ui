@@ -2,6 +2,8 @@
 
 import { renderToString, h, reset } from "@vdom-lib";
 import { SsrApp } from "./SsrApp";
+import { App } from "../vdom-app/App";
+import { setSSRUrl } from "../utils/router-v2";
 
 export async function render(url) {
   console.log("Rendering for URL:", url);
@@ -14,10 +16,11 @@ export async function render(url) {
   `;
 
   const html = renderToString(
-    // <StaticRouter location={url}>
-    // <App />
-    // </StaticRouter>
-    <SsrApp currentUrl={url} />,
+    // IMP: NEED TO BE SAME AS entry-server.jsx except for url
+    // <SsrApp currentUrl={url} />,
+    // <App type="built-in" url={url} />,
+
+    <App type="built-in" url={url} />,
   );
 
   return { header, html };
@@ -25,4 +28,4 @@ export async function render(url) {
 
 // this is very important
 
-export { reset };
+export { setSSRUrl, reset };

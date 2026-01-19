@@ -80,10 +80,15 @@ async function createServer() {
           path.resolve(__dirname, extraPath, "dist-ssr/client/index.html"),
           "utf-8",
         );
+
+        // get seturl fn
+        renderModule.setSSRUrl(url);
+
         const { header, html } = await renderModule.render(url);
         headerContent = header;
         appContent = html;
 
+        // get reset fn
         resetStateForServer = renderModule.reset;
       } else {
         // Dev mode with HMR
@@ -93,15 +98,23 @@ async function createServer() {
         );
         template = await vite.transformIndexHtml(url, template);
 
-        renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
-        const stateModule = await vite.ssrLoadModule(
-          "/src/utils/simple-state.js",
+        // get seturl fn
+        const routeModule = await vite.ssrLoadModule(
+          "/src/utils/router-v2.jsx",
         );
-        resetStateForServer = stateModule.reset;
+        routeModule.setSSRUrl(url);
+
+        renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
 
         const { header, html } = await renderModule.render(url);
         headerContent = header;
         appContent = html;
+
+        // get reset fn
+        const stateModule = await vite.ssrLoadModule(
+          "/src/utils/simple-state.js",
+        );
+        resetStateForServer = stateModule.reset;
       }
 
       const html = template
