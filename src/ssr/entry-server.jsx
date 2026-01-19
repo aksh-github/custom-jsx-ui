@@ -3,7 +3,7 @@
 import { renderToString, h, reset } from "@vdom-lib";
 import { SsrApp } from "./SsrApp";
 import { App } from "../vdom-app/App";
-import { setSSRUrl } from "../utils/router-v2";
+import { setSSRUrl } from "@router-v2";
 
 export async function render(url) {
   console.log("Rendering for URL:", url);
