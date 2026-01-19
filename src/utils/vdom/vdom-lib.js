@@ -2,10 +2,11 @@
 
 const IS_PROD = typeof window !== "undefined" ? import.meta.env.PROD : false;
 
-const log = console.log;
-const logt = console.time,
-  logte = console.timeEnd;
 const noop = () => {};
+const log = IS_PROD ? noop : console.log;
+const logt = IS_PROD ? noop : console.time,
+  logte = IS_PROD ? noop : console.timeEnd;
+
 // const log = noop;
 // const logt = noop;
 // const logte = noop;
