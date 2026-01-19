@@ -14,7 +14,8 @@
     "build:c": "vite build",
     "build:s": "vite build --ssr src/ssr/entry-server.jsx --outDir dist-ssr/server",
     "build-all": "npm run build:c && npm run build:s",
-    "ssr": "node server-ssr/server.js"
+    "ssr": "node server-ssr/server.js",
+    "ssrp": "node server-ssr/server.js --prod"
   },
   "author": "",
   "license": "ISC",
