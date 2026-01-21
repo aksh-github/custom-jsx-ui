@@ -59,7 +59,7 @@ export const DynTextArea = () => (
     importFn={TextAreaComp}
     resolve="TextArea"
     key="TextArea"
-    fallback={<div>Loading TextArea...</div>}
+    fallback={<section>Loading TextArea...</section>}
   />
 );
 
@@ -67,7 +67,7 @@ export const DynCompo = () => (
   <Lazy
     importFn={DynCompoPromise}
     key="PropsDriven"
-    resolve="PropsDriven22"
+    resolve="PropsDriven"
     fallback={<div>Loading Props driven compo...</div>}
     n="This is a props driven component"
     error={

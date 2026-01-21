@@ -331,7 +331,7 @@ function ComplexRoute(props) {
       {/* {c() % 2 === 0 ? <Master /> : "NA"}
       {c() % 2 === 0 ? <Master /> : "NA"} */}
       {/* {c % 2 !== 0 ? <ArrayCompMemo arr={arr} /> : null} */}
-      {c % 2 !== 0 ? <ArrayCompVirtual arr={arr} /> : null}
+      {c % 2 !== 0 ? <ArrayCompVirtual arr={arr} /> : <div />}
       <p>
         <LinkV2 to="/route2?q=some">Go next</LinkV2>
         <button
@@ -578,6 +578,16 @@ const routeObj = {
   // "/topics": () => <Topics basepath="/topics" match={curPath} />,
 };
 
+async function loadWC() {
+  try {
+    const module = await import("../compos/web-compo");
+    return module;
+    // use module
+  } catch (err) {
+    // handle error
+  }
+}
+
 export function App(props) {
   // console.log(routerContext.get());
   const curPath = routerContext.get()?.pathname || props.url;
@@ -590,6 +600,12 @@ export function App(props) {
   let ct = 0;
 
   createEffect(() => {
+    loadWC()
+      .then((mod) => {
+        console.log(mod);
+      })
+      .catch((err) => console.log);
+
     if (footRef) {
       // const p = document.createElement("p");
       // p.textContent = footerTp();
@@ -601,7 +617,7 @@ export function App(props) {
       footRef.appendChild(
         createElement(
           <div>
-            <h1>Static Header</h1>Static content....
+            <h4>Static Header</h4>Static content....
           </div>,
         ),
       );

@@ -167,8 +167,8 @@ const Counter = () => {
 };
 
 const root = document.getElementById("root");
-// mount(root, () => <App type="dyn" />);
-mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
+mount(root, () => <App type="dyn" />);
+// mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 
 // Usage
 
