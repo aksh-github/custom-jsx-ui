@@ -5,8 +5,17 @@ import { SsrApp } from "./SsrApp";
 import { App } from "../vdom-app/App";
 import { setSSRUrl } from "@router-v2";
 
-export async function render(url) {
-  console.log("Rendering for URL:", url);
+export const loader = async (url) => {
+  // any init code put here
+
+  setSSRUrl(url);
+
+  console.log("loader called");
+  return await fetch("http://localhost:3000/api/1");
+};
+
+export async function render(url, result, err) {
+  console.log("Rendering for URL:", url, result, err);
 
   // this can be dynamically created based on url
   const header = `
@@ -26,6 +35,9 @@ export async function render(url) {
   return { header, html };
 }
 
-// this is very important
+export const dispose = () => {
+  console.log("dispose called");
+  reset();
+};
 
-export { setSSRUrl, reset };
+// this is very important

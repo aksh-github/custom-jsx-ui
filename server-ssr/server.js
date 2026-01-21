@@ -21,9 +21,26 @@ const isProd = process.argv.includes("--prod");
 console.log(`Mode: ${isProd ? "PRODUCTION" : "DEVELOPMENT"}`);
 // console.log(`Args:`, process.argv);
 
+const callLoader = async (url, loader) => {
+  let result, err;
+
+  try {
+    result = await loader(url);
+    if (result?.ok && result.json) result = await result.json();
+  } catch (e) {
+    console.log(e);
+    err = e;
+  }
+
+  return {
+    result,
+    err,
+  };
+};
+
 async function createServer() {
   const app = express();
-  let vite, renderModule, resetStateForServer;
+  let vite, renderModule, dispose;
 
   if (isProd) {
     const compression = (await import("compression")).default;
@@ -82,14 +99,22 @@ async function createServer() {
         );
 
         // get seturl fn
-        renderModule.setSSRUrl(url);
+        // renderModule.setSSRUrl(url);
 
-        const { header, html } = await renderModule.render(url);
+        // load data
+        // load data
+        let result, err, respon;
+
+        if (renderModule) respon = await callLoader(url, renderModule.loader);
+
+        // pass data / err to render
+
+        const { header, html } = await renderModule.render(url, result, err);
         headerContent = header;
         appContent = html;
 
-        // get reset fn
-        resetStateForServer = renderModule.reset;
+        // get dispose fn
+        dispose = renderModule.dispose;
       } else {
         // Dev mode with HMR
         template = fs.readFileSync(
@@ -99,31 +124,35 @@ async function createServer() {
         template = await vite.transformIndexHtml(url, template);
 
         // get seturl fn
-        const routeModule = await vite.ssrLoadModule(
-          "/src/utils/router-v2.jsx",
-        );
-        routeModule.setSSRUrl(url);
+        // const routeModule = await vite.ssrLoadModule(
+        //   "/src/utils/router-v2.jsx",
+        // );
+        // routeModule.setSSRUrl(url);
 
         renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
 
-        const { header, html } = await renderModule.render(url);
+        // load data
+        let result, err, respon;
+
+        if (renderModule) respon = await callLoader(url, renderModule.loader);
+
+        // pass data / err to render
+        const { header, html } = await renderModule.render(url, result, err);
         headerContent = header;
         appContent = html;
 
-        // get reset fn
-        const stateModule = await vite.ssrLoadModule(
-          "/src/utils/simple-state.js",
-        );
-        resetStateForServer = stateModule.reset;
+        // get dispose fn
+        // console.log(renderModule.rese);
+        dispose = renderModule.dispose;
       }
 
       const html = template
         .replace(`<!--ssr-outlet-->`, appContent)
         .replace(`<!--ssr-header-->`, headerContent);
 
-      if (resetStateForServer) {
+      if (dispose) {
         console.log("Reset state available");
-        resetStateForServer();
+        dispose();
       }
 
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
