@@ -1,20 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.11/mode/javascript/javascript.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .editor-container {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      @media (max-width: 768px) {
+        .editor-container {
+          flex-direction: column;
+        }
+      }
+      .editor {
+        height: 300px;
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .editor-header {
+        padding: 5px;
+        background: #f0f0f0;
+        border-bottom: 1px solid #ccc;
+        font-weight: bold;
+      }
+      .preview {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+      }
+    </style>
   </head>
   <body>
-    <!-- <div id="root">
-      <h1>Hello World</h1>
-      <p>This is a simple html5 page.</p>
-      
+    <div class="editor-container">
+      <div class="editor">
+        <div class="editor-header">HTML</div>
+        <textarea id="html-editor"></textarea>
+      </div>
+      <div class="editor">
+        <div class="editor-header">CSS</div>
+        <textarea id="css-editor"></textarea>
+      </div>
+      <div class="editor">
+        <div class="editor-header">JS</div>
+        <textarea id="js-editor"></textarea>
+      </div>
     </div>
-    <div id="root2">
-      <h1>Hello World modified</h1>
-      <p>This is a simple html5 page. modified</p>
-      <input type="text" />
-    </div> -->
-    <div id="apply"></div>
-    <script type="module" src="./src/test.jsx"></script>
+    <iframe id="preview" class="preview" width="100%" height="300"></iframe>
+
+    <script>
+      const htmlEditor = CodeMirror.fromTextArea(
+        document.getElementById("html-editor"),
+        {
+          mode: "htmlmixed",
+          theme: "default",
+        },
+      );
+      const cssEditor = CodeMirror.fromTextArea(
+        document.getElementById("css-editor"),
+        {
+          mode: "css",
+          theme: "default",
+        },
+      );
+      const jsEditor = CodeMirror.fromTextArea(
+        document.getElementById("js-editor"),
+        {
+          mode: "javascript",
+          theme: "default",
+        },
+      );
+
+      function updatePreview() {
+        const html = htmlEditor.getValue();
+        const css = `<style>${cssEditor.getValue()}</style>`;
+        const js = `<script>${jsEditor.getValue()}<\/script>`;
+        const preview = document.getElementById("preview");
+        preview.srcdoc = html + css + js;
+      }
+
+      htmlEditor.on("change", updatePreview);
+      cssEditor.on("change", updatePreview);
+      jsEditor.on("change", updatePreview);
+    </script>
   </body>
 </html>
