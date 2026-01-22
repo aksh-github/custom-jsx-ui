@@ -32,32 +32,66 @@
         border: 1px solid #ccc;
         border-radius: 5px;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
       .editor-header {
         padding: 5px;
         background: #f0f0f0;
         border-bottom: 1px solid #ccc;
         font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+      }
+      .editor-header button {
+        margin-left: 5px;
+        cursor: pointer;
       }
       .preview {
         border: 1px solid #ccc;
         border-radius: 5px;
         padding: 10px;
       }
+      .collapsed-h {
+        height: 40px !important;
+        overflow: hidden;
+      }
+      .collapsed-v {
+        width: 170px !important;
+        overflow: hidden;
+      }
     </style>
   </head>
   <body>
     <div class="editor-container">
       <div class="editor">
-        <div class="editor-header">HTML</div>
+        <div class="editor-header">
+          HTML
+          <div>
+            <button onclick="toggleCollapse(this, 'h')">_</button>
+            <button onclick="toggleCollapse(this, 'v')">|</button>
+          </div>
+        </div>
         <textarea id="html-editor"></textarea>
       </div>
       <div class="editor">
-        <div class="editor-header">CSS</div>
+        <div class="editor-header">
+          CSS
+          <div>
+            <button onclick="toggleCollapse(this, 'h')">_</button>
+            <button onclick="toggleCollapse(this, 'v')">|</button>
+          </div>
+        </div>
         <textarea id="css-editor"></textarea>
       </div>
       <div class="editor">
-        <div class="editor-header">JS</div>
+        <div class="editor-header">
+          JS
+          <div>
+            <button onclick="toggleCollapse(this, 'h')">_</button>
+            <button onclick="toggleCollapse(this, 'v')">|</button>
+          </div>
+        </div>
         <textarea id="js-editor"></textarea>
       </div>
     </div>
@@ -69,6 +103,7 @@
         {
           mode: "htmlmixed",
           theme: "default",
+          lineNumbers: true,
         },
       );
       const cssEditor = CodeMirror.fromTextArea(
@@ -76,6 +111,7 @@
         {
           mode: "css",
           theme: "default",
+          lineNumbers: true,
         },
       );
       const jsEditor = CodeMirror.fromTextArea(
@@ -83,6 +119,7 @@
         {
           mode: "javascript",
           theme: "default",
+          lineNumbers: true,
         },
       );
 
@@ -97,6 +134,21 @@
       htmlEditor.on("change", updatePreview);
       cssEditor.on("change", updatePreview);
       jsEditor.on("change", updatePreview);
+
+      function toggleCollapse(btn, dir) {
+        const editor = btn.closest(".editor");
+        if (dir === "h") {
+          editor.classList.toggle("collapsed-h");
+          btn.textContent = editor.classList.contains("collapsed-h")
+            ? "□"
+            : "_";
+        } else {
+          editor.classList.toggle("collapsed-v");
+          btn.textContent = editor.classList.contains("collapsed-v")
+            ? "◞"
+            : "|";
+        }
+      }
     </script>
   </body>
 </html>
