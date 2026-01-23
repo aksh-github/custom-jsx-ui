@@ -21,23 +21,6 @@ const isProd = process.argv.includes("--prod");
 console.log(`Mode: ${isProd ? "PRODUCTION" : "DEVELOPMENT"}`);
 // console.log(`Args:`, process.argv);
 
-const callLoader = async (url, loader) => {
-  let result, err;
-
-  try {
-    result = await loader(url);
-    if (result?.ok && result.json) result = await result.json();
-  } catch (e) {
-    console.log(e);
-    err = e;
-  }
-
-  return {
-    result,
-    err,
-  };
-};
-
 async function createServer() {
   const app = express();
   let vite, renderModule, dispose;
@@ -101,15 +84,9 @@ async function createServer() {
         // get seturl fn
         // renderModule.setSSRUrl(url);
 
-        // load data
-        // load data
-        let result, err, respon;
-
-        if (renderModule) respon = await callLoader(url, renderModule.loader);
-
         // pass data / err to render
 
-        const { header, html } = await renderModule.render(url, result, err);
+        const { header, html } = await renderModule.render(url);
         headerContent = header;
         appContent = html;
 
@@ -131,13 +108,8 @@ async function createServer() {
 
         renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
 
-        // load data
-        let result, err, respon;
-
-        if (renderModule) respon = await callLoader(url, renderModule.loader);
-
         // pass data / err to render
-        const { header, html } = await renderModule.render(url, result, err);
+        const { header, html } = await renderModule.render(url);
         headerContent = header;
         appContent = html;
 
