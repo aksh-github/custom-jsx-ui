@@ -1363,19 +1363,6 @@ export {
 // export function SuspenseV2(props, child) {
 // This function is still available in 24jun25 br in commented form
 
-// function escapeHtml(unsafe) {
-// if (typeof unsafe === "object")
-// console.log("escapeHtml called with:", unsafe);
-// return unsafe && unsafe.replace
-// ? unsafe
-// .replace(/&/g, "&amp;")
-// .replace(/</g, "&lt;")
-// .replace(/>/g, "&gt;")
-// .replace(/"/g, "&quot;")
-// .replace(/'/g, "&#039;")
-// : unsafe;
-// }
-
 function escapeHtml(unsafe) {
   // Early return for null/undefined
   if (unsafe == null) return "";
@@ -1445,6 +1432,10 @@ export function renderToString(jsx) {
         // console.warn(`⚠️ Blocked dangerous <${jsx.type}> tag during SSR`);
         // return `<!-- Blocked: ${jsx.type} -->` + renderToString(jsx.children);
         avoidChildren = true;
+      }
+
+      if (jsx.type === "br" || jsx.type === "hr") {
+        return (html += `<${jsx.type} />`);
       }
 
       html = "<" + jsx.type;
