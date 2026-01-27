@@ -999,6 +999,8 @@ if (typeof window !== "undefined") {
           if (actualComparison) {
             if (
               oldNode.type === newNode.type &&
+              // ===
+              //   domNode?.tagName?.toLowerCase()
               propsChanged(oldNode.props, newNode.props)
             )
               propsPatches.push({

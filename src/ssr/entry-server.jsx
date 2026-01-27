@@ -42,7 +42,7 @@ export async function render(url) {
     // <SsrApp currentUrl={url} />,
     // <App type="built-in" url={url} />,
 
-    <App type="built-in" url={url} />,
+    <App type="dyn" url={url} />,
   );
   return { header, html };
 }

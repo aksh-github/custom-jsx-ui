@@ -17,6 +17,7 @@ import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
 
 import { PerfTest } from "../compos/PerfTest";
 import { SsrApp } from "../ssr/SsrApp";
+import { Sans } from "./sans/sans";
 
 // =======================
 
@@ -167,7 +168,8 @@ const Counter = () => {
 };
 
 const root = document.getElementById("root");
-mount(root, () => <App type="dyn" />);
+// mount(root, () => <App type="dyn" />);
+mount(root, () => <Sans />);
 // mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 
 // Usage
