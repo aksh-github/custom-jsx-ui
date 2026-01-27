@@ -261,7 +261,7 @@ if (typeof window !== "undefined") {
     }
 
     function isEventProp(name) {
-      return /^on/.test(name);
+      return /^on[A-Z]/.test(name);
     }
 
     function extractEventName(name) {
