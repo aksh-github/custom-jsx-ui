@@ -33,6 +33,12 @@ export const setSSRUrl = (url) => {
     ssrPathname = urlObj.pathname;
     ssrSearch = urlObj.search;
     ssrHash = urlObj.hash;
+    routerContext.set({
+      search: ssrSearch,
+      hash: ssrHash,
+      state: null,
+      pathname: ssrPathname,
+    });
   } catch (e) {
     // Fallback: simple parsing
     const hashIdx = url.indexOf("#");
@@ -49,6 +55,13 @@ export const setSSRUrl = (url) => {
     } else {
       ssrPathname = url;
     }
+
+    routerContext.set({
+      search: ssrSearch,
+      hash: ssrHash,
+      state: null,
+      pathname: ssrPathname,
+    });
   }
 };
 
@@ -262,19 +275,15 @@ export const routerInstance = Router();
 if (!isServer) routerInstance.init();
 
 export const RouterAdv = ({ routeObj }) => {
-  // Set ssrPathname if provided (for SSR)
-  // if (isServer ) {
-  //   ssrPathname = ssrUrl;
-  // }
-
-  const [curPath, setCurPath] = createState({
-    pathname: isServer ? ssrPathname : window.location.pathname,
-  });
+  // const [curPath, setCurPath] = createState({
+  //   pathname: isServer
+  //     ? ssrPathname
+  //     : routerContext.get()?.pathname || window.location.pathname,
+  // });
 
   const onRouteChange = (routeConfig) => {
-    // setCurPath(newPath);
-    setCurPath(routerContext.get());
-    routerContext.set(routeConfig);
+    // setCurPath(routerContext.get());
+    // routerContext.set(routeConfig);
   };
 
   createEffect(() => {
@@ -284,37 +293,31 @@ export const RouterAdv = ({ routeObj }) => {
     };
   }, []);
 
-  // const routeKeys = Object.keys(routeObj);
+  const finalUrl = isServer ? ssrPathname : routerContext.get()?.pathname;
 
-  // for (let i = 0; i < routeKeys.length; i++) {
-  //   const path = routeKeys[i];
-  //   const match = matchPath(curPath?.pathname, {
-  //     path,
-  //     exact: true,
-  //   });
-  //   if (match) {
-  //     const Comp = routeObj[path];
-  //     log(Comp);
-  //     if (Comp && typeof Comp === "function") {
-  //       return <Comp match={match} />;
-  //     } else {
-  //       return Comp;
-  //     }
-  //   }
-  // }
-  const finalUrl = isServer
-    ? ssrPathname
-    : routerContext.get()?.pathname || curPath?.pathname;
+  // console.log(finalUrl);
 
-  const Comp = routeObj[`${finalUrl}`];
-  if (Comp && typeof Comp === "function") {
-    return <Comp />;
-  } else {
-    return (
-      Comp?.render?.() ||
-      (routeObj["404"]?.render ? routeObj["404"].render() : routeObj["404"])
-    );
+  // Iterate through routes to find first match (supports dynamic paths)
+  const routeKeys = Object.keys(routeObj);
+  for (let i = 0; i < routeKeys.length; i++) {
+    const path = routeKeys[i];
+    const match = matchPath(finalUrl, {
+      path,
+      exact: routeKeys[i].includes("*") ? false : true,
+    });
+
+    if (match) {
+      const Comp = routeObj[path];
+      if (Comp && typeof Comp === "function") {
+        return <Comp />;
+      } else {
+        return Comp?.render?.() || Comp;
+      }
+    }
   }
+
+  // Fallback to 404
+  return null;
 };
 
 /**

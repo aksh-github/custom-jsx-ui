@@ -56,7 +56,7 @@ const Topics = (props) => {
     return pathname?.endsWith(slug);
   });
 
-  // console.log(item);
+  console.log(item, pathname);
 
   return (
     <div>
@@ -566,16 +566,18 @@ const routeObj = {
   },
   "/heavy": Heavy,
   "/json-form": JsonFormConsumer,
-  404: {
+  "/route2": SimpleRoute,
+  "/topics": { render: () => <Topics basepath="/topics" /> },
+  "/topics/*": { render: () => <Topics basepath="/topics" /> },
+  "*": {
     render: () => {
       // console.log(routerContext.get());
-      const curPath = routerContext.get()?.pathname;
-      if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
-      else return "Wrong path 404";
+      // const curPath = routerContext.get()?.pathname;
+      // if (curPath?.startsWith("/topics")) return <Topics basepath="/topics" />;
+      // else return "Wrong path 404";
+      return "Wrong path 404";
     },
   },
-  "/route2": SimpleRoute,
-  // "/topics": () => <Topics basepath="/topics" match={curPath} />,
 };
 
 async function loadWC() {
