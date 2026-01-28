@@ -8,4 +8,4 @@
 #### app/chat branch: Contain actual implementation of chat app (chat folder) along with master br content.  (not maintained much)
 
 **Latest Branch**
-#### 12dec25: Latest stable branch as of 12-Dec-25
+#### 15jan26-ssr: Latest stable branch as of 28-Jan-26
