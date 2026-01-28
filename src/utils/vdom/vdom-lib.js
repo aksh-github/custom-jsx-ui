@@ -1455,9 +1455,10 @@ export function renderToString(jsx) {
           if (
             propValue == null ||
             propValue === false ||
-            propName.startsWith("on")
-          )
+            /^on[A-Z]/.test(propName)
+          ) {
             continue;
+          }
 
           if (propName === "className") {
             html += ` class="${escapeHtml(propValue)}"`;
