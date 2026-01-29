@@ -350,15 +350,18 @@ if (typeof window !== "undefined") {
       // }
       const props = Object.assign({}, newProps, oldProps);
       for (const name in props) {
-        if (name === "onSubmit")
-          addEventListeners($target, { [name]: newProps[name] });
-        else updateProp($target, name, newProps[name], oldProps[name]);
+        if (name === "onSubmit") {
+          // addEventListeners($target, { [name]: newProps[name] });
+
+          $target[`__${name}`] = newProps[name];
+        } else updateProp($target, name, newProps[name], oldProps[name]);
       }
     }
 
     function addEventListeners($target, props) {
       for (const name in props) {
-        if (isEventProp(name)) {
+        // onSubmit is handled differently at mount n hydrate
+        if (isEventProp(name) && name !== "onSubmit") {
           const extratedName = extractEventName(name);
 
           // if (!eventListeners.has($target))
@@ -539,8 +542,15 @@ if (typeof window !== "undefined") {
 
     // only 1st type (complete rewrite etc)
 
+    function globalEventListener(e) {
+      const eventType = e.type;
+      log(eventType);
+      e.target[`__onSubmit`](e);
+    }
+
     function mount($root, initCompo) {
       rootNode = $root;
+      rootNode.addEventListener("submit", globalEventListener);
       // 0. for route change clean existing things
       // if (rootNode?.firstChild) {
       //   log(">>> this is route change");
@@ -601,6 +611,7 @@ if (typeof window !== "undefined") {
 
     function hydrate($root, initCompo) {
       rootNode = $root;
+      rootNode.addEventListener("submit", globalEventListener);
       curr = initCompo;
       old = curr(); // create latest vdom
       log(old);
@@ -993,7 +1004,7 @@ if (typeof window !== "undefined") {
           // updateProps(domNode, newNode.props, oldNode.props);
           // this is available in 24jun25 br in commented form
 
-          if (newNode?.props?.ignoreNode) return;
+          // if (newNode?.props?.ignoreNode) return;
 
           // dont enable below condition
           if (actualComparison) {
@@ -1012,6 +1023,8 @@ if (typeof window !== "undefined") {
 
           last = domNode;
         }
+
+        if (newNode?.props?.ignoreNode) return;
 
         // if (newNode?.props?.cacheKey) {
         // this is available in 24jun25 br in commented form
