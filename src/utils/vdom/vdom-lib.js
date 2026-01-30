@@ -1367,6 +1367,7 @@ export {
   createEffect,
   createState,
   createContext,
+  createRef,
   skipUpdate,
   batch,
   smartRegisterCallback,

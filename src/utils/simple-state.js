@@ -86,6 +86,10 @@ const SmartState = (() => {
   const gCtx = {};
   let ctxIdx = 0;
 
+  // for refs
+  const refs = {};
+  let refIdx = 0;
+
   let batchOp = false;
   let isSkipping = false;
 
@@ -133,6 +137,9 @@ const SmartState = (() => {
       delete gCtx[key];
     });
 
+    // reset refs
+    refIdx = 0;
+
     if (isServer) {
       mountMap.clear();
       unMountMap.clear();
@@ -171,6 +178,17 @@ const SmartState = (() => {
             // else gs[_key] = null;
 
             delete gs[_key];
+          }
+          // console.log(gs);
+        });
+
+        // clear refs
+        Object.keys(refs).forEach((_key) => {
+          if (_key.startsWith(key)) {
+            // if (Array.isArray(gs[_key])) gs[_key].length = 0;
+            // else gs[_key] = null;
+            refs[_key]?.__clean?.();
+            delete refs[_key];
           }
           // console.log(gs);
         });
@@ -243,6 +261,55 @@ const SmartState = (() => {
     idx++;
 
     return [gs[key], set, specialSet];
+  };
+
+  const ref = (iv) => {
+    log(refs);
+
+    if (lastComp != currComp) {
+      // lastComp = currComp;
+      refIdx = 0;
+    }
+
+    const key = `${currComp}-${refIdx}`;
+
+    if (refs[key] == undefined) refs[key] = iv;
+
+    const setRef = (nv) => {
+      let temp;
+
+      if (typeof nv === "function") {
+        temp = nv(refs[key]);
+      } else {
+        temp = nv;
+      }
+
+      if (temp === refs[key]) return;
+
+      refs[key] = temp;
+
+      lastComp = key.split("-")?.[0];
+
+      if (isSkipping) {
+      } else {
+        if (lastComp) updateComps.add(lastComp);
+
+        if (!batchOp) {
+          // reset();
+
+          throtUpdate();
+        }
+      }
+      lastComp = null;
+
+      // console.log("gs", gs);
+    };
+
+    if (lastComp != currComp) lastComp = currComp;
+
+    refIdx++;
+
+    return [refs[key], setRef];
   };
 
   const context = (iv) => {
@@ -337,6 +404,7 @@ const SmartState = (() => {
   return {
     state,
     context,
+    ref,
     init,
     reset,
     skipUpdate,
@@ -348,6 +416,7 @@ const SmartState = (() => {
 
 export const createState = SmartState.state;
 export const createContext = SmartState.context;
+export const createRef = SmartState.ref;
 export const init = SmartState.init;
 export const reset = SmartState.reset;
 // export const resetForServer = SmartState.resetForServer;
