@@ -178,31 +178,6 @@ const SmartState = (() => {
     }
   };
 
-  // const resetForServer = () => {
-  //   // gs = {};
-  //   lastComp = fnLastComp = null;
-  //   idx = fnIdx = 0;
-
-  //   // reset context
-  //   ctxIdx = 0;
-  //   Object.entries(gCtx).forEach(([key, fn]) => {
-  //     fn();
-  //     delete gCtx[key];
-  //   });
-
-  //   // clear
-
-  //   mountMap.clear();
-  //   unMountMap.clear();
-
-  //   // clear data
-  //   Object.keys(gs).forEach((key) => {
-  //     delete gs[key];
-  //   });
-
-  //   log("gs in resetForServer", gs);
-  // };
-
   const state = (iv) => {
     log(gs);
     if (lastComp != currComp) {
