@@ -501,6 +501,7 @@ if (typeof window !== "undefined") {
       if (!node?.$c) {
         setProps($el, node.props);
         addEventListeners($el, node.props);
+        if (node.props?.onSubmit) $el[`__onSubmit`] = node.props?.onSubmit;
       }
 
       if (node.children.length > 100) {

@@ -18,7 +18,7 @@ function _createEffect() {
     }
 
     const dependenciesChanged = dependencies.some(
-      (dep, i) => dep !== prevDeps?.[i]
+      (dep, i) => dep !== prevDeps?.[i],
     );
 
     // if (!prevDeps?.length || dependenciesChanged) {
