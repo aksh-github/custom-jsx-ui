@@ -35,6 +35,7 @@ import {
   DynSans,
   DynTextArea,
 } from "../compos/DynamicExports";
+import { createRef } from "../utils/simple-state";
 // import { } from "../utils/vdom/switch";
 // import { Sans } from "./sans/sans";
 
@@ -146,6 +147,7 @@ const Input = () => {
       })}
       <input
         className="input"
+        id="in1"
         onInput={(e) => {
           // console.log(e, e.target.value);
           setInput({
@@ -296,10 +298,11 @@ function ComplexRoute(props) {
 
   return (
     <div
-      ref={(_r) => {
-        // console.log(_r);
-        ref = _r;
-      }}
+      id="complex-div"
+      // ref={(_r) => {
+      //   // console.log(_r);
+      //   ref = _r;
+      // }}
     >
       hello world {c} {s}
       <hole-component
@@ -390,27 +393,35 @@ const Odd = () => {
 };
 
 // SimpleRoute
-
+// let ref = null;
 export const SimpleRoute = () => {
   const [pst, setPst] = createState(0);
   const [data, setData] = createState(null);
   // const tv = pst.get("r");
-  let ref = null;
+  const [ref, setRef] = createRef(null);
 
   // const [arrState] = createState({ arr: ["10", "20"] });
 
   createEffect(() => {
     // console.log("Ref available in onMount for SimpleRoute", ref);
     return () => {
-      console.log("unmount for SimpleRoute");
-      ref = null;
+      console.log("unmount for SimpleRoute", ref);
+      // ref = null;
     };
   }, []);
+
+  createEffect(() => {
+    if (ref) {
+      ref.__clean = () => {
+        console.log("this node will be cleaned up");
+      };
+    }
+  }, [ref]);
 
   const Row = ({ n }) => <p>{n}</p>;
 
   return (
-    <div ref={(_ref) => (ref = _ref)}>
+    <div ref={setRef}>
       {/* route2
         <Link href="/">Go Back</Link>
         <hr /> */}
@@ -590,16 +601,51 @@ async function loadWC() {
   }
 }
 
+// let footerRef = null;
+
 export function App(props) {
   // console.log(routerContext.get());
   const curPath = routerContext.get()?.pathname || props.url;
-  let footRef = null;
-  let [footerTp, setFooterTp] = createState(0);
+
+  let [footerRef, setfooterRef] = createRef(null);
   let timer = null;
 
   // console.log(routerContext.get());
 
   let ct = 0;
+
+  createEffect(() => {
+    if (footerRef) {
+      // const p = document.createElement("p");
+      // p.textContent = footerRef();
+
+      // footerRef.appendChild(p);
+      const p = createElement(<p />);
+      // ||
+      footerRef.appendChild(p);
+      footerRef.appendChild(
+        createElement(
+          <div>
+            <h4>Static Header</h4>Static content....
+          </div>,
+        ),
+      );
+
+      const wcd = footerRef.querySelector("web-component div");
+
+      timer = setInterval(() => {
+        // skipUpdate(() => setfooterRef((_tp) => _tp + 1)); // with createState but skips ui comparison
+        // setfooterRef((_tp) => _tp + 1);
+        // p.textContent = footerRef();
+        ct++;
+        p.textContent = "This footer demoes ignoreNode " + ct; // without using createState
+
+        if (wcd) {
+          wcd.textContent = "Hello from wc " + ct;
+        }
+      }, 1000);
+    }
+  }, [footerRef]);
 
   createEffect(() => {
     loadWC()
@@ -608,40 +654,9 @@ export function App(props) {
       })
       .catch((err) => console.log);
 
-    if (footRef) {
-      // const p = document.createElement("p");
-      // p.textContent = footerTp();
-
-      // footRef.appendChild(p);
-      const p = createElement(<p />);
-      // ||
-      footRef.appendChild(p);
-      footRef.appendChild(
-        createElement(
-          <div>
-            <h4>Static Header</h4>Static content....
-          </div>,
-        ),
-      );
-
-      const wcd = footRef.querySelector("web-component div");
-
-      timer = setInterval(() => {
-        // skipUpdate(() => setFooterTp((_tp) => _tp + 1)); // with createState but skips ui comparison
-        // setFooterTp((_tp) => _tp + 1);
-        // p.textContent = footerTp();
-        ct++;
-        p.textContent = "This footer demoes ignoreNode ignoreLater " + ct; // without using createState
-
-        if (wcd) {
-          wcd.textContent = "Hello from wc " + ct;
-        }
-      }, 1000);
-    }
-
     return () => {
       clearInterval(timer);
-      timer = footRef = null;
+      timer = null;
     };
   }, []);
 
@@ -678,7 +693,10 @@ export function App(props) {
       <MySwitch type={props.type} cp={curPath} />
 
       <footer
-        ref={(_ref) => (footRef = _ref)}
+        // ref={(_ref) => {
+        //   setfooterRef(_ref);
+        // }}
+        ref={setfooterRef}
         ignoreNode
         // ignoreLater={true}
         style={{ backgroundColor: "bisque" }}
