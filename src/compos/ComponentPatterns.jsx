@@ -1,27 +1,16 @@
 // import { createEffect, createSignal } from "../utils/signal-complex";
 import { signal } from "../utils/signal-v2";
-import { h, createState, createEffect, skipUpdate } from "@vdom-lib";
+import { h, createState, createEffect, createRef } from "@vdom-lib";
 import { routerInstance } from "../utils/router-v2";
 
 export const TextArea = () => {
   // const [t, set] = atom("");
 
   const [t, set] = createState("");
-  let txtRef;
-
-  // onMount(() => {
-  //   console.log(txtRef);
-  //   setTimeout(() => {
-  //     txtRef.focus();
-  //   }, 100);
-  // }, []);
 
   createEffect(() => {
-    // if (txtRef) txtRef.focus();
-
     return () => {
       console.log("unmounting TextArea");
-      txtRef = null;
     };
   }, []);
 
@@ -43,16 +32,7 @@ export const TextArea = () => {
         ></textarea>
         <br /> */}
       <span>{t}</span>
-      <input
-        value={t}
-        ref={(ta) => {
-          txtRef = ta;
-          // setTimeout(() => {
-          //   ta.focus();
-          // }, 100);
-        }}
-        onInput={(e) => set(e.target.value)}
-      />
+      <input value={t} id="comp-in" onInput={(e) => set(e.target.value)} />
     </section>
   );
 };
@@ -296,11 +276,13 @@ packet-beta
 };
 
 const SseComp = () => {
-  let zmdRef = null;
+  const [zmdRef, setZmdRef] = createRef(null);
   let data = "";
   let scriptEl;
 
   createEffect(() => {
+    if (zmdRef == null) return;
+
     let source = new EventSource("http://localhost:8000/events");
 
     // build, attach script el
@@ -331,23 +313,18 @@ const SseComp = () => {
     };
 
     // Cleanup function
-    return () => {
+    zmdRef.__clean = () => {
       console.log("Cleaning up SSE connection");
       if (source) {
         source.close();
         source = null;
       }
-      zmdRef = null;
+      scriptEl = null;
+      // zmdRef.remove();
     };
-  }, []);
+  }, [zmdRef]);
 
-  return (
-    <zero-md
-      ref={(el) => {
-        zmdRef = el;
-      }}
-    ></zero-md>
-  );
+  return <zero-md ref={setZmdRef}></zero-md>;
 };
 
 export const Embed = () => {
@@ -356,7 +333,7 @@ export const Embed = () => {
   return (
     <div>
       <h2>Embed</h2>
-      <SseComp />
+      {/* <SseComp /> */}
       <input
         type="text"
         value={yt}
@@ -365,7 +342,7 @@ export const Embed = () => {
           setYt(e.target.value);
         }}
       />
-      <iframe
+      {/* <iframe
         width="100%"
         height="615"
         src={`https://www.youtube.com/embed/${yt}`}
@@ -373,11 +350,14 @@ export const Embed = () => {
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
-      ></iframe>
+      ></iframe> */}
       <hr />
       <Gist />
       <hr />
-      <zero-md src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"></zero-md>
+      <zero-md
+        // ref={setZmdRef}
+        src="https://raw.githubusercontent.com/aksh-github/pages/refs/heads/master/data/sanskrit/intro.md"
+      ></zero-md>
     </div>
   );
 };
