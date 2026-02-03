@@ -1,9 +1,10 @@
 // import { renderToString } from "react-dom/server";
 
-import { renderToString, h, reset } from "@vdom-lib";
+import { h, reset } from "@vdom-lib";
 import { SsrApp } from "./SsrApp";
 import { App } from "../vdom-app/App";
 import { setSSRUrl } from "@router-v2";
+import { renderToString } from "@vdom-ssr";
 
 const getData = async (url) => {
   let result, err;
@@ -40,8 +41,6 @@ export async function render(url) {
   const html = renderToString(
     // IMP: NEED TO BE SAME AS entry-server.jsx except for url
     // <SsrApp currentUrl={url} />,
-    // <App type="built-in" url={url} />,
-
     <App type="dyn" url={url} />,
   );
   return { header, html };
