@@ -1219,6 +1219,7 @@ if (typeof window !== "undefined") {
             current.removeEventListener(evt, current._events[evt], true);
           }
           current._events = null;
+          current.__onSubmit = null;
         }
 
         // Add children to stack
