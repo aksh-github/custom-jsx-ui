@@ -194,7 +194,7 @@ const JsonForm = ({
       }, {});
 
       setFormState((prevState) =>
-        usecaseChanged ? { ...newState } : { ...prevState, ...newState }
+        usecaseChanged ? { ...newState } : { ...prevState, ...newState },
       );
       // setFormValid(isFormValid(initialState));
 
@@ -330,12 +330,12 @@ const JsonForm = ({
       {uiJson && formState && (
         <form
           id={uiJson.form.id}
-          ref={(el) => {
-            formRef = el;
+          // ref={(el) => {
+          //   formRef = el;
 
-            // console.log("el", el);
-            el = null;
-          }}
+          //   // console.log("el", el);
+          //   el = null;
+          // }}
           className={uiJson.form.className}
           onBlur={(e) => {
             const { name, value, type, checked } = e.target;
