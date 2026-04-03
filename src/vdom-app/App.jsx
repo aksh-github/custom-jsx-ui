@@ -297,7 +297,7 @@ function ComplexRoute(props) {
   );
 
   return (
-    <div
+    <main
       id="complex-div"
       // ref={(_r) => {
       //   // console.log(_r);
@@ -348,7 +348,7 @@ function ComplexRoute(props) {
       </p>
       <Ctr v={c} key={"k1"} />
       {c % 2 === 0 ? <Master /> : "NA"}
-    </div>
+    </main>
   );
 }
 
