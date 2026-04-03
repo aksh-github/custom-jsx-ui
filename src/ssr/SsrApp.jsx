@@ -1,6 +1,5 @@
 import {
   h,
-  smartRegisterCallback,
   createState,
   createEffect,
   createContext,
@@ -12,8 +11,6 @@ import {
 import { DynSans, DynTextArea } from "../compos/DynamicExports";
 import { Loader } from "../utils/vdom/loader";
 // import { Sans } from "../vdom-app/sans/sans";
-
-// smartRegisterCallback(forceUpdate);
 
 const ctx = createContext(0);
 const nameCtx = createContext("Aks");

@@ -56,13 +56,18 @@ const microframe = (() => {
       // if (altFuncCache) {
       // this is available in 24jun25 br in commented form
 
+      // funcCache[cacheKey] = {
+      //   fname: type.name,
+      //   // fn: _fn,
+      //   mount: true,
+      //   unMount: null,
+      //   p: curParent,
+      //   key: props?.key,
+      // };
       funcCache[cacheKey] = {
-        fname: type.name,
-        // fn: _fn,
+        name: cacheKey,
         mount: true,
         unMount: null,
-        p: curParent,
-        key: props?.key,
       };
 
       // if (props?.key !== undefined) callStack[counter].key = props.key;
@@ -1360,7 +1365,13 @@ export { Loader } from "./loader";
 
 // state import exports
 
-import { init, reset, setCurrComp, updateComps } from "../simple-state";
+import {
+  init,
+  reset,
+  setCurrComp,
+  smartRegisterCallback,
+  updateComps,
+} from "../simple-state";
 
 // export const createState = _createState;
 
@@ -1380,3 +1391,8 @@ export {
 
 // export function SuspenseV2(props, child) {
 // This function is still available in 24jun25 br in commented form
+
+if (typeof window !== "undefined") {
+  smartRegisterCallback(forceUpdate);
+  log("== registered");
+}

@@ -4,7 +4,8 @@ import { App } from "../vdom-app/App";
 
 // mount(document.getElementById("root"), () => <App />);
 
-smartRegisterCallback(forceUpdate);
+// moved to vdom-lib
+// smartRegisterCallback(forceUpdate);
 
 // forceUpdate(() => <App />);
 hydrate(document.getElementById("root"), () => (

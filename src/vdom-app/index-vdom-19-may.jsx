@@ -25,7 +25,8 @@ import { Sans } from "./sans/sans";
 
 // for my state
 // registerCallback(forceUpdate);
-smartRegisterCallback(forceUpdate, 50);
+// moved to vdom-lib
+// smartRegisterCallback(forceUpdate, 50);
 
 const ctx = createContext(0);
 const nameCtx = createContext("Aks");
@@ -169,8 +170,8 @@ const Counter = () => {
 
 const root = document.getElementById("root");
 // mount(root, () => <App type="dyn" />);
-mount(root, () => <Sans />);
-// mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
+// mount(root, () => <Sans />);
+mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 
 // Usage
 
