@@ -940,7 +940,7 @@ if (typeof window !== "undefined") {
 
           // currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
           currComp = newNode.$c;
-          let c = currComp.split(":")[0];
+          let c = currComp?.split(":")[0];
 
           if (
             // currComp === updateComp ||
