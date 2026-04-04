@@ -106,12 +106,12 @@ const microframe = (() => {
         return {
           ...rv,
           // props: rv.props,
-          $c: type.name,
+          $c: cacheKey,
           // children: rv.children,
           children: [rv],
           // dont think its reqd
           // fragChildLen: rv?.children.length || undefined,
-          $p: curParent,
+          // $p: curParent,
           key: props?.key,
           props: props || {},
           type: "df",
@@ -127,10 +127,10 @@ const microframe = (() => {
 
         //special case return value Array and may be no type  (parent)
         return {
-          $c: type.name,
+          $c: cacheKey,
           type: "df", //assign doc fragment type
           children: rv,
-          $p: curParent,
+          // $p: curParent,
         };
       }
       // return {
@@ -147,20 +147,20 @@ const microframe = (() => {
           //   rv.type = "df";
           // }
           return {
-            $c: type.name,
+            $c: cacheKey,
             // value: rv,
             // ...rv,
             children: [rv],
             // type: "df", // sure that type is unavailable hence using df
-            $p: curParent,
+            // $p: curParent,
           };
         } else {
           // or 2. simple node
           return {
-            $c: type.name,
+            $c: cacheKey,
             value: rv,
             props: props || {},
-            $p: curParent,
+            // $p: curParent,
           };
         }
       }
@@ -938,7 +938,8 @@ if (typeof window !== "undefined") {
         } else {
           // log(newNode.props, oldNode.props);
 
-          currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
+          // currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
+          currComp = newNode.$c;
           let c = currComp.split(":")[0];
 
           if (
@@ -1288,7 +1289,7 @@ if (typeof window !== "undefined") {
           // arr.push(next);
           // const notToSkip = !next.getAttribute("ignorenode");
           const notToSkip = !(
-            next?.getAttribute("ignorenode") ||
+            next?.getAttribute("ignorenode") != null ||
             next.tagName === "IFRAME" ||
             isWebComponent(next)
           );
@@ -1382,8 +1383,7 @@ export {
   createRef,
   skipUpdate,
   batch,
-  smartRegisterCallback,
-  reset,
+    reset,
   setCurrComp, // only required for loader
 } from "../simple-state";
 

@@ -3,7 +3,6 @@ import { App } from "./App";
 import {
   h,
   mount,
-  smartRegisterCallback,
   createState,
   createEffect,
   createContext,
