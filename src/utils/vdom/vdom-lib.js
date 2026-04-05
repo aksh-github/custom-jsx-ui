@@ -256,6 +256,7 @@ if (typeof window !== "undefined") {
         $target.setAttribute(name, value);
         $target[name] = true;
       } else {
+        removeBooleanProp($target, name);
         $target[name] = false;
       }
     }
