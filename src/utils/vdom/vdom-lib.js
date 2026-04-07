@@ -1384,7 +1384,7 @@ export {
   createRef,
   skipUpdate,
   batch,
-    reset,
+  reset,
   setCurrComp, // only required for loader
 } from "../simple-state";
 
@@ -1395,4 +1395,4 @@ export {
 
 if (typeof window !== "undefined") {
   smartRegisterCallback(forceUpdate);
-  }
+}
