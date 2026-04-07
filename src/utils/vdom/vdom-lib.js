@@ -1395,5 +1395,4 @@ export {
 
 if (typeof window !== "undefined") {
   smartRegisterCallback(forceUpdate);
-  log("== registered");
-}
+  }
