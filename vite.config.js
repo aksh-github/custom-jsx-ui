@@ -7,11 +7,11 @@ const shared = {
     // jsxInject: `import { h, df } from '/src/lib/vdom/vdom-lib.js'`,
   },
   alias: {
-    // "@vdom-lib": "/src/lib/vdom-lib.js",
+    "@dom-lib": "/src/utils/dom/lib.v2.js",
     // "@simple-state": "/src/lib/simple-state.js",
-    "@vdom-lib": "/src/utils/vdom/vdom-lib.js",
-    "@vdom-ssr": "/src/utils/vdom/vdom-ssr.js",
-    "@router-v2": "/src/utils/router-v2.jsx",
+    // "@vdom-lib": "/src/utils/vdom/vdom-lib.js",
+    // "@vdom-ssr": "/src/utils/vdom/vdom-ssr.js",
+    // "@router-v2": "/src/utils/router-v2.jsx",
   },
 };
 

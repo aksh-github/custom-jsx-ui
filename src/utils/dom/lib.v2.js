@@ -1,570 +1,602 @@
-(function () {
-  const eventListeners = new WeakMap();
+import { setCurrComp, updateComps } from "../signal-complex";
 
-  const originalAddEventListener = EventTarget.prototype.addEventListener;
-  const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+const TEXT_ELEMENT = "TEXT_ELEMENT";
 
-  EventTarget.prototype.addEventListener = function (type, listener, options) {
-    if (!eventListeners.has(this)) {
-      eventListeners.set(this, []);
-    }
-    eventListeners.get(this).push({ type, listener, options });
-    originalAddEventListener.call(this, type, listener, options);
-  };
+// Per-mount-point state tracking
+const mountPoints = new Map();
+let currentMountContainer = null;
+let mountIdCounter = 0;
+const containerToId = new WeakMap();
+const mountIdToContainer = new Map();
 
-  EventTarget.prototype.removeEventListener = function (
-    type,
-    listener,
-    options
-  ) {
-    if (eventListeners.has(this)) {
-      const listeners = eventListeners.get(this);
-      for (let i = 0; i < listeners.length; i++) {
-        if (listeners[i].type === type && listeners[i].listener === listener) {
-          listeners.splice(i, 1);
-          break;
-        }
-      }
-    }
-    originalRemoveEventListener.call(this, type, listener, options);
-  };
-
-  window.getEventListeners = function (node) {
-    return eventListeners.get(node) || [];
-  };
-})();
-
-function domListIterator(rootNode) {
-  // pass rootNode if its not global
-  // console.log(next);
-  let arr = [rootNode];
-
-  if (rootNode?.nodeType === 3) return arr;
-
-  let next = rootNode;
-
-  function iterChild() {
-    while (next) {
-      // console.log(next);
-      // arr.push(next);
-      if (next.firstElementChild) {
-        next = next.firstElementChild;
-        // console.log(next);
-        arr.push(next);
-      } else {
-        iterSibling();
-      }
-    }
+function getMountId(container) {
+  if (!containerToId.has(container)) {
+    const mountId = `m${mountIdCounter++}`;
+    containerToId.set(container, mountId);
+    mountIdToContainer.set(mountId, container);
   }
-
-  function iterSibling() {
-    while (next) {
-      if (next.nextElementSibling) {
-        next = next.nextElementSibling;
-
-        // console.log(next);
-        arr.push(next);
-        return;
-      }
-
-      next = next.parentElement;
-
-      if (next === rootNode) {
-        next = null;
-      }
-    }
-  }
-
-  iterChild();
-  return arr;
+  return containerToId.get(container);
 }
 
-const microframe = (() => {
-  let stack = [];
-
-  let callStack = [];
-  let counter = 0;
-
-  let oldCallStack = []; // copy of callStack to see cached results
-  const ArrIterator = (_from) => {
-    let from = _from || 0;
-
-    return {
-      get: () => {
-        // console.log(from);
-        const rv = { curr: oldCallStack[from], idx: from };
-        from++;
-        return rv;
-      },
-      reset: (_from) => {
-        from = _from || 0;
-      },
-    };
-  };
-  let iter;
-
-  // mount n unmount
-
-  let currMount = null,
-    currUnmount = null;
-
-  function onMount(cb) {
-    // console.log(counter, cb);
-    currMount = cb;
-  }
-
-  function onCleanup(cb) {
-    // console.log(callStack[counter]);
-    currUnmount = cb;
-  }
-
-  function callUnmountAll() {
-    let len = oldCallStack.length;
-    let clen = callStack.length;
-
-    for (let i = 0; i < len; ++i) {
-      let found = false;
-      for (let j = 0; j < clen; ++j) {
-        if (
-          oldCallStack[i].fname === callStack[j].fname &&
-          oldCallStack[i].p === callStack[j].p
-        ) {
-          found = true;
-          break;
-        } else {
-        }
-      }
-
-      if (!found) {
-        // console.log("call unmount for ", oldCallStack[i].fname);
-        oldCallStack[i]?.unMount?.();
-        oldCallStack[i].unMount = null;
-      }
-    }
-  }
-
-  function callMountAll() {
-    let len = callStack.length;
-    for (let i = 0; i < len; ++i) {
-      // console.log(callStack[i]);
-      callStack[i]?.mount?.();
-      // need to check carefully
-      callStack[i].mount = null;
-    }
-  }
-
-  const createDom = (type, props, ...children) => {
-    const el = document.createElement(type);
-    //   el.dataset.id = ctr++;
-    Object.keys(props || {}).forEach((k) => {
-      if (k === "style") {
-        Object.keys(props[k]).forEach((sk) => {
-          el.style[sk] = props[k][sk];
-        });
-      } else {
-        // el[k] = props[k]
-        if (k?.startsWith("on")) {
-          const evtName = k.replace(/on/, "").toLowerCase();
-          el.addEventListener(evtName, props[k]);
-          // rootNode.addEventListener(evtName, handleEvent);
-          // eventList.push({ el, evtName, cb: props[k] });
-        } else if (k?.startsWith("data")) {
-          el.setAttribute(k, props[k]);
-        } else if (k === "ref") {
-          props[k]?.(el);
-        } else {
-          el[k] = props[k];
-        }
-        // console.log('spl handling for: ', k)
-      }
+function getMountState(container) {
+  if (!mountPoints.has(container)) {
+    mountPoints.set(container, {
+      rootVNode: null,
+      renderedVNode: null,
+      hookStates: [],
+      delegatedListeners: new Map(),
     });
+  }
+  return mountPoints.get(container);
+}
 
-    const addChild = (child) => {
-      if (Array.isArray(child)) {
-        child.forEach((c) => addChild(c));
-      } else if (typeof child === "object" && child != null) {
-        el.appendChild(child);
-      } else {
-        el.appendChild(document.createTextNode(child));
-      }
-    };
+function setCurrentMount(container) {
+  currentMountContainer = container;
+}
 
-    (children || []).forEach((c) => addChild(c));
+function flattenChildren(children) {
+  const flat = [];
 
-    return el;
-  };
-
-  const domv2 = (type, props, ...children) => {
-    // console.log(type, props, children);
-    // console.log(rootNode);
-
-    if (!type) return null;
-
-    let _fn = null;
-    let curParent;
-
-    if (Array.isArray(children)) children = children.flat();
-
-    if (typeof type === "function") {
-      curParent = stack[stack.length - 1]?.n;
-      stack.push({ n: type?.name });
-
-      if (oldCallStack?.length) {
-        const exisng = iter.get();
-
-        if (
-          type.name == exisng?.curr?.fname &&
-          curParent == exisng?.curr?.p &&
-          props?.key === exisng?.curr?.key
-        ) {
-          // console.log("matched for ", exisng);
-          // iter.reset(exisng.idx);
-          _fn = exisng.curr.fn;
-          currMount = exisng.curr.mount;
-          currUnmount = exisng.curr.unMount;
-        } else {
-          let j = exisng.idx + 1;
-          let found = false;
-          iter.reset(j);
-          for (; j < oldCallStack.length; ++j) {
-            const exisng2 = iter.get();
-            // if (exisng2?.curr == null) break;
-            // console.log(
-            //   type.name,
-            //   exisng2?.curr?.fname,
-            //   type.name == exisng2?.curr?.fname ?? "matched"
-            // );
-            if (
-              type.name == exisng2?.curr?.fname &&
-              curParent == exisng2?.curr?.p
-            ) {
-              iter.reset(exisng2.idx); //next search should start from here
-              found = true;
-
-              _fn = exisng2.curr.fn;
-              currMount = exisng2.curr.mount;
-              currUnmount = exisng2.curr.unMount;
-              break;
-            }
-          }
-          if (!found) {
-            // reset to whatever last found idx
-            iter.reset(exisng.idx);
-            _fn = type(props, ...children);
-          }
-        }
-      } else {
-        _fn = type(props, ...children);
-      }
-
-      callStack[counter] = {
-        fname: type.name,
-        fn: _fn,
-        mount: currMount,
-        unMount: currUnmount,
-        p: curParent,
-      };
-
-      if (props?.key !== undefined) callStack[counter].key = props.key;
-
-      currMount = currUnmount = null;
-
-      counter++;
-
-      const rv =
-        typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
-
-      // console.log(rv);
-      stack.pop();
-
-      return rv;
-    } else {
-      return createDom(type, props, ...children);
+  for (const child of children) {
+    if (Array.isArray(child)) {
+      flat.push(...flattenChildren(child));
+      continue;
     }
-  };
 
-  function _renderUtils() {
-    let Main = null,
-      rootNode = null;
-    let oldc;
+    if (
+      child === null ||
+      child === undefined ||
+      child === false ||
+      child === true
+    ) {
+      continue;
+    }
 
-    const render = (_node, _Main) => {
-      // reset all callstack
-      // calls unmount for all as well
-      // lc.reset(true);
+    if (typeof child === "string" || typeof child === "number") {
+      flat.push(createTextElement(String(child)));
+      continue;
+    }
 
-      rootNode = _node;
-
-      // event handler for all
-      // rootNode.addEventListener("click", handleEvent);
-
-      Main = _Main;
-      // imp step: set the latest state
-      // oldc = Main();
-      oldc = microframe.domv2(Main);
-
-      if (oldc == null || oldc == undefined || typeof oldc === "string") {
-        oldc = document.createTextNode(oldc);
-      } else if (typeof oldc === "number") {
-        oldc = document.createTextNode(oldc.toString());
-      }
-
-      if (rootNode.firstChild) rootNode.replaceChild(oldc, rootNode.firstChild);
-      else rootNode.appendChild(oldc);
-
-      // call mount for all
-      callMountAll();
-
-      iter = ArrIterator();
-      oldCallStack = [...callStack];
-      callStack = [];
-
-      // console.log(oldCallStack, callStack);
-
-      return oldc;
-    };
-
-    const forceUpdate = () => {
-      counter = 0; // v imp
-
-      console.log(oldc);
-
-      // callStack = [];
-      iter = ArrIterator();
-
-      console.log(performance.now());
-
-      const newc = domv2(Main);
-      const diffs = computeDiff(oldc, newc);
-
-      console.log(diffs);
-
-      callUnmountAll();
-
-      applyPatchv2(rootNode.firstChild, diffs);
-
-      console.log(performance.now());
-
-      // call mount for all
-      callMountAll();
-
-      // backup for future comparison
-      oldCallStack = [...callStack];
-      callStack = [];
-      oldc = newc;
-    };
-
-    return { render, forceUpdate };
+    flat.push(child);
   }
 
-  const microPatch = (compName, existNode) => {
-    console.log(oldCallStack, callStack);
+  return flat;
+}
 
-    oldCallStack.forEach((item) => {
-      if (item.fname == compName) {
-        // item.fn = null;
-        const newNode = item.fn();
-        // console.log(computeDiff(existNode, newNode));
-        const diffs = computeDiff(existNode, newNode);
-        console.log(diffs);
-        applyPatchv2(existNode, diffs);
-        // existNode = newNode;
-
-        renderUtils.forceUpdate();
-      }
-    });
-  };
-
+function createTextElement(text) {
   return {
-    domv2,
-    onMount,
-    onCleanup,
-    // callMountAll,
-    // ArrIterator,
-    _renderUtils,
-    microPatch,
+    type: TEXT_ELEMENT,
+    props: {
+      nodeValue: text,
+      children: [],
+    },
   };
-})();
-
-// export const mount = microframe.mount;
-export const domv2 = microframe.domv2;
-export const forceUpdate = microframe.forceUpdate;
-export const onMount = microframe.onMount;
-export const onCleanup = microframe.onCleanup;
-export const microPatch = microframe.microPatch;
-
-export const renderUtils = microframe._renderUtils();
-
-// version 2
-
-// Function to compute the diff between two DOM nodes
-export function computeDiff(node1, node2) {
-  const diffs = [];
-
-  function walk(node1, node2, path) {
-    if (!node1 && node2) {
-      diffs.push({ type: "ADD", path, node: node2.cloneNode(true) });
-    } else if (node1 && !node2) {
-      diffs.push({ type: "REMOVE", path });
-    } else if (
-      node1.nodeType !== node2.nodeType ||
-      node1.nodeName !== node2.nodeName
-    ) {
-      const clone = node2.cloneNode(true);
-      const ogNodes = domListIterator(node2);
-      const cloneNodes = domListIterator(clone);
-
-      // console.log(ogNodes, cloneNodes);
-
-      if (ogNodes.length === cloneNodes.length && node2.nodeType === 1) {
-        for (let i = 0; i < ogNodes.length; i++) {
-          getEventListeners(ogNodes[i]).forEach((listener) => {
-            cloneNodes[i].addEventListener(
-              listener.type,
-              listener.listener,
-              listener.options
-            );
-          });
-        }
-      }
-      // updateList(old, clone);
-      diffs.push({ type: "REPLACE", path, node: clone });
-      // diffs.push({ type: "REPLACE", path, node: node2.cloneNode(true) });
-    } else if (
-      node1.nodeType === Node.TEXT_NODE &&
-      node1.nodeValue !== node2.nodeValue
-    ) {
-      diffs.push({ type: "TEXT", path, value: node2.nodeValue });
-    } else {
-      // Check for attribute differences
-      if (node1.nodeType === Node.ELEMENT_NODE) {
-        const attrs1 = node1.attributes;
-        const attrs2 = node2.attributes;
-        const attrDiffs = [];
-
-        for (let i = 0; i < attrs1.length; i++) {
-          const attr1 = attrs1[i];
-          const attr2 = attrs2.getNamedItem(attr1.name);
-          if (!attr2 || attr1.value !== attr2.value) {
-            attrDiffs.push({
-              name: attr1.name,
-              value: attr2 ? attr2.value : null,
-            });
-          }
-        }
-
-        for (let i = 0; i < attrs2.length; i++) {
-          const attr2 = attrs2[i];
-          if (!attrs1.getNamedItem(attr2.name)) {
-            attrDiffs.push({ name: attr2.name, value: attr2.value });
-          }
-        }
-
-        if (node1.tagName === "INPUT" || node1.tagName === "TEXTAREA") {
-          if (node1.value !== node2.value) {
-            diffs.push({
-              type: "PROP",
-              path,
-              name: "value",
-              value: node2.value,
-            });
-          }
-        }
-
-        if (attrDiffs.length > 0) {
-          diffs.push({ type: "ATTR", path, attrs: attrDiffs });
-        }
-      }
-
-      const children1 = Array.from(node1.childNodes);
-      const children2 = Array.from(node2.childNodes);
-      const maxLength = Math.max(children1.length, children2.length);
-
-      for (let i = 0; i < maxLength; i++) {
-        walk(children1[i], children2[i], path.concat(i));
-      }
-    }
-  }
-
-  walk(node1, node2, []);
-  return diffs;
 }
 
-export function getPath(node, target) {
-  const fpath = [];
-
-  function walk(node, path) {
-    if (node === target) {
-      console.log(node, " got it");
-      console.log(path);
-      fpath.push(path);
-      // return path;
-    }
-
-    const children1 = node.childNodes;
-
-    for (let i = 0; i < children1.length; i++) {
-      walk(children1[i], path.concat(i));
-
-      // console.log(node);
-    }
-  }
-
-  walk(node, []);
-
-  return fpath[0];
+export function h(type, props, ...children) {
+  return {
+    type,
+    props: {
+      ...(props || {}),
+      children: flattenChildren(children),
+    },
+  };
 }
 
-// Function to apply a patch to a DOM tree
-export function applyPatchv2(root, diffs) {
-  diffs.forEach((diff) => {
-    const { type, path, node, value, attrs } = diff;
-    const parent = path
-      .slice(0, -1)
-      .reduce((acc, index) => acc.childNodes[index], root);
-    const index = path[path.length - 1];
+function isEventProp(key) {
+  return key.startsWith("on");
+}
 
-    // if (index === undefined || index === null) return;
+function getComponentDisplayName(type) {
+  return type.name || "Anonymous";
+}
 
-    switch (type) {
-      case "ADD":
-        if (index === undefined || index === null) root.appendChild(node);
-        else parent.appendChild(node);
-        break;
-      case "REMOVE":
-        if (index === undefined || index === null) root.remove();
-        else parent.removeChild(parent.childNodes[index]);
-        break;
-      case "REPLACE":
-        if (index === undefined || index === null)
-          root.parentNode.replaceChild(node, parent);
-        else parent.replaceChild(node, parent.childNodes[index]);
-        break;
-      case "TEXT":
-        if (index === undefined || index === null) root.nodeValue = value;
-        else parent.childNodes[index].nodeValue = value;
-        break;
-      case "ATTR":
-        const targetNode =
-          index === undefined || index === null
-            ? root
-            : parent.childNodes[index];
-        attrs.forEach((attr) => {
-          if (attr.value === null) {
-            targetNode.removeAttribute(attr.name);
-          } else {
-            targetNode.setAttribute(attr.name, attr.value);
-          }
-        });
-      case "PROP": // for inputs etc
-        const targetElement =
-          index === undefined || index === null
-            ? root
-            : parent.childNodes[index];
-        targetElement.value = value;
-        break;
-    }
+function getDerivedComponentKey(type, parentName, jsxKey) {
+  return `${getComponentDisplayName(type)}:${parentName}:${jsxKey ?? "undefined"}`;
+}
+
+function getElementEvents(dom) {
+  if (!dom.__events) {
+    dom.__events = {};
+  }
+  return dom.__events;
+}
+
+function invokeMountHooks(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) {
+    return;
+  }
+
+  const onMount = node.__onMount;
+  if (typeof onMount === "function" && node.__onMountCalled !== true) {
+    node.__onMountCalled = true;
+    onMount.call(node, node);
+  }
+
+  for (const child of node.childNodes) {
+    invokeMountHooks(child);
+  }
+}
+
+function createDelegatedEvent(event, currentTarget) {
+  return new Proxy(event, {
+    get(target, prop) {
+      if (prop === "currentTarget") return currentTarget;
+      if (prop === "nativeEvent") return event;
+      const value = target[prop];
+      return typeof value === "function" ? value.bind(target) : value;
+    },
   });
 }
 
-// end version 2
+function removeDelegatedListeners(container, mount) {
+  for (const [eventName, listener] of mount.delegatedListeners.entries()) {
+    container.removeEventListener(eventName, listener);
+  }
+  mount.delegatedListeners.clear();
+}
+
+function cleanupMount(container) {
+  const mount = mountPoints.get(container);
+  if (!mount) {
+    return;
+  }
+
+  removeDelegatedListeners(container, mount);
+  mount.rootVNode = null;
+  mount.renderedVNode = null;
+
+  mountPoints.delete(container);
+
+  const mountId = containerToId.get(container);
+  if (mountId) {
+    mountIdToContainer.delete(mountId);
+  }
+
+  if (currentMountContainer === container) {
+    currentMountContainer = null;
+  }
+}
+
+function ensureDelegatedListener(container, eventName) {
+  const mount = getMountState(container);
+  if (mount.delegatedListeners.has(eventName)) {
+    return;
+  }
+
+  const delegatedListener = (event) => {
+    let node = event.target;
+
+    while (node && node !== container) {
+      const handlers = node.__events;
+      const handler = handlers?.[eventName];
+
+      if (typeof handler === "function") {
+        try {
+          const delegatedEvent = createDelegatedEvent(event, node);
+          handler.call(node, delegatedEvent);
+        } catch (e) {
+          console.error("Handler threw:", e);
+        }
+        if (event.cancelBubble) break;
+      }
+
+      node = node.parentNode;
+    }
+  };
+
+  container.addEventListener(eventName, delegatedListener);
+  mount.delegatedListeners.set(eventName, delegatedListener);
+}
+
+function setProp(dom, key, value, container) {
+  if (key === "children" || key === "key") {
+    return;
+  }
+
+  // need to be before next if
+  if (key === "onMount") {
+    dom.__onMount = typeof value === "function" ? value : undefined;
+    return;
+  }
+
+  if (isEventProp(key)) {
+    const eventName = key.slice(2).toLowerCase();
+    const events = getElementEvents(dom);
+
+    if (typeof value === "function") {
+      events[eventName] = value;
+      if (container) {
+        ensureDelegatedListener(container, eventName);
+      }
+    } else {
+      delete events[eventName];
+    }
+
+    return;
+  }
+
+  if (key === "className") {
+    if (value === null || value === undefined || value === false) {
+      dom.removeAttribute("class");
+      return;
+    }
+    dom.setAttribute("class", value);
+    return;
+  }
+
+  if (value === null || value === undefined || value === false) {
+    dom.removeAttribute(key);
+    return;
+  }
+
+  if (key === "value" || key === "htmlFor") {
+    // special case
+    dom[key] = value;
+
+    // special handling for select
+    setTimeout(() => {
+      dom[key] = value;
+    }, 0);
+    return;
+  }
+
+  if (key === "style") {
+    for (const sk in value) {
+      dom.style[sk] = value[sk];
+    }
+    return;
+  }
+
+  if (key === "ref") {
+    value?.(dom);
+    return;
+  }
+
+  dom.setAttribute(key, value);
+}
+
+function updateProps(dom, oldProps = {}, newProps = {}, container) {
+  for (const [key, oldValue] of Object.entries(oldProps)) {
+    if (key === "children" || key === "key") {
+      continue;
+    }
+
+    if (!(key in newProps)) {
+      setProp(dom, key, undefined, container);
+    }
+  }
+
+  for (const [key, newValue] of Object.entries(newProps)) {
+    if (key === "children" || key === "key") {
+      continue;
+    }
+
+    const oldValue = oldProps[key];
+    if (oldValue !== newValue) {
+      setProp(dom, key, newValue, container);
+    }
+  }
+}
+
+export function createDom(vnode, container) {
+  if (vnode.type === TEXT_ELEMENT) {
+    return document.createTextNode(vnode.props.nodeValue);
+  }
+
+  if (typeof vnode.type === "function") {
+    return createDom(vnode.type(vnode.props || {}), container);
+  }
+
+  const dom = vnode?.type
+    ? document.createElement(vnode.type)
+    : document.createDocumentFragment();
+  const props = vnode.props || {};
+
+  for (const [key, value] of Object.entries(props)) {
+    setProp(dom, key, value, container);
+  }
+
+  for (const child of props.children || []) {
+    dom.appendChild(createDom(child, container));
+  }
+
+  return dom;
+}
+
+function resolveVNode(
+  vnode,
+  parentComponentName = "undefined",
+  mountId = "undefined",
+) {
+  if (!vnode) {
+    return null;
+  }
+
+  if (typeof vnode.type === "function") {
+    const componentKey = getDerivedComponentKey(
+      vnode.type,
+      parentComponentName,
+      vnode.props?.key,
+    );
+
+    // console.log(`Rendering component: ${componentKey}`);
+    setCurrComp(`${mountId}|${componentKey}`);
+
+    const nextProps = {
+      ...(vnode.props || {}),
+      _key: componentKey,
+    };
+
+    const nextVNode = {
+      ...vnode,
+      props: nextProps,
+    };
+
+    return resolveVNode(
+      nextVNode.type(nextVNode.props),
+      getComponentDisplayName(vnode.type),
+      mountId,
+    );
+  }
+
+  const props = vnode.props || {};
+  const children = (props.children || [])
+    .map((child) => resolveVNode(child, parentComponentName, mountId))
+    .filter(Boolean);
+
+  return {
+    ...vnode,
+    props: {
+      ...props,
+      children,
+    },
+  };
+}
+
+function patch(parent, dom, oldVNode, newVNode, container) {
+  if (!oldVNode && newVNode) {
+    const newDom = createDom(newVNode, container);
+    parent.appendChild(newDom);
+    invokeMountHooks(newDom);
+    return newDom;
+  }
+
+  if (oldVNode && !newVNode) {
+    parent.removeChild(dom);
+    return null;
+  }
+
+  if (oldVNode.type !== newVNode.type) {
+    const newDom = createDom(newVNode, container);
+    parent.replaceChild(newDom, dom);
+    return newDom;
+  }
+
+  if (newVNode.type === TEXT_ELEMENT) {
+    if (oldVNode.props.nodeValue !== newVNode.props.nodeValue) {
+      dom.nodeValue = newVNode.props.nodeValue;
+    }
+    return dom;
+  }
+
+  updateProps(dom, oldVNode.props || {}, newVNode.props || {}, container);
+
+  const oldChildren = oldVNode.props?.children || [];
+  const newChildren = newVNode.props?.children || [];
+  const childDoms = Array.from(dom.childNodes);
+  const maxChildren = Math.max(oldChildren.length, newChildren.length);
+
+  for (let i = 0; i < maxChildren; i += 1) {
+    patch(dom, childDoms[i], oldChildren[i], newChildren[i], container);
+  }
+
+  return dom;
+}
+
+function rerender() {
+  if (!currentMountContainer) {
+    return;
+  }
+
+  const mount = getMountState(currentMountContainer);
+  if (!mount.rootVNode) {
+    return;
+  }
+
+  const mountId = getMountId(currentMountContainer);
+  const nextVNode = resolveVNode(mount.rootVNode, "undefined", mountId);
+  const currentDom = currentMountContainer.firstChild;
+
+  patch(
+    currentMountContainer,
+    currentDom,
+    mount.renderedVNode,
+    nextVNode,
+    currentMountContainer,
+  );
+  mount.renderedVNode = nextVNode;
+}
+
+export function render(vnode, container) {
+  if (vnode === null || vnode === undefined) {
+    unmount(container);
+    return;
+  }
+
+  const mount = getMountState(container);
+  mount.rootVNode = vnode;
+
+  setCurrentMount(container);
+  rerender();
+}
+
+export function unmount(container) {
+  if (!container) {
+    return;
+  }
+
+  cleanupMount(container);
+  container.replaceChildren();
+}
+
+export function rerenderMount(container) {
+  setCurrentMount(container);
+  rerender();
+}
+
+function rerenderAllMounts() {
+  const previousMount = currentMountContainer;
+  const containers = Array.from(mountPoints.keys());
+
+  for (const container of containers) {
+    if (!container.isConnected) {
+      cleanupMount(container);
+      continue;
+    }
+    setCurrentMount(container);
+    rerender();
+    console.log(`Rerendered mount: ${getMountId(container)}`);
+  }
+  setCurrentMount(previousMount);
+}
+
+function rerenderUpdatedMounts() {
+  if (updateComps.size === 0) {
+    return false;
+  }
+
+  const previousMount = currentMountContainer;
+  const touchedMountIds = new Set();
+
+  for (const compKey of updateComps) {
+    const mountId = String(compKey).split("|")[0];
+    if (mountId) {
+      touchedMountIds.add(mountId);
+    }
+  }
+
+  updateComps.clear();
+
+  if (touchedMountIds.size === 0) {
+    setCurrentMount(previousMount);
+    return false;
+  }
+
+  for (const mountId of touchedMountIds) {
+    const container = mountIdToContainer.get(mountId);
+    if (!container || !mountPoints.has(container)) {
+      continue;
+    }
+
+    if (!container.isConnected) {
+      cleanupMount(container);
+      continue;
+    }
+
+    setCurrentMount(container);
+    rerender();
+    console.log(`Rerendered updated mount: ${mountId}`);
+  }
+
+  setCurrentMount(previousMount);
+  return true;
+}
+
+// All change related code
+
+export function applyPropsPatches(patches) {
+  const containers = Array.from(mountPoints.keys());
+
+  for (let container in containers) {
+    while (patches.length) {
+      const patch = patches.shift();
+
+      // updateProps(patch.$target, );
+      updateProps(patch.$target, {}, patch.newProps, container);
+
+      patch.$target = null;
+      patch.newProps = null;
+      patch.oldProps = null;
+      // patch = null;
+    }
+  }
+  patches.length = 0;
+}
+
+export function applyPatches(patches) {
+  const disposalPromises = [];
+
+  while (patches.length) {
+    const patch = patches.shift();
+
+    switch (patch.op) {
+      case "APPENDDF":
+        patch.p.appendChild(patch.c);
+        break;
+      case "APPEND":
+        if (Array.isArray(patch.c)) {
+          const l = patch.c.length;
+          for (let i = 0; i < l; ++i) {
+            patch.p.appendChild(createDom(patch.c[i]));
+          }
+        }
+
+        patch.p.appendChild(createDom(patch.c));
+        break;
+
+      case "REMOVE":
+        patch.p.removeChild(patch.c);
+        // disposalPromises.push(disposeNodes(patch.c));
+        break;
+
+      case "REMOVEALL":
+        // const childrenToDispose = Array.from(patch.p.childNodes);
+        // disposalPromises.push(
+        //   Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
+        // );
+
+        if (patch.p.replaceChildren) {
+          patch.p.replaceChildren();
+        } else {
+          while (patch.p.firstChild) {
+            patch.p.removeChild(patch.p.firstChild);
+          }
+        }
+        break;
+
+      case "REPLACE":
+        patch.p.replaceChild(createDom(patch.c[0]), patch.c[1]);
+        // disposalPromises.push(disposeNodes(patch.c[1]));
+        break;
+
+      case "REPLACEALL":
+        const l = patch.c.length;
+        const newArr = [];
+        for (let i = 0; i < l; ++i) {
+          newArr.push(createDom(patch.c[i]));
+        }
+        patch.p.replaceChildren(...newArr);
+        newArr.length = 0;
+        // disposalPromises.push(disposeNodes(patch.c[1]));
+        break;
+
+      case "CONTENT":
+        patch.p.textContent = patch.c;
+        break;
+    }
+
+    patch.p = patch.c = null;
+  }
+
+  patches.length = 0;
+
+  // Cleanup all references after all disposals complete
+  // if (disposalPromises.length > 0) {
+  //   Promise.all(disposalPromises)
+  //     .catch((err) => log("Error during node disposal:", err))
+  //     .finally(() => {
+  //       disposalPromises.length = 0;
+  //     });
+  // }
+}

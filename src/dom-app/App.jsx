@@ -1,404 +1,401 @@
-// import { createSignal, batch, createEffect } from "../utils/signal-complex";
-import { domv2, onMount, onCleanup } from "../utils/dom/lib.v2";
-// import { dom, onMount, onCleanup } from "lib-jsx";
-// import Link from "../compos/Link";
-import { state, atom } from "../utils/simple-state";
-import { signal } from "../utils/signal-v2";
-// import { useState } from "./utils/hooks-experi";
-import { LinkV2, Router } from "../utils/router-v2";
-
-let routeHandler = Router();
-
-const Ctr = ({ v, __spl }) => {
-  const [st, setSt] = state({ c: 100, version: "Loading..." });
-
-  onCleanup(() => {
-    console.log("unmount Ctr");
-  });
-
-  onMount(() => {
-    const timer = setTimeout(() => {
-      clearTimeout(timer);
-      fetch("/package.json")
-        .then((res) => res.json())
-        .then((res) => {
-          setSt((st) => ({
-            ...st,
-            version: res.version,
-          }));
-        });
-    }, 4000);
-  });
-
-  return (props) => {
-    // console.log(props);
-    return (
-      <div
-        style={{
-          background: st().c % 2 === 0 ? "orange" : "tomato",
-          color: st().c % 2 === 0 ? "white" : "unset",
-          padding: "2em",
-        }}
-      >
-        <h3>Child</h3>
-        <p>
-          Parent ctr: {props.v} {props.v % 2 === 0 ? "Even" : null}
-        </p>
-        <p>My ctr: {st().c}</p>
-        <p>Json Value: {st().version}</p>
-        <button
-          onClick={(e) => {
-            // setcc(cc() + 1);
-            setSt((st) => ({ ...st, c: st.c + 1 }));
-          }}
-        >
-          click
-        </button>
-      </div>
-    );
-  };
-};
-
-// end Ctr
-
-const Input = () => {
-  const [input, setInput] = state({
-    input: {
-      v: "some",
-      e: "",
-    },
-  });
-
-  onCleanup(() => {
-    console.log("unmount Input");
-  });
-
-  return () => {
-    return (
-      <div>
-        {[10, 20, 30].map((it) => {
-          return <p>{it}</p>;
-        })}
-        <input
-          className="input"
-          onInput={(e) => {
-            // console.log(e, e.target.value);
-            setInput((st) => ({
-              ...st,
-              input: {
-                v: e.target.value,
-                e: e.target.value ? "" : "incorrect",
-              },
-            }));
-          }}
-          value={input().input.v}
-        />
-        <p>{input().input.e}</p>
-        <TextArea />
-      </div>
-    );
-  };
-};
-
-// ComplexRoute (route 1)
-
-function ComplexRoute(props) {
-  console.log("rendered App", props);
-  const [c, setc] = atom(0);
-  const [s, sets] = atom("akshay");
-  let ref = null;
-
-  createEffect(() => {
-    console.log(c());
-  });
-
-  onMount(() => {
-    console.log("mount app", ref);
-  });
-
-  const arr = [];
-  for (let i = 0; i < 2; ++i) arr.push(i);
-
-  const Number = () => {
-    onMount(() => {
-      console.log("mounting number");
-    });
-    onCleanup(() => {
-      console.log("unmounting number");
-    });
-    return ({ n }) => <li>{n}</li>;
-  };
-
-  const Master = () => () =>
-    (
-      <div>
-        <Ctr v={c()} />
-        <Input />
-      </div>
-    );
-
-  return () => (
-    <div
-      ref={(_r) => {
-        // console.log(_r);
-        ref = _r;
-      }}
-    >
-      hello world {c()} {s()}
-      <div>
-        <button
-          onClick={(e) => {
-            // batch(() => {
-            //   setc(c() + 1);
-            //   sets("akshay is smart");
-            // });
-            setc(c() + 1);
-          }}
-        >
-          Counter
-        </button>
-      </div>
-      {/* {c() % 2 === 0 ? <Master /> : "NA"}
-      {c() % 2 === 0 ? <Master /> : "NA"} */}
-      {c() % 2 !== 0 ? (
-        <ul>
-          {arr.map((n) => (
-            <Number n={n} />
-          ))}
-        </ul>
-      ) : // <Number n={10} />
-      null}
-      <p>
-        <LinkV2 href="route2">Go next</LinkV2>
-        <button
-          onClick={() => {
-            routeHandler.navigator.go("route2");
-          }}
-        >
-          Go to simple
-        </button>
-      </p>
-      <Ctr v={c()} key={"k1"} />
-      {c() % 2 === 0 ? <Master /> : "NA"}
-    </div>
-  );
-}
-
-// SimpleRoute (route 2)
+import { h, createDom, applyPropsPatches, applyPatches } from "@dom-lib";
+import { createSignal, createEffect, createRef } from "../utils/signal-complex";
 
 const Even = () => {
-  onMount(() => {
-    console.log("onMount for Even");
-  });
+  const [count, setCount] = createSignal(0);
 
-  onCleanup(() => {
-    console.log("unmount for Even");
-  });
+  createEffect(() => {
+    console.log("mounting Even");
 
-  return () => "Divisible by 2";
-};
+    return () => {
+      console.log("unmounting Even");
+    };
+  }, []);
 
-const SomeOdd = () => {
-  onMount(() => {
-    console.log("onMount for SomeOdd");
-  });
-
-  onCleanup(() => {
-    console.log("unmount for SomeOdd");
-  });
-
-  return () => "[SomeOdd]";
+  return (
+    <div>
+      <h2>Even Component</h2>
+      <p>
+        This is the Even component.
+        {count}
+      </p>
+      <button
+        onClick={() => {
+          setCount((count) => count + 2);
+          ctx.set((c) => c + 1);
+        }}
+      >
+        Increment
+      </button>
+    </div>
+  );
 };
 
 const Odd = () => {
-  onMount(() => {
-    console.log("onMount for Odd");
-  });
+  const [count, setCount] = createSignal(1);
 
-  onCleanup(() => {
-    console.log("unmount for Odd");
-  });
+  createEffect(() => {
+    console.log("mounting Odd");
 
-  return () => (
+    return () => {
+      console.log("unmounting Odd");
+    };
+  }, []);
+
+  return (
     <div>
-      <SomeOdd />
-      NOT divisible
+      <h2>Odd Component</h2>
+      <p>
+        This is the Odd component.
+        {count}
+      </p>
+      <p>{nameCtx.get()}</p>
+      <button
+        onClick={() => {
+          ctx.set((c) => c + 1);
+
+          setCount((count) => count + 2);
+          nameCtx.set("hello world");
+        }}
+      >
+        Increment
+      </button>
     </div>
   );
 };
 
-// SimpleRoute
-
-export const SimpleRoute = () => {
-  const [r, setr] = createSignal(0);
-  const [pst, setPst] = atom(0);
-  // const tv = pst().r;
-  let ref = null;
-
-  const arrState = state({ arr: ["10", "20"] });
-
-  onMount(() => {
-    console.log("Ref available in onMount for SimpleRoute", ref);
-  });
-
-  onCleanup(() => {
-    console.log("unmount for SimpleRoute");
-  });
-
-  const NoParentComp = () => {
-    // let noParent = [<p>10</p>, <p>20</p>];
-    const [noParent, setNoParent] = createSignal([<p>10</p>, <p>20</p>]);
-    // const Arr = state({ a: [<p>10</p>, <p>20</p>] });
-    console.log("This is not supported, since h() return value is cached");
-
-    return () => (
-      <>
-        <button
-          onClick={() => {
-            setNoParent([...noParent(), <p>40</p>]);
-            console.log(noParent());
-            // Arr.set({ a: [...Arr.get("a"), <p>40</p>] });
-            // console.log(Arr.get("a"));
-          }}
-        >
-          Update below Array (NOT supported)
-        </button>
-        {noParent()}
-      </>
-    );
-  };
-
-  const arr = [];
-  for (let i = 0; i < 5000; ++i) arr.push(i);
-
-  const Number = () => {
-    onMount(() => {
-      // console.log("mounting number");
-    });
-    onCleanup(() => {
-      // console.log("unmounting number");
-    });
-    return ({ n }) => <li className="list-item">{n}</li>;
-  };
-
-  return () => {
-    console.log(pst());
-    return (
-      <div ref={(_ref) => (ref = _ref)}>
-        {/* route2
-        <Link href="/">Go Back</Link>
-        <hr /> */}
-        <div>
-          <h3>{pst() % 2 === 0 ? <Even /> : <Odd />}</h3>
-          <button onClick={() => setPst(pst() + 1)}>Change</button>
-        </div>
-        {/* <ArrayWithMap /> */}
-        {/* <ArrayWithoutMap /> */}
-        {/* <ArrayThatWorks /> */}
-        {/* <ArrayWithFragments /> */}
-        {/* <PropsDriven n="Property to Component" /> */}
-
-        {pst() % 2 === 0 ? (
-          <ul>
-            {arr.map((n) => (
-              <Number n={n} />
-            ))}
-          </ul>
-        ) : null}
-
-        <TextArea />
-      </div>
-    );
-  };
+const Child = ({ ctr }) => {
+  console.log("Child executed");
+  return <p>{ctr}</p>;
 };
 
-export const TextArea = () => {
-  const [txt, settxt] = atom("");
-  const [t, set] = atom("dfd");
-  let txtRef;
+const [online, setOnlineCtx] = createSignal(true);
+const [chatArr, setchatArr] = createSignal(["a", "b", 12505689898]);
 
-  console.log("came here");
+const Messages = () => {
+  // const arr = chatArr();
+  let msgEl = null;
 
-  const clear = () => {
-    set("");
-    settxt("");
-  };
-
-  return () => (
-    <div ref={(ta) => (txtRef = ta)} style={{ backgroundColor: "beige" }}>
-      <button onClick={clear}>Clear</button>
-      <br />
-      <span>{txt()}</span>
-      <textarea
-        value={txt()}
-        onInput={(e) => settxt(e.target.value)}
-      ></textarea>
-      <br />
-      <span>{t()}</span>
-      <input value={t()} onInput={(e) => set(e.target.value)} />
-    </div>
-  );
-};
-
-export function App(props) {
-  const [curPath, setCurPath] = state({ url: window.location.pathname });
-
-  onMount(() => {
-    console.log("=== Main App mounted");
-    routeHandler.init(onRouteChange);
-  });
-
-  onCleanup(() => {
-    routeHandler.cleanup();
-  });
-
-  function onRouteChange(path) {
-    setCurPath(path);
-  }
-  return () => {
+  const Message = ({ index, char }) => {
     return (
       <div>
-        {/* <ul>
-          <li>
-            <LinkV2 to="/">Complex</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/route2">Simple</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/topics">Topics</LinkV2>
-          </li>
-          <li>
-            <LinkV2 to="/frag">Fragments</LinkV2>
-          </li>
-        </ul> */}
-
-        <hr />
-
-        {(() => {
-          switch (curPath().url) {
-            // switch (route()) {
-            case "/route2":
-              return <SimpleRoute />;
-            case "/":
-              return <ComplexRoute />;
-            case "/frag":
-              return (
-                <df>
-                  {/* <ArrayWithFragmentsComplex />
-                  <p>in between</p> */}
-                  <ArrayWithFragments />
-                </df>
-              );
-            default:
-              if (curPath()?.url?.startsWith("/topics"))
-                return <Topics basepath="/topics" match={curPath()} />;
-              else return "Wrong path 404";
-          }
-        })()}
-        <footer>some footer for all</footer>
+        {" "}
+        <p key={index}>{char} </p>
+        <section ignoreNode={true}>this section ignored</section>
       </div>
     );
-    // return <SimpleRoute />;
   };
-}
+
+  const buildList = (init = false) => {
+    const Items = () =>
+      chatArr().map((char, index) => {
+        return <Message index={index} char={char} />;
+      });
+
+    if (msgEl)
+      if (init) {
+        applyPatches([
+          {
+            op: "APPEND",
+            p: msgEl,
+            c: Items(),
+          },
+        ]);
+      } else {
+        applyPatches([
+          {
+            op: "REPLACEALL",
+            p: msgEl,
+            c: Items(),
+          },
+        ]);
+      }
+  };
+
+  createEffect(() => {
+    chatArr();
+    buildList();
+  });
+
+  return (
+    <div
+      className="messages"
+      onMount={(el) => {
+        msgEl = el;
+        buildList(true);
+      }}
+    ></div>
+  );
+};
+
+let formEl = null;
+const Form = () => {
+  const [t, sett] = createSignal("placeholder");
+  const [show, setShow] = createSignal(true);
+  // const [tel, setTel] = createRef();
+
+  const validate = () => {
+    // console.log("validating", t());
+    // Add your validation logic here
+    return t()?.trim().length > 0 && online(); // Example: non-empty string
+  };
+
+  const onInput = (e) => {
+    const value = e.target.value;
+    // console.log("input value", value);
+    sett(value);
+  };
+
+  createEffect(() => {
+    // console.log("input value", t(), tel);
+    const v = online();
+    if (formEl) {
+      const p = formEl.querySelector("p");
+      const inTxt = p.getAttribute("data-t");
+      // p.innerText = inTxt + (v ? "Online" : "Offline");
+      let flag = validate();
+
+      // formEl.querySelector("[type='submit']").disabled = !flag;
+      applyPropsPatches([
+        {
+          $target: formEl.querySelector("[type='submit']"),
+          newProps: { disabled: !flag },
+        },
+      ]);
+
+      applyPatches([
+        {
+          p: p,
+          op: "CONTENT",
+          c: inTxt + (v ? "Online" : "Offline"),
+        },
+      ]);
+    }
+  });
+
+  createEffect(() => {
+    // console.log("input value", t(), tel);
+    const v = t();
+    if (formEl) {
+      // formEl.querySelector("textarea").value = v;
+
+      let flag = validate();
+
+      // formEl.querySelector("[type='submit']").disabled = !flag;
+      applyPropsPatches([
+        {
+          $target: formEl.querySelector("textarea"),
+          newProps: { value: v },
+        },
+        {
+          $target: formEl.querySelector("[type='submit']"),
+          newProps: { disabled: !flag },
+        },
+      ]);
+    }
+  });
+
+  createEffect(() => {
+    const flag = show();
+    if (flag) {
+      console.log("show");
+      // if (formEl)
+      // applyPatches([
+      //   {
+      //     op: "APPEND",
+      //     p: formEl.querySelector(".messages"),
+      //     c: formEl.querySelector(".messages"),
+      //   },
+      // ]);
+      setchatArr([]);
+    } else {
+      // if (formEl)
+      // applyPatches([
+      //   {
+      //     op: "REMOVEALL",
+      //     p: formEl.querySelector(".messages"),
+      //     // c: formEl.querySelector(".messages"),
+      //   },
+      // ]);
+    }
+  });
+
+  const submit = (e) => {
+    e.preventDefault();
+    validate();
+    // console.log("submitted", t);
+
+    setchatArr((arr) => [...arr, t()]);
+    sett("");
+  };
+
+  return (
+    <div
+      // ref={(el) => (formEl = el)}
+      onMount={(el) => {
+        formEl = el;
+      }}
+    >
+      <button
+        onClick={() => {
+          setOnlineCtx(true);
+        }}
+      >
+        Set Online
+      </button>
+      <button
+        onClick={() => {
+          setOnlineCtx(false);
+        }}
+      >
+        Set Offline
+      </button>
+      <p data-t="Online status: ">
+        Online status: {online() ? "Online" : "Offline"}
+      </p>
+      <hr />
+      <button
+        onClick={() => {
+          setShow((s) => !s);
+        }}
+      >
+        Toggle
+      </button>
+      {show() ? <Messages /> : null}
+      <button onClick={() => sett("some text")}>Set Text</button>
+      <form onSubmit={submit}>
+        <textarea value={t()} onInput={onInput}></textarea>
+        <button disabled={!validate()} type="submit">
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+};
+
+// const Parent = (props, children) => {
+//   console.log(props, children);
+//   children[0].props = { ...children[0].props, data: 100 };
+//   return children[0];
+// };
+
+export const SsrApp = ({ currentUrl }) => {
+  const [count, setCount] = createSignal(0);
+  const [t, sett] = createSignal("");
+
+  console.log("Counter rendered for URL:", currentUrl);
+
+  createEffect(() => {
+    console.log("mounting Counter");
+
+    return () => {
+      console.log("unmounting Counter");
+    };
+  });
+
+  const validate = () => {
+    console.log("validating", t);
+    // Add your validation logic here
+    return t.length > 0; // Example: non-empty string
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    validate();
+    // Perform the submit action
+    console.log("submitted", t);
+    sett("");
+  };
+
+  const onInput = (e) => {
+    const value = e.target.value;
+    console.log("input value", value);
+    sett(value);
+  };
+
+  const onChange = (e) => {
+    const value = e.target.value;
+    console.log("change value", value);
+    sett(value);
+  };
+
+  const Decide = ({ count }) => {
+    return count % 2 === 0 ? <Even /> : <Odd />;
+    // return count % 2 === 0 ? <Even /> : "this is odd";
+    // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+    // return count % 2 === 0 ? "this is even" : <Odd />;
+  };
+
+  return (
+    <div>
+      {/* <h2>SSR App</h2>
+      <p>Counter: {count}</p>
+      <p
+        style={{
+          backgroundColor: "lightblue",
+          padding: "10px",
+        }}
+        className="some-class"
+      >
+        {ctx.get()}
+      </p>
+      <p>
+        {null}
+        {undefined}
+        {true}
+        {false}
+      </p>
+      <script id="dyn-script">alert(10)</script>
+      <a href="javascript:alert(10)">Dangerous link</a>
+      <button onClick={() => setCount((count) => count + 1)}>Increment</button>
+      <hr />
+      <Decide count={count} />
+      <hr />
+      <Switch value={10}>
+        <Switch.Case when={10} render={() => "this is 10"} />
+        <Switch.Case
+          when={20}
+          render={() => (
+            <div
+              className="some-20"
+              style={{
+                background: "beige",
+              }}
+            >
+              this is 20
+            </div>
+          )}
+        />
+        <Switch.Default>
+          <div>This is the default case</div>
+        </Switch.Default>
+      </Switch>
+      <hr />
+      <DynTextArea />
+      <form onSubmit={submit}>
+        <input value={t} onInput={onInput} onChange={onChange} />
+        <button type="submit">Submit</button>
+      </form>
+      <Child ctr={count} />
+
+      <div ignoreNode={true}>this should be ignored</div>
+
+      <Loader
+        promiseFn={someFetch}
+        loading="Loading..."
+        error="Error loading data"
+        key={"api/1"}
+        onLoad={(data) => <LoaderTest data={data} />}
+      />
+
+      <Loader
+        promiseFn={someFetch2}
+        loading="Loading..."
+        error="Error loading data"
+        key={"api/2"}
+        onLoad={(data) => <LoaderTest2 data={data} />}
+      /> */}
+      <Form />
+    </div>
+  );
+};
