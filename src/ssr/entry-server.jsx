@@ -40,8 +40,8 @@ export async function render(url) {
 
   const html = renderToString(
     // IMP: NEED TO BE SAME AS entry-server.jsx except for url
-    // <SsrApp currentUrl={url} />,
-    <App type="dyn" url={url} />,
+    <SsrApp currentUrl={url} />,
+    // <App type="dyn" url={url} />,
   );
   return { header, html };
 }

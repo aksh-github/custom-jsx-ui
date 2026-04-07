@@ -15,6 +15,9 @@ import { Loader } from "../utils/vdom/loader";
 const ctx = createContext(0);
 const nameCtx = createContext("Aks");
 
+const onlineCtx = createContext(true);
+const chatArr = createContext(["a", "b", "c"]);
+
 const Even = () => {
   const [count, setCount] = createState(0);
 
@@ -83,6 +86,77 @@ const Child = memo(({ ctr }) => {
   return <p>{ctr}</p>;
 }, "Child");
 
+const Messages = () => {
+  const arr = chatArr.get();
+
+  return (
+    <div>
+      {arr.map((char, index) => {
+        return (
+          <div>
+            {" "}
+            <p key={index}>{char} </p>
+            <section ignoreNode={true}>this section ignored</section>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const Form = () => {
+  const [t, sett] = createState("");
+
+  const validate = () => {
+    console.log("validating", t);
+    // Add your validation logic here
+    return t?.trim().length > 0 && onlineCtx.get(); // Example: non-empty string
+  };
+
+  const onInput = (e) => {
+    const value = e.target.value;
+    console.log("input value", value);
+    sett(value);
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    validate();
+    // console.log("submitted", t);
+    sett("");
+    chatArr.set((arr) => [...arr, t]);
+  };
+
+  return (
+    <div>
+      <button
+        onClick={() => {
+          onlineCtx.set(true);
+        }}
+      >
+        Set Online
+      </button>
+      <button
+        onClick={() => {
+          onlineCtx.set(false);
+        }}
+      >
+        Set Offline
+      </button>
+      <p>Online status: {onlineCtx.get() ? "Online" : "Offline"}</p>
+      <hr />
+      <Messages />
+      <button onClick={() => sett("some text")}>Set Text</button>
+      <form onSubmit={submit}>
+        <textarea value={t} onInput={onInput}></textarea>
+        <button disabled={!validate()} type="submit">
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+};
+
 // const Parent = (props, children) => {
 //   console.log(props, children);
 //   children[0].props = { ...children[0].props, data: 100 };
@@ -138,7 +212,7 @@ export const SsrApp = ({ currentUrl }) => {
 
   return (
     <div>
-      <h2>SSR App</h2>
+      {/* <h2>SSR App</h2>
       <p>Counter: {count}</p>
       <p
         style={{
@@ -204,7 +278,8 @@ export const SsrApp = ({ currentUrl }) => {
         error="Error loading data"
         key={"api/2"}
         onLoad={(data) => <LoaderTest2 data={data} />}
-      />
+      /> */}
+      <Form />
     </div>
   );
 };
