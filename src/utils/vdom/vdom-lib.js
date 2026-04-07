@@ -22,6 +22,22 @@ log("check https://github.com/pomber/incremental-rendering-demo");
 let funcCache = {},
   altFuncCache = {};
 
+function propsChanged(oldProps, newProps) {
+  if (oldProps === newProps) return false;
+  if (!oldProps || !newProps) return true;
+
+  const oldKeys = Object.keys(oldProps);
+  if (oldKeys.length !== Object.keys(newProps).length) return true;
+
+  for (let i = 0; i < oldKeys.length; i++) {
+    const key = oldKeys[i];
+    if (!(key in newProps) || oldProps[key] !== newProps[key]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const microframe = (() => {
   let currComp = null;
 
@@ -38,18 +54,32 @@ const microframe = (() => {
   function h(type, props, ...children) {
     let _fn = null;
     let curParent;
+    let updtFlag = undefined;
 
     if (Array.isArray(children)) children = children.flat();
 
     if (typeof type === "function") {
       curParent = stack[stack.length - 1]?.n;
       // log("curre parent is", curParent, type.name);
-      stack.push({ n: type?.name });
-
       const cacheKey = `${type.name}:${curParent}:${props?.key}`;
+
+      const check = updateComps.has(stack[stack.length - 1]) ? true : false;
+
+      stack.push({ n: type?.name });
 
       setCurrComp(cacheKey);
       currComp = cacheKey;
+
+      const lastFn = altFuncCache[cacheKey];
+
+      if (lastFn) {
+        // this is not beneficial it seems for sans cmopo
+        // if (propsChanged(lastFn.props, props)) {
+        //   updateComps.add(cacheKey);
+        // }
+      } else {
+        updateComps.add(cacheKey);
+      }
 
       let rv = type(props, children);
 
@@ -68,6 +98,7 @@ const microframe = (() => {
         name: cacheKey,
         mount: true,
         unMount: null,
+        props: props,
       };
 
       // if (props?.key !== undefined) callStack[counter].key = props.key;
@@ -168,6 +199,11 @@ const microframe = (() => {
 
     // log(children);
 
+    if (updateComps.has(currComp))
+      // log(currComp);
+      updtFlag = true;
+    else updtFlag = undefined;
+
     // frag case
     if (type === "df") {
       let ct = children.length;
@@ -180,6 +216,7 @@ const microframe = (() => {
       // }
       return {
         type,
+        updtFlag: updtFlag,
         props: props || {},
         fragChildLen: ct,
         children,
@@ -188,6 +225,7 @@ const microframe = (() => {
       return {
         // _c,
         type,
+        updtFlag: updtFlag,
         props: props || {},
         // children: props?.ignoreNode ? [] : children,
         children:
@@ -287,6 +325,7 @@ if (typeof window !== "undefined") {
     function setProp($target, name, value) {
       // log(name, value);
       if (isCustomProp(name)) {
+        if (name === "onSubmit") $target[`__onSubmit`] = value;
         return;
       } else if (name === "className") {
         $target.setAttribute("class", value);
@@ -760,7 +799,8 @@ if (typeof window !== "undefined") {
       function diffElement($parent, newNode, oldNode, index = 0) {
         // if (!actualComparison && newNode?.type && oldNode?.type)
         //   return doMain(newNode, oldNode);
-        if (!actualComparison && updateCompsSize) {
+        // if (!actualComparison && updateCompsSize) {
+        if (!newNode?.updtFlag && updateCompsSize) {
           if (newNode?.type && oldNode?.type) return doMain(newNode, oldNode);
           // if (newNode?.type === oldNode?.type) return;
           if (newNode === oldNode) return;
@@ -963,35 +1003,35 @@ if (typeof window !== "undefined") {
           }
         }
 
-        if (actualComparison && comparisonsReqd === 0) {
-          // log(newNode.props);
-          // log(CTR, stk, newNode);
-          const { fragChildLen } = newNode;
-          if (fragChildLen) {
-            // CTR += 1;
-            let qc = CTR + 1;
+        // if (actualComparison && comparisonsReqd === 0) {
+        //   // log(newNode.props);
+        //   // log(CTR, stk, newNode);
+        //   const { fragChildLen } = newNode;
+        //   if (fragChildLen) {
+        //     // CTR += 1;
+        //     let qc = CTR + 1;
 
-            for (let i = 0; i < fragChildLen; ++i) {
-              let addThisMuch = 0;
-              log("qc: ", qc);
-              const el = stk[qc];
-              // log(el);
-              addThisMuch = el?.querySelectorAll("*").length || 0;
-              comparisonsReqd += addThisMuch;
-              qc += 1 + addThisMuch;
-            }
-            // log(
-            //   "comparisonsReqd till: ",
-            //   comparisonsReqd,
-            //   stk[CTR + fragChildLen + comparisonsReqd]
-            // );
-            compareTill = CTR + fragChildLen + comparisonsReqd + 1;
-          } else {
-            comparisonsReqd += stk[CTR + 1]?.querySelectorAll("*").length || 0;
-            // log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
-            compareTill = CTR + comparisonsReqd + 1;
-          }
-        }
+        //     for (let i = 0; i < fragChildLen; ++i) {
+        //       let addThisMuch = 0;
+        //       log("qc: ", qc);
+        //       const el = stk[qc];
+        //       // log(el);
+        //       addThisMuch = el?.querySelectorAll("*").length || 0;
+        //       comparisonsReqd += addThisMuch;
+        //       qc += 1 + addThisMuch;
+        //     }
+        //     // log(
+        //     //   "comparisonsReqd till: ",
+        //     //   comparisonsReqd,
+        //     //   stk[CTR + fragChildLen + comparisonsReqd]
+        //     // );
+        //     compareTill = CTR + fragChildLen + comparisonsReqd + 1;
+        //   } else {
+        //     comparisonsReqd += stk[CTR + 1]?.querySelectorAll("*").length || 0;
+        //     // log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
+        //     compareTill = CTR + comparisonsReqd + 1;
+        //   }
+        // }
 
         // if (
         //   newNode?.props?.importFn ||
@@ -1015,7 +1055,7 @@ if (typeof window !== "undefined") {
           // if (newNode?.props?.ignoreNode) return;
 
           // dont enable below condition
-          if (actualComparison) {
+          if (newNode?.updtFlag || !hydrated) {
             if (
               oldNode.type === newNode.type &&
               // ===
@@ -1253,22 +1293,6 @@ if (typeof window !== "undefined") {
 
       // end
     };
-
-    function propsChanged(oldProps, newProps) {
-      if (oldProps === newProps) return false;
-      if (!oldProps || !newProps) return true;
-
-      const oldKeys = Object.keys(oldProps);
-      if (oldKeys.length !== Object.keys(newProps).length) return true;
-
-      for (let i = 0; i < oldKeys.length; i++) {
-        const key = oldKeys[i];
-        if (!(key in newProps) || oldProps[key] !== newProps[key]) {
-          return true;
-        }
-      }
-      return false;
-    }
 
     function isWebComponent(element) {
       // Check if the tag name includes a hyphen
