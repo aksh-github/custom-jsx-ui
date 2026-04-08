@@ -65,7 +65,7 @@ const microframe = (() => {
 
       const check = updateComps.has(stack[stack.length - 1]) ? true : false;
 
-      stack.push({ n: type?.name });
+      stack.push({ n: type?.name, comp: cacheKey });
 
       setCurrComp(cacheKey);
       currComp = cacheKey;
@@ -98,7 +98,7 @@ const microframe = (() => {
         name: cacheKey,
         mount: true,
         unMount: null,
-        props: props,
+        // props: props,
       };
 
       // if (props?.key !== undefined) callStack[counter].key = props.key;
@@ -113,9 +113,10 @@ const microframe = (() => {
       // const rv =
       //   typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
 
-      setCurrComp(null);
-
       stack.pop();
+
+      setCurrComp(null);
+      currComp = stack[stack.length - 1];
 
       // if (stack[stack.length - 1]?.ch) stack[stack.length - 1].ch.push(popped);
       // else {
@@ -199,7 +200,7 @@ const microframe = (() => {
 
     // log(children);
 
-    if (updateComps.has(currComp))
+    if (updateComps.has(stack[stack.length - 1].comp))
       // log(currComp);
       updtFlag = true;
     else updtFlag = undefined;
@@ -399,6 +400,9 @@ if (typeof window !== "undefined") {
           // addEventListeners($target, { [name]: newProps[name] });
 
           $target[`__${name}`] = newProps[name];
+          // Reqd for SSR case
+          if ($target.getAttribute("onsubmit") !== null)
+            $target.removeAttribute("onsubmit");
         } else updateProp($target, name, newProps[name], oldProps[name]);
       }
     }
@@ -594,6 +598,8 @@ if (typeof window !== "undefined") {
       e.target[`__onSubmit`](e);
     }
 
+    let hydrated = false;
+
     function mount($root, initCompo) {
       rootNode = $root;
       rootNode.addEventListener("submit", globalEventListener);
@@ -626,9 +632,8 @@ if (typeof window !== "undefined") {
 
       altFuncCache = { ...funcCache };
       funcCache = {};
+      hydrated = true; // just to be sure
     }
-
-    let hydrated = false;
 
     let patches = [],
       propsPatches = [];
@@ -656,6 +661,7 @@ if (typeof window !== "undefined") {
     }
 
     function hydrate($root, initCompo) {
+      hydrated = false;
       rootNode = $root;
       rootNode.addEventListener("submit", globalEventListener);
       curr = initCompo;
@@ -672,7 +678,7 @@ if (typeof window !== "undefined") {
 
       forceUpdate();
 
-      hydrated = true;
+      // hydrated = true;
     }
 
     // all delta updates
@@ -792,6 +798,8 @@ if (typeof window !== "undefined") {
 
       const updateCompsSize = updateComps.size;
       let currComp = null;
+      let checkAll = updateCompsSize === 0 || !hydrated;
+
       let actualComparison = !hydrated ? true : false;
       let comparisonsReqd = 0;
       let compareTill = 0;
@@ -799,6 +807,8 @@ if (typeof window !== "undefined") {
       function diffElement($parent, newNode, oldNode, index = 0) {
         // if (!actualComparison && newNode?.type && oldNode?.type)
         //   return doMain(newNode, oldNode);
+
+        // this is SKIP condition
         // if (!actualComparison && updateCompsSize) {
         if (!newNode?.updtFlag && updateCompsSize) {
           if (newNode?.type && oldNode?.type) return doMain(newNode, oldNode);
@@ -1054,8 +1064,7 @@ if (typeof window !== "undefined") {
 
           // if (newNode?.props?.ignoreNode) return;
 
-          // dont enable below condition
-          if (newNode?.updtFlag || !hydrated) {
+          if (newNode?.updtFlag || checkAll) {
             if (
               oldNode.type === newNode.type &&
               // ===
