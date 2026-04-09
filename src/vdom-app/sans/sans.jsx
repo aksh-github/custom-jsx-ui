@@ -44,7 +44,7 @@ const localStore = () => {
         JSON.stringify({
           hash,
           d: data,
-        })
+        }),
       );
     },
     get: (_key) => {
@@ -262,7 +262,7 @@ const checkProcessUpdates = () => {
           const dditem = dictionaryData[`${item.type}`];
           if (dditem) {
             const uio = Object.values(UIObj).find(
-              (it) => it.dkey === item.type
+              (it) => it.dkey === item.type,
             );
 
             dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
@@ -324,7 +324,7 @@ function GenericTab({ prop, search: srch, dkey }) {
   // console.log("exec", searchCtx.get());
 
   const RR = filtered.map((d) =>
-    d?.ev || d?.ew ? <RowComponent row={d} /> : null
+    d?.ev || d?.ew ? <RowComponent row={d} /> : null,
   );
 
   return (
