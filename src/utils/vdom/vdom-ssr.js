@@ -86,7 +86,6 @@ export function renderToString(jsx) {
           const propValue = jsx.props[propName];
 
           if (propName === "onSubmit") {
-            console.log("Need to do something");
             html += ` onSubmit=""`;
           }
 
