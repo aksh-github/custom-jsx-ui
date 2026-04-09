@@ -52,7 +52,6 @@ const microframe = (() => {
   }
 
   function h(type, props, ...children) {
-    let _fn = null;
     let curParent;
     let updtFlag = undefined;
 
@@ -63,7 +62,7 @@ const microframe = (() => {
       // log("curre parent is", curParent, type.name);
       const cacheKey = `${type.name}:${curParent}:${props?.key}`;
 
-      const check = updateComps.has(stack[stack.length - 1]) ? true : false;
+      // const check = updateComps.has(stack[stack.length - 1]) ? true : false;
 
       stack.push({ n: type?.name, comp: cacheKey });
 
@@ -83,35 +82,12 @@ const microframe = (() => {
 
       let rv = type(props, children);
 
-      // if (altFuncCache) {
-      // this is available in 24jun25 br in commented form
-
-      // funcCache[cacheKey] = {
-      //   fname: type.name,
-      //   // fn: _fn,
-      //   mount: true,
-      //   unMount: null,
-      //   p: curParent,
-      //   key: props?.key,
-      // };
       funcCache[cacheKey] = {
         name: cacheKey,
         mount: true,
         unMount: null,
         // props: props,
       };
-
-      // if (props?.key !== undefined) callStack[counter].key = props.key;
-
-      // counter++;
-
-      // callStack[callStack.length - 1].p = stack[stack.length - 2]?.n;
-
-      // b4
-      // log(stack, callStack[callStack.length - 1]);
-
-      // const rv =
-      //   typeof _fn === "function" ? _fn({ ...props, children: children }) : _fn;
 
       stack.pop();
 
@@ -129,12 +105,6 @@ const microframe = (() => {
 
       //complex node
       if (rv?.type) {
-        // rv is frag
-        // if (rv.type === "df") {
-        //   // rv.props = { ...rv.props, _cc: rv?.children.length };
-        //   props = { ...props, fragChildLen: rv?.children.length };
-        // }
-
         return {
           ...rv,
           // props: rv.props,
@@ -200,7 +170,7 @@ const microframe = (() => {
 
     // log(children);
 
-    if (updateComps.has(stack[stack.length - 1].comp))
+    if (updateComps.has(stack[stack.length - 1]?.comp))
       // log(currComp);
       updtFlag = true;
     else updtFlag = undefined;
@@ -585,11 +555,6 @@ if (typeof window !== "undefined") {
         );
     }
 
-    // moved top
-    // let rootNode = null;
-    // let curr = null;
-    // let old = null;
-
     // only 1st type (complete rewrite etc)
 
     function globalEventListener(e) {
@@ -603,17 +568,7 @@ if (typeof window !== "undefined") {
     function mount($root, initCompo) {
       rootNode = $root;
       rootNode.addEventListener("submit", globalEventListener);
-      // 0. for route change clean existing things
-      // if (rootNode?.firstChild) {
-      //   log(">>> this is route change");
-      //   while (callStack?.length) {
-      //     const fn = callStack.splice(callStack.length - 1, 1)?.[0];
-      //     // log(fn);
-      //     fn?.unMount?.();
 
-      //     counter--;
-      //   }
-      // }
       curr = initCompo;
       // log(curr);
       // log(performance.now());
@@ -805,9 +760,6 @@ if (typeof window !== "undefined") {
       let compareTill = 0;
 
       function diffElement($parent, newNode, oldNode, index = 0) {
-        // if (!actualComparison && newNode?.type && oldNode?.type)
-        //   return doMain(newNode, oldNode);
-
         // this is SKIP condition
         // if (!actualComparison && updateCompsSize) {
         if (!newNode?.updtFlag && updateCompsSize) {
@@ -991,72 +943,9 @@ if (typeof window !== "undefined") {
 
           // currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
           currComp = newNode.$c;
-          let c = currComp?.split(":")[0];
-
-          if (
-            // currComp === updateComp ||
-            updateComps.has(currComp) ||
-            newNode.$p === c ||
-            newNode.key !== oldNode?.key
-          ) {
-            actualComparison = true;
-          } else {
-            // actualComparison = true;
-            // if (!actualComparison) {
-            //   // log("this must be due to context change");
-            //   // if (newNode?.props?.context !== oldNode?.props?.context) {
-            //   if (updateCtx.has(newNode?.props?.context)) {
-            //     // log("context changed");
-            //     actualComparison = true;
-            //   }
-            // }
-          }
         }
-
-        // if (actualComparison && comparisonsReqd === 0) {
-        //   // log(newNode.props);
-        //   // log(CTR, stk, newNode);
-        //   const { fragChildLen } = newNode;
-        //   if (fragChildLen) {
-        //     // CTR += 1;
-        //     let qc = CTR + 1;
-
-        //     for (let i = 0; i < fragChildLen; ++i) {
-        //       let addThisMuch = 0;
-        //       log("qc: ", qc);
-        //       const el = stk[qc];
-        //       // log(el);
-        //       addThisMuch = el?.querySelectorAll("*").length || 0;
-        //       comparisonsReqd += addThisMuch;
-        //       qc += 1 + addThisMuch;
-        //     }
-        //     // log(
-        //     //   "comparisonsReqd till: ",
-        //     //   comparisonsReqd,
-        //     //   stk[CTR + fragChildLen + comparisonsReqd]
-        //     // );
-        //     compareTill = CTR + fragChildLen + comparisonsReqd + 1;
-        //   } else {
-        //     comparisonsReqd += stk[CTR + 1]?.querySelectorAll("*").length || 0;
-        //     // log("comparisonsReqd till: ", stk[CTR + comparisonsReqd + 1]);
-        //     compareTill = CTR + comparisonsReqd + 1;
-        //   }
-        // }
-
-        // if (
-        //   newNode?.props?.importFn ||
-        //   (newNode?.props?.cacheKey && !newNode?.props?.fetch)
-        // ) {
-        //   // CTR += 1;
-        // }
 
         const domNode = stk[CTR];
-
-        if (CTR === compareTill + 1) {
-          actualComparison = false;
-          comparisonsReqd = 0;
-          compareTill = 0;
-        }
 
         if (last !== domNode) {
           // updateProps(domNode, newNode.props, oldNode.props);
