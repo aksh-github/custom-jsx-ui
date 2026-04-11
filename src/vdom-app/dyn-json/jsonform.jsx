@@ -350,7 +350,7 @@ const JsonForm = ({
         >
           {uiJson.form.fields.map((field, idx) => (
             <Field
-              // key={field.name + idx + field.name}
+              key={field.name}
               field={field}
               state={formState[field.name]}
             />
