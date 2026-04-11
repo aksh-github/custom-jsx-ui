@@ -836,6 +836,10 @@ if (typeof window !== "undefined") {
           } else if ($parent?.childNodes[index]) {
             let el = $parent.childNodes[index];
 
+            if (oldNode == null) {
+              log("=== do something for this case");
+            }
+
             patches.push({
               p: $parent,
               op: "REPLACE",
@@ -989,9 +993,18 @@ if (typeof window !== "undefined") {
         if (newLength + oldLength === 0) {
         } else if (newLength === 0) {
           // log(domNode, stk, CTR);
-          const toSkip = domNode.querySelectorAll("*").length;
-          CTR += toSkip;
-          stk.splice(CTR, CTR + toSkip);
+          // const toSkip = domNode.querySelectorAll("*").length;
+          // CTR += toSkip;
+          while (CTR < stk.length) {
+            if (domNode.contains(stk[CTR])) {
+              // console.log("remove", stk[CTR]);
+              // stk.splice(CTR, 1);
+              CTR++;
+            } else {
+              // CTR--;
+              break;
+            }
+          }
 
           patches.push({
             p: domNode,
@@ -1001,21 +1014,19 @@ if (typeof window !== "undefined") {
           if (oldNode?.children) {
             old = oldNode.children = oldNode.props = null;
           }
-        }
-        // else if (oldLength === 0) {
-        //   log("** APPEND: This is NOT BENEFICIAL");
-        //   const df = $d.createDocumentFragment();
+        } else if (oldLength === 0) {
+          // log("** APPEND: This is NOT BENEFICIAL");
+          const df = $d.createDocumentFragment();
 
-        //   for (let i = 0; i < newLength; ++i)
-        //     patches.push({
-        //       p: df,
-        //       op: "APPEND",
-        //       c: createElement(newNode.children[i]),
-        //     });
+          for (let i = 0; i < newLength; ++i)
+            patches.push({
+              p: df,
+              op: "APPEND",
+              c: newNode.children[i],
+            });
 
-        //   patches.push({ p: domNode, op: "APPEND", c: df });
-        // }
-        else {
+          patches.push({ p: domNode, op: "APPENDDF", c: df });
+        } else {
           for (let i = 0; i < newLength || i < oldLength; i++) {
             // if (newNode.type === "df" && oldNode.type === "df") {
             //   doMain(newNode.children[i], oldNode.children[i]);
