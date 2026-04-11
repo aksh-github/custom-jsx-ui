@@ -1,7 +1,7 @@
 import { h, memo, createEffect, createState } from "@vdom-lib";
 // import "./App.css";
 
-const PixelComp = memo(({ largeArray }) => {
+const PixelComp = ({ largeArray }) => {
   return (
     <div
       //   className="flex flex-wrap overflow-scroll gap-1"
@@ -27,7 +27,8 @@ const PixelComp = memo(({ largeArray }) => {
       ))}
     </div>
   );
-}, "PixelComp");
+};
+// , "PixelComp");
 
 function SlowComponent(props) {
   const [largeArray, setLargeArray] = createState([]);
