@@ -574,7 +574,7 @@ if (typeof window !== "undefined") {
       // log(performance.now());
       old = curr(); // create latest vdom
       // log(performance.now());
-      log(old);
+      // log(old);
       // log(funcCache);
       // 1. set dom
       // rootNode.appendChild(createElement(old));
@@ -621,7 +621,7 @@ if (typeof window !== "undefined") {
       rootNode.addEventListener("submit", globalEventListener);
       curr = initCompo;
       old = curr(); // create latest vdom
-      log(old);
+      // log(old);
       // log(funcCache);
       // callMountAll();
 
@@ -645,7 +645,7 @@ if (typeof window !== "undefined") {
 
       let current = curr(); // create latest vdom
       if (!IS_PROD) logte("TETVD");
-      log(old, current);
+      // log(old, current);
       // const oldStack = CompoIterator().iterate(old);
       // const currStack = CompoIterator().iterate(current);
 
@@ -668,7 +668,7 @@ if (typeof window !== "undefined") {
       if (!IS_PROD) logt("TET");
 
       // diffElement(rootNode, current, old);
-      wrapper(rootNode, current, old);
+      // wrapper(rootNode, current, old);
 
       // log(performance.now());
 
@@ -676,6 +676,8 @@ if (typeof window !== "undefined") {
 
       let tout = setTimeout(() => {
         clearTimeout(tout);
+
+        wrapper(rootNode, current, old);
 
         callUnmountAll();
 
