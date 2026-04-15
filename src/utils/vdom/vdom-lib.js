@@ -645,7 +645,7 @@ if (typeof window !== "undefined") {
 
       let current = curr(); // create latest vdom
       if (!IS_PROD) logte("TETVD");
-      // log(old, current);
+      log(old, current);
       // const oldStack = CompoIterator().iterate(old);
       // const currStack = CompoIterator().iterate(current);
 
@@ -674,49 +674,33 @@ if (typeof window !== "undefined") {
 
       // log("===================");
 
-      let tout = setTimeout(() => {
-        clearTimeout(tout);
+      // let tout = setTimeout(() => {
+      //   clearTimeout(tout);
 
-        wrapper(rootNode, current, old);
+      wrapper(rootNode, current, old);
 
-        callUnmountAll();
+      callUnmountAll();
 
-        // 3. update dom
-        // log(patches, propsPatches);
-        // console.log(patches);
-        if (propsPatches) applyPropsPatches(propsPatches);
-        if (patches) applyPatches(patches);
-        patches = propsPatches = null;
-        // 3. trigger lifecycle
-        // callLifeCycleHooks(callStack, oldStack);
+      // 3. update dom
+      // log(patches, propsPatches);
+      // console.log(patches);
+      if (propsPatches) applyPropsPatches(propsPatches);
+      if (patches) applyPatches(patches);
+      patches = propsPatches = null;
+      // 3. trigger lifecycle
+      // callLifeCycleHooks(callStack, oldStack);
 
-        callMountAll();
-        // log(callStack, oldStack);
+      callMountAll();
+      // log(callStack, oldStack);
 
-        old = current;
+      old = current;
 
-        altFuncCache = { ...funcCache };
-        // altFuncCache = structuredClone(funcCache);
-        funcCache = {};
+      altFuncCache = { ...funcCache };
+      // altFuncCache = structuredClone(funcCache);
+      funcCache = {};
 
-        if (!IS_PROD) logte("TET");
-      }, 0);
-      // requestAnimationFrame(() => {
-      //   // 3. update dom
-      //   log(patches);
-      //   applyPatches(patches);
-      //   patches = [];
-      //   // 3. trigger lifecycle
-      //   // callLifeCycleHooks(callStack, oldStack);
-
-      //   callMountAll();
-      //   // log(callStack, oldStack);
-
-      //   // backup for future comparison
-      //   oldCallStack = [...callStack];
-      //   callStack = [];
-      //   old = current;
-      // });
+      if (!IS_PROD) logte("TET");
+      // }, 0);
     }
 
     function isValid(v) {
@@ -1329,5 +1313,32 @@ export {
 // This function is still available in 24jun25 br in commented form
 
 if (typeof window !== "undefined") {
-  smartRegisterCallback(forceUpdate);
+  // scheduler
+
+  class Scheduler {
+    constructor() {
+      this.dirty = false;
+
+      this.channel = new MessageChannel();
+      this.channel.port1.onmessage = () => this.flush();
+    }
+
+    schedule() {
+      if (this.dirty) return; // batches all calls until flush runs
+      this.dirty = true;
+      this.channel.port2.postMessage(null); // macrotask — yields to browser
+    }
+
+    flush() {
+      this.dirty = false; // only resets when macrotask fires
+      forceUpdate();
+    }
+  }
+
+  // smartRegisterCallback(forceUpdate);
+
+  const s = new Scheduler();
+  smartRegisterCallback(() => {
+    s.schedule();
+  }, 0);
 }

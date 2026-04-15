@@ -105,7 +105,8 @@ const SmartState = (() => {
     ? noop
     : (cb, duration = 100) => {
         forceUpdate = cb;
-        throtUpdate = debounce(forceUpdate, duration);
+        // throtUpdate = debounce(forceUpdate, duration);
+        throtUpdate = forceUpdate;
       };
 
   const skipUpdate = (cb) => {
