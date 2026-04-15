@@ -13,6 +13,18 @@ body {
   min-height: 30em;
   font-size: 16px;
 
+  .back {
+    position: fixed;
+    top: 1em;
+    left: 1em;
+    padding: 1em;
+    background: cornsilk;
+    color: var(--primary-text-color);
+    text-decoration: none;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
   .search-result-borders {
     border: 0.12em solid var(--primary-bg-color);
     border-radius: 1em;

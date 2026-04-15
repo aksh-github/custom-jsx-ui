@@ -408,6 +408,9 @@ export function Sans() {
             <div class="sweeper"></div>
           </div>
         </div> */}
+        <a href="/pages/data/sanskrit/intro.html" className="back">
+          ←
+        </a>
 
         <div className="search-box">
           <input
