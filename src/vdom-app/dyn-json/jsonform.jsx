@@ -1,4 +1,4 @@
-import { h, df, createState, createEffect } from "@vdom-lib";
+import { h, createState, createEffect } from "@vdom-lib";
 import { isFormValid, loadUI, setGlobalUIJson, validate } from "./utils";
 
 const Playground = () => {
@@ -8,7 +8,7 @@ const Playground = () => {
   // const effect = createEffect();
 
   return (
-    <df>
+    <div>
       <h1>Playground</h1>
       <div
         className="pg-container"
@@ -47,13 +47,13 @@ const Playground = () => {
       <pre>
         <code>{parseResult}</code>
       </pre>
-    </df>
+    </div>
   );
 };
 
 const ErrorMessage = ({ name, error }) => {
   return (
-    <df>
+    <div>
       <div className="col-sm-2"></div>
       <p id={name + "Error"} className="message-invalid danger col-sm-10">
         {/* {error ? (
@@ -62,7 +62,7 @@ const ErrorMessage = ({ name, error }) => {
 {" " + (error || "")} */}
         {error}
       </p>
-    </df>
+    </div>
   );
 };
 
@@ -76,7 +76,7 @@ const Field = (props) => {
     case "email":
     case "password":
       control = (
-        <df>
+        <div>
           <label htmlFor={field.name} className="form-label">
             {field.label}
           </label>
@@ -89,12 +89,12 @@ const Field = (props) => {
             required={field.required}
             value={field.defaultValue || state?.value || ""}
           />
-        </df>
+        </div>
       );
       break;
     case "select":
       control = (
-        <df>
+        <div>
           <label htmlFor={field.name} className="form-label">
             {field.label}
           </label>
@@ -113,12 +113,12 @@ const Field = (props) => {
               </option>
             ))}
           </select>
-        </df>
+        </div>
       );
       break;
     case "checkbox":
       control = (
-        <df>
+        <div>
           <input
             type="checkbox"
             className={field.className}
@@ -131,12 +131,12 @@ const Field = (props) => {
           <label className="form-check-label" htmlFor={field.name}>
             {field.label}
           </label>
-        </df>
+        </div>
       );
       break;
     case "textarea":
       control = (
-        <df>
+        <div>
           <label htmlFor={field.name} className="form-label">
             {field.label}
           </label>
@@ -150,7 +150,7 @@ const Field = (props) => {
             cols={field.cols}
             value={field.defaultValue || state?.value || ""}
           ></textarea>
-        </df>
+        </div>
       );
       break;
     default:
