@@ -17,9 +17,9 @@ export const JsonFormConsumer = () => {
           ...prevUiJson,
           form: {
             ...prevUiJson.form,
-            fields: uiJson.form.fields // .filter((field, idx) => idx === 0)
+            children: uiJson.form.children // .filter((field, idx) => idx === 0)
               .filter((field) => field.name === "selectUsecase")
-              .concat(uiJson.form.more[currrentValue.value]?.fields || []),
+              .concat(uiJson.form.more[currrentValue.value]?.children || []),
             // id: "configForm" + Date.now(), // update form id to force re-render
           },
         };
@@ -31,7 +31,7 @@ export const JsonFormConsumer = () => {
 
   createEffect(() => {
     console.log("onMount");
-    loadUI("/form.json?t=" + Date.now())
+    loadUI("/form2.json?t=" + Date.now())
       .then((data) => {
         console.log("UI JSON loaded successfully", data);
         setUiJson(data);

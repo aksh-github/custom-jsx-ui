@@ -19,12 +19,12 @@ export const setGlobalUIJson = (data) => {
 };
 
 export const validate = (name, value) => {
-  if (!uiJson || !uiJson.form || !uiJson.form.fields) {
+  if (!uiJson || !uiJson.form || !uiJson.form.children) {
     console.error("UI JSON not loaded yet");
     return "";
   }
 
-  const field = uiJson.form.fields.find((f) => f.name === name);
+  const field = uiJson.form.children.find((f) => f.name === name);
   if (!field) {
     console.error("Field not found in UI JSON:", name);
     return "";

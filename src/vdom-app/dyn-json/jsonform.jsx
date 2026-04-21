@@ -35,7 +35,7 @@ const Playground = () => {
         </div>
         {/* <div>{JSON.stringify(json())}</div> */}
         <div>
-          {json?.form?.fields.map((field, idx) => (
+          {json?.form?.children.map((field, idx) => (
             <Field
               // key={field.name + idx + field.name}
               field={field}
@@ -103,11 +103,11 @@ const Field = (props) => {
             className={"col-sm-101 " + field.className}
             id={field.id || field.name}
             name={field.name}
-            required={field.required}
+            // required={field.required}
             // defaultValue={field.value || state?.value}
             value={field.defaultValue || state?.value || ""}
           >
-            {field.options.map((option) => (
+            {field.children.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -158,7 +158,7 @@ const Field = (props) => {
   }
 
   return control ? (
-    <div className="mb-3" key={field.name}>
+    <div className="mb-3">
       {control}
       <ErrorMessage
         name={field.name}
@@ -185,7 +185,7 @@ const JsonForm = ({
   createEffect(() => {
     console.log("uiJson changed");
     if (uiJson) {
-      const newState = uiJson.form?.fields.reduce((acc, field) => {
+      const newState = uiJson.form?.children.reduce((acc, field) => {
         acc[field.name] = {
           value: formState?.[field.name]?.value || field.defaultValue || "",
           error: formState?.[field.name]?.error || field.error || "",
@@ -348,7 +348,7 @@ const JsonForm = ({
           onChange={handleChange}
           onSubmit={handleSubmit}
         >
-          {uiJson.form.fields.map((field, idx) => (
+          {uiJson.form.children.map((field, idx) => (
             <Field
               key={field.name}
               field={field}
