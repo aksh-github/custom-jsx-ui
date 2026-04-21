@@ -51,7 +51,7 @@ export function renderToString(jsx) {
   if (typeof jsx === "string" || typeof jsx === "number") {
     return escapeHtml(jsx) + "<!--|-->";
   } else if (jsx == null || typeof jsx === "boolean") {
-    return null + "<!--|-->";
+    return "" + "<!--|-->";
   } else if (Array.isArray(jsx)) {
     return jsx.map((child) => renderToString(child)).join("");
   } else if (typeof jsx === "object") {
