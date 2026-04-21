@@ -1,22 +1,44 @@
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/pug/pug.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/rulers.min.js"></script>
 <style>
   * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    font-size: 16px;
+  }
   .layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    height: 560px;
+    height: 100vh;
     border: 0.5px solid var(--color-border-tertiary);
     border-radius: var(--border-radius-lg);
   }
   .pane {
     display: flex;
     flex-direction: column;
+    flex: 1;
   }
   .pane-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     border-right: 0.5px solid var(--color-border-tertiary);
+  }
+  #pug-editor {
+    flex: 1;
+    overflow: hidden;
   }
   .pane-header {
     padding: 9px 14px;
@@ -103,6 +125,22 @@
   .tg {
     color: #888780;
   }
+  .CodeMirror {
+    flex: 1;
+    height: auto !important;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--color-text-primary);
+    background: var(--color-background-primary);
+    border: none;
+    outline: none;
+    padding: 14px;
+  }
+  .CodeMirror-gutters {
+    background: var(--color-background-primary);
+    border-right: 0.5px solid var(--color-border-tertiary);
+  }
 </style>
 
 <h2 class="sr-only">
@@ -121,7 +159,7 @@
         <button class="btn-sm" onclick="load('form')">form2</button>
       </div>
     </div>
-    <textarea id="pug" spellcheck="false"></textarea>
+    <div id="pug-editor"></div>
   </div>
 
   <div class="pane">
@@ -190,7 +228,7 @@ form#exampleForm22
             option(value="Agile") Agile
             option(value="Social Media Marketing") Social Media Marketing
             option(value="Plain") Plain
-      checkbox(name="checkAgree" label="Do you agree ?" defaultValue=true)
+      checkbox(name="checkAgree" defaultValue=true) Do you agree?
         validation(required=true)
       select(name="selectAction-ag" requestObjName="action" defaultValue="" error="") Action
         children
@@ -244,6 +282,19 @@ form#exampleForm22
   let currentTab = "json";
   let lastResult = null;
 
+  var editor = CodeMirror(document.getElementById("pug-editor"), {
+    mode: "pug",
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    theme: "default",
+    rulers: Array.from({ length: 20 }, (_, i) => ({
+      column: (i + 1) * 4,
+      color: "rgba(0,0,0,0.1)",
+      width: 1,
+    })),
+  });
+
   function switchTab(t) {
     currentTab = t;
     document.querySelectorAll(".tab").forEach((el, i) => {
@@ -253,7 +304,7 @@ form#exampleForm22
   }
 
   function load(name) {
-    document.getElementById("pug").value = EXAMPLES[name];
+    editor.setValue(EXAMPLES[name]);
     compile();
   }
 
@@ -540,7 +591,7 @@ form#exampleForm22
   }
 
   function compile() {
-    const src = document.getElementById("pug").value;
+    const src = editor.getValue();
     if (!src.trim()) {
       lastResult = null;
       render();
@@ -647,6 +698,6 @@ form#exampleForm22
     }
   }
 
-  document.getElementById("pug").addEventListener("input", compile);
+  editor.on("change", compile);
   load("page");
 </script>
