@@ -1,0 +1,64 @@
+//- Form schema
+form#exampleForm22
+  //- Use case
+  select(name="selectUsecase" defaultValue="Plain" error="") Use Case
+    validation(required=true minLength=1 maxLength=50)
+    children
+      option(value="") Select Use Case
+      option(value="Agile") Agile
+      option(value="Social Media Marketing") Social Media Marketing
+      option(value="Plain") Plain
+
+  //- Agile use case
+  checkbox(name="checkAgree" defaultValue=true) Do you agree?
+    validation(required=true)
+  select(name="selectAction-ag" requestObjName="action" defaultValue="" error="") Action
+    children
+      option(value="") Select Action
+      option(value="User story generation") User story generation
+      option(value="EPIC generation") EPIC generation
+    validation(required=true minLength=1 maxLength=50)
+  select(name="selectRegion-ag" requestObjName="region" value="" error="") Region
+    children
+      option(value="") Select Region
+      option(value="CA") Canada
+      option(value="US") US
+      option(value="ASIA") Asia
+    validation(required=true minLength=1 maxLength=50)
+  select(name="selectBusinessUnit-ag" requestObjName="business_unit" value="" error="") Business Unit
+    children
+      option(value="") Select Business Unit
+      option(value="Marketing") Marketing
+    validation(required=true minLength=1 maxLength=50)
+
+  //- Social Media Marketing use case
+  select(name="selectAction" requestObjName="action" value="" error="") Action
+    children
+      option(value="") Select Action
+      option(value="Generate Content") Generate Content
+    validation(required=true minLength=1 maxLength=50)
+
+  select(name="selectRegion" requestObjName="region" defaultValue="CA" error="") Region
+    children
+      option(value="") Select Region
+      option(value="CA") Canada
+      option(value="US") US
+      option(value="ASIA") Asia
+    validation(required=true minLength=1 maxLength=50)
+
+  select(name="selectBusinessUnit" requestObjName="business_unit" value="" error="") Business Unit
+    children
+      option(value="") Select Business Unit
+      option(value="Marketing") Marketing
+    validation(required=true minLength=1 maxLength=50)
+
+  select(name="selectContentType" requestObjName="platform_type" value="" error="") Content Type
+    children
+      option(value="") Select Content Type
+      option(value="Instagram") Instagram
+      option(value="X") X (Twitter)
+      option(value="LinkedIn") LinkedIn
+      option(value="Facebook") Facebook
+    validation(required=true minLength=1 maxLength=50)
+
+  //- Plain use case
