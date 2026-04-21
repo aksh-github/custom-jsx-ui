@@ -32,209 +32,222 @@
             "label": "Plain"
           }
         ]
-      },
-      {
-        "name": "checkAgree",
-        "defaultValue": true,
-        "type": "checkbox",
-        "label": "Do you agree?",
-        "validation": {
-          "required": true
-        }
-      },
-      {
-        "name": "selectAction-ag",
-        "requestObjName": "action",
-        "defaultValue": "",
-        "error": "",
-        "type": "select",
-        "label": "Action",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Action"
-          },
-          {
-            "value": "User story generation",
-            "label": "User story generation"
-          },
-          {
-            "value": "EPIC generation",
-            "label": "EPIC generation"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
-      },
-      {
-        "name": "selectRegion-ag",
-        "requestObjName": "region",
-        "value": "",
-        "error": "",
-        "type": "select",
-        "label": "Region",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Region"
-          },
-          {
-            "value": "CA",
-            "label": "Canada"
-          },
-          {
-            "value": "US",
-            "label": "US"
-          },
-          {
-            "value": "ASIA",
-            "label": "Asia"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
-      },
-      {
-        "name": "selectBusinessUnit-ag",
-        "requestObjName": "business_unit",
-        "value": "",
-        "error": "",
-        "type": "select",
-        "label": "Business Unit",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Business Unit"
-          },
-          {
-            "value": "Marketing",
-            "label": "Marketing"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
-      },
-      {
-        "name": "selectAction",
-        "requestObjName": "action",
-        "value": "",
-        "error": "",
-        "type": "select",
-        "label": "Action",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Action"
-          },
-          {
-            "value": "Generate Content",
-            "label": "Generate Content"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
-      },
-      {
-        "name": "selectRegion",
-        "requestObjName": "region",
-        "defaultValue": "CA",
-        "error": "",
-        "type": "select",
-        "label": "Region",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Region"
-          },
-          {
-            "value": "CA",
-            "label": "Canada"
-          },
-          {
-            "value": "US",
-            "label": "US"
-          },
-          {
-            "value": "ASIA",
-            "label": "Asia"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
-      },
-      {
-        "name": "selectBusinessUnit",
-        "requestObjName": "business_unit",
-        "value": "",
-        "error": "",
-        "type": "select",
-        "label": "Business Unit",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Business Unit"
-          },
-          {
-            "value": "Marketing",
-            "label": "Marketing"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
-      },
-      {
-        "name": "selectContentType",
-        "requestObjName": "platform_type",
-        "value": "",
-        "error": "",
-        "type": "select",
-        "label": "Content Type",
-        "children": [
-          {
-            "value": "",
-            "label": "Select Content Type"
-          },
-          {
-            "value": "Instagram",
-            "label": "Instagram"
-          },
-          {
-            "value": "X",
-            "label": "X (Twitter)"
-          },
-          {
-            "value": "LinkedIn",
-            "label": "LinkedIn"
-          },
-          {
-            "value": "Facebook",
-            "label": "Facebook"
-          }
-        ],
-        "validation": {
-          "required": true,
-          "minLength": 1,
-          "maxLength": 50
-        }
       }
     ]
+  },
+  "more": {
+    "Agile": {
+      "children": [
+        {
+          "name": "checkAgree",
+          "defaultValue": true,
+          "type": "checkbox",
+          "label": "Do you agree?",
+          "validation": {
+            "required": true
+          }
+        },
+        {
+          "name": "selectAction-ag",
+          "requestObjName": "action",
+          "defaultValue": "",
+          "error": "",
+          "type": "select",
+          "label": "Action",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Action"
+            },
+            {
+              "value": "User story generation",
+              "label": "User story generation"
+            },
+            {
+              "value": "EPIC generation",
+              "label": "EPIC generation"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        {
+          "name": "selectRegion-ag",
+          "requestObjName": "region",
+          "value": "",
+          "error": "",
+          "type": "select",
+          "label": "Region",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Region"
+            },
+            {
+              "value": "CA",
+              "label": "Canada"
+            },
+            {
+              "value": "US",
+              "label": "US"
+            },
+            {
+              "value": "ASIA",
+              "label": "Asia"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        {
+          "name": "selectBusinessUnit-ag",
+          "requestObjName": "business_unit",
+          "value": "",
+          "error": "",
+          "type": "select",
+          "label": "Business Unit",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Business Unit"
+            },
+            {
+              "value": "Marketing",
+              "label": "Marketing"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        }
+      ]
+    },
+    "Social Media Marketing": {
+      "children": [
+        {
+          "name": "selectAction",
+          "requestObjName": "action",
+          "value": "",
+          "error": "",
+          "type": "select",
+          "label": "Action",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Action"
+            },
+            {
+              "value": "Generate Content",
+              "label": "Generate Content"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        {
+          "name": "selectRegion",
+          "requestObjName": "region",
+          "defaultValue": "CA",
+          "error": "",
+          "type": "select",
+          "label": "Region",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Region"
+            },
+            {
+              "value": "CA",
+              "label": "Canada"
+            },
+            {
+              "value": "US",
+              "label": "US"
+            },
+            {
+              "value": "ASIA",
+              "label": "Asia"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        {
+          "name": "selectBusinessUnit",
+          "requestObjName": "business_unit",
+          "value": "",
+          "error": "",
+          "type": "select",
+          "label": "Business Unit",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Business Unit"
+            },
+            {
+              "value": "Marketing",
+              "label": "Marketing"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        {
+          "name": "selectContentType",
+          "requestObjName": "platform_type",
+          "value": "",
+          "error": "",
+          "type": "select",
+          "label": "Content Type",
+          "children": [
+            {
+              "value": "",
+              "label": "Select Content Type"
+            },
+            {
+              "value": "Instagram",
+              "label": "Instagram"
+            },
+            {
+              "value": "X",
+              "label": "X (Twitter)"
+            },
+            {
+              "value": "LinkedIn",
+              "label": "LinkedIn"
+            },
+            {
+              "value": "Facebook",
+              "label": "Facebook"
+            }
+          ],
+          "validation": {
+            "required": true,
+            "minLength": 1,
+            "maxLength": 50
+          }
+        }
+      ]
+    },
+    "Plain": {
+      "children": []
+    }
   }
 }

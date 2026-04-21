@@ -19,7 +19,7 @@ export const JsonFormConsumer = () => {
             ...prevUiJson.form,
             children: uiJson.form.children // .filter((field, idx) => idx === 0)
               .filter((field) => field.name === "selectUsecase")
-              .concat(uiJson.form.more[currrentValue.value]?.children || []),
+              .concat(uiJson.more[currrentValue.value]?.children || []),
             // id: "configForm" + Date.now(), // update form id to force re-render
           },
         };
