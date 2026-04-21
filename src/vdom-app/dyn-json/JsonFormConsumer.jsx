@@ -46,12 +46,17 @@ export const JsonFormConsumer = () => {
   }, []);
 
   return (
-    <JsonForm
-      setRequestObj={() => {}}
-      setIsFormValid={() => {}}
-      uiJson={uiJson}
-      onFormChange={onFormChange}
-      usecaseChanged={usecaseChanged}
-    />
+    <div>
+      <a href="/pug-compiler.html" target="_blank">
+        Use PUG to Json compiler
+      </a>
+      <JsonForm
+        setRequestObj={() => {}}
+        setIsFormValid={() => {}}
+        uiJson={uiJson}
+        onFormChange={onFormChange}
+        usecaseChanged={usecaseChanged}
+      />
+    </div>
   );
 };
