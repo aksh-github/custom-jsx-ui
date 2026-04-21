@@ -5,7 +5,7 @@
     "children": [
       {
         "name": "selectUsecase",
-        "defaultValue": "",
+        "defaultValue": "Plain",
         "error": "",
         "type": "select",
         "label": "Use Case",
@@ -35,9 +35,9 @@
       },
       {
         "name": "checkAgree",
-        "label": "Do you agree ?",
         "defaultValue": true,
         "type": "checkbox",
+        "label": "Do you agree?",
         "validation": {
           "required": true
         }
