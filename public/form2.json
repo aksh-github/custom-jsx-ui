@@ -39,6 +39,7 @@
     "Agile": {
       "children": [
         {
+          "id": "checkAgree",
           "name": "checkAgree",
           "defaultValue": true,
           "type": "checkbox",

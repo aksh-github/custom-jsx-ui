@@ -828,20 +828,32 @@ if (typeof window !== "undefined") {
             });
 
             if (el?.nodeType === 1) {
+              // while (CTR < stk.length) {
+              //   CTR++;
+
+              //   if (stk[CTR] === el) {
+              //     const allChildLen = el.querySelectorAll("*").length;
+              //     // log(CTR, " CTR BEFORE", stk[CTR]);
+              //     // CTR += allChildLen;
+              //     stk.splice(CTR, allChildLen);
+              //     // log(CTR, " CTR AFTER", stk[CTR]);
+
+              //     break;
+              //   }
+              //   // console.log(CTR, stk[CTR]);
+              // }
+
               while (CTR < stk.length) {
-                CTR++;
-
-                if (stk[CTR] === el) {
-                  const allChildLen = el.querySelectorAll("*").length;
-                  // log(CTR, " CTR BEFORE", stk[CTR]);
-                  // CTR += allChildLen;
-                  stk.splice(CTR, allChildLen);
-                  // log(CTR, " CTR AFTER", stk[CTR]);
-
+                if (el.contains(stk[CTR])) {
+                  // console.log("remove", stk[CTR]);
+                  // stk.splice(CTR, 1);
+                  CTR++;
+                } else {
+                  // CTR--;
                   break;
                 }
-                // console.log(CTR, stk[CTR]);
               }
+              CTR++;
             }
 
             // additoinal logic for frag modify. This changed on 2-sep
