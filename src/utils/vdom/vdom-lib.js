@@ -464,14 +464,11 @@ if (typeof window !== "undefined") {
           // );
           // return tnode;
           if (!node.children) {
-            const tnode = $d.createTextNode(
+            const tnode =
               // node?.value == null || node?.value == undefined
-              node?.value == null ||
-                node?.value == undefined ||
-                typeof node?.value === "boolean"
-                ? ""
-                : node?.value,
-            );
+              node?.value == null || typeof node?.value === "boolean"
+                ? $d.createComment(node.value)
+                : $d.createTextNode(node?.value);
             return tnode;
           } else {
             return createElement(node.children[0]);
@@ -484,11 +481,9 @@ if (typeof window !== "undefined") {
             // return $el2;
           }
         } else
-          return $d.createTextNode(
-            node == null || node == undefined || typeof node === "boolean"
-              ? ""
-              : node,
-          );
+          return node == null || typeof node === "boolean"
+            ? $d.createComment(node)
+            : $d.createTextNode(node);
       }
 
       //special case Compo with Array return and no type (parent)
@@ -822,9 +817,9 @@ if (typeof window !== "undefined") {
           } else if ($parent?.childNodes[index]) {
             let el = $parent.childNodes[index];
 
-            if (oldNode == null) {
-              log("=== do something for this case");
-            }
+            // if (oldNode == null) {
+            //   log("=== do something for this case");
+            // }
 
             patches.push({
               p: $parent,
