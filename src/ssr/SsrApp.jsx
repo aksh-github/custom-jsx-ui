@@ -15,7 +15,7 @@ import { Loader } from "../utils/vdom/loader";
 const ctx = createContext(0);
 const nameCtx = createContext("Aks");
 
-const onlineCtx = createContext(true);
+const onlineCtx = createContext(false);
 const chatArr = createContext(["a", "b", "c"]);
 
 const Even = () => {
@@ -81,10 +81,10 @@ const Odd = () => {
   );
 };
 
-const Child = memo(({ ctr }) => {
+const Child = ({ ctr }) => {
   console.log("Child executed");
   return <p>{ctr}</p>;
-}, "Child");
+};
 
 const Messages = () => {
   const arr = chatArr.get();
@@ -129,6 +129,9 @@ const Form = () => {
 
   return (
     <div>
+      {onlineCtx.get() ? (
+        <button onClick={() => sett("some text")}>Set Text</button>
+      ) : null}
       <button
         onClick={() => {
           onlineCtx.set(true);
@@ -146,13 +149,18 @@ const Form = () => {
       <p>Online status: {onlineCtx.get() ? "Online" : "Offline"}</p>
       <hr />
       <Messages />
-      <button onClick={() => sett("some text")}>Set Text</button>
+      {onlineCtx.get() ? (
+        <button onClick={() => sett("some text")}>Set Text</button>
+      ) : null}
       <form onSubmit={submit}>
         <textarea value={t} onInput={onInput}></textarea>
         <button disabled={!validate()} type="submit">
           Submit
         </button>
       </form>
+      {onlineCtx.get() ? (
+        <button onClick={() => sett("some text")}>Set Text</button>
+      ) : null}
     </div>
   );
 };
@@ -212,8 +220,8 @@ export const SsrApp = ({ currentUrl }) => {
 
   return (
     <div>
-      {/* <h2>SSR App</h2>
-      <p>Counter: {count}</p>
+      <h2>SSR App</h2>
+      {/* <p>Counter: {count}</p>
       <p
         style={{
           backgroundColor: "lightblue",

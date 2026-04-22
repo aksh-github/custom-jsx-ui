@@ -187,7 +187,7 @@ const Jumbotron = ({ dispatch }) => (
   <div className="jumbotron">
     <div className="row">
       <div className="col-md-6">
-        <h1>React Hooks keyed</h1>
+        <h1>VDOM Framework</h1>
       </div>
       <div className="col-md-6">
         <div className="row">
@@ -237,7 +237,7 @@ const TBody = () => {
           key={item.id}
           item={item}
           selected={selected === item.id}
-          dispatch={listReducer}
+          // dispatch={listReducer}
         />
       ))}
     </tbody>
