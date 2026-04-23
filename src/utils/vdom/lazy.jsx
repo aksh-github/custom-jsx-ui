@@ -9,7 +9,7 @@ function Loader({ fallback }) {
 
 export function Lazy(
   { key, importFn, resolve, fallback, error, ...other },
-  child
+  child,
 ) {
   if (!importFn) throw Error("importFn is mandatory");
 
@@ -63,7 +63,7 @@ export function Lazy(
   // return render({ error: null, loading: false, data: Comp });
 
   if (!Comp) {
-    return <div>{fallback}</div>;
+    return <section>{fallback}</section>;
   }
   // pass only relevant props
   const { importFn: ifn, fallback: fb, error: er, resolve: re, ...p2 } = other;
