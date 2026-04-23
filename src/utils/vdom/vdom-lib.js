@@ -628,7 +628,7 @@ if (typeof window !== "undefined") {
 
       forceUpdate();
 
-      // hydrated = true;
+      hydrated = true;
     }
 
     // all delta updates
@@ -972,6 +972,35 @@ if (typeof window !== "undefined") {
         // if (newNode?.props?.cacheKey) {
         // this is available in 24jun25 br in commented form
 
+        if (oldNode?.type === "df" && newNode?.type !== "df") {
+          log("special handling");
+
+          patches.push({
+            op: "REPLACE",
+            p: domNode.parentNode,
+            c: [newNode, domNode],
+          });
+
+          if (domNode?.nodeType === 1) {
+            while (CTR < stk.length) {
+              if (domNode.contains(stk[CTR])) {
+                // console.log("remove", stk[CTR]);
+                // stk.splice(CTR, 1);
+                CTR++;
+              } else {
+                // CTR--;
+                break;
+              }
+            }
+          }
+
+          if (oldNode?.children) {
+            old = oldNode.children = oldNode.props = null;
+          }
+
+          CTR--;
+          return;
+        }
         const newLength = newNode.children.length;
         const oldLength = oldNode.children.length;
 
