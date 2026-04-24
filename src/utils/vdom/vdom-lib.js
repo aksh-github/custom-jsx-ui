@@ -320,7 +320,6 @@ if (typeof window !== "undefined") {
           // special handling for select
           const sid = setTimeout(() => {
             clearTimeout(sid);
-            sid = null;
             $target[name] = value;
           }, 0);
           return;
