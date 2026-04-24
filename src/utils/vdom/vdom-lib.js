@@ -318,9 +318,12 @@ if (typeof window !== "undefined") {
           $target[name] = value;
 
           // special handling for select
-          setTimeout(() => {
+          const sid = setTimeout(() => {
+            clearTimeout(sid);
+            sid = null;
             $target[name] = value;
           }, 0);
+          return;
         }
         $target.setAttribute(name, value);
       }
