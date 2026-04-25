@@ -845,6 +845,9 @@ if (typeof window !== "undefined") {
               //   // console.log(CTR, stk[CTR]);
               // }
 
+              if (oldNode?.children)
+                oldNode = oldNode.children = oldNode.props = null;
+
               while (CTR < stk.length) {
                 if (el.contains(stk[CTR])) {
                   // console.log("remove", stk[CTR]);
@@ -856,6 +859,10 @@ if (typeof window !== "undefined") {
                 }
               }
               CTR++;
+            } else {
+              // this is specifically for Switch comp
+              if (oldNode?.value)
+                oldNode = oldNode.value = oldNode.props = null;
             }
 
             // additoinal logic for frag modify. This changed on 2-sep
