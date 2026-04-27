@@ -106,6 +106,8 @@ const microframe = (() => {
       // IMP: If we dont want Compo nodes
       // return rv.fragChildLen > 0 ? rv.children : rv;
 
+      // return rv;
+
       //complex node
       if (rv?.type) {
         return {
