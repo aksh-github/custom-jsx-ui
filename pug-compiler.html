@@ -1,180 +1,191 @@
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
-/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/pug/pug.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/rulers.min.js"></script>
-<style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  html,
-  body {
-    height: 100%;
-  }
-  body {
-    font-size: 16px;
-  }
-  .layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    height: 100vh;
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-lg);
-  }
-  .pane {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-  .pane-left {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    border-right: 0.5px solid var(--color-border-tertiary);
-  }
-  #pug-editor {
-    flex: 1;
-    overflow: hidden;
-  }
-  .pane-header {
-    padding: 9px 14px;
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    background: var(--color-background-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  textarea {
-    flex: 1;
-    resize: none;
-    border: none;
-    outline: none;
-    padding: 14px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 1.75;
-    color: var(--color-text-primary);
-    background: var(--color-background-primary);
-  }
-  .json-out {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 1.75;
-    white-space: pre;
-  }
-  .tabs {
-    display: flex;
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    background: var(--color-background-secondary);
-  }
-  .tab {
-    padding: 8px 14px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    color: var(--color-text-secondary);
-  }
-  .tab.active {
-    color: var(--color-text-primary);
-    border-bottom-color: var(--color-text-primary);
-  }
-  .btn-sm {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 99px;
-    border: 0.5px solid var(--color-border-secondary);
-    background: transparent;
-    cursor: pointer;
-    color: var(--color-text-secondary);
-  }
-  .btn-sm:hover {
-    background: var(--color-background-secondary);
-  }
-  .err {
-    color: var(--color-text-danger);
-    padding: 14px;
-    font-size: 12px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-  .tk {
-    color: #185fa5;
-  }
-  .ts {
-    color: #3b6d11;
-  }
-  .tn {
-    color: #854f0b;
-  }
-  .tb {
-    color: #993556;
-  }
-  .tg {
-    color: #888780;
-  }
-  .CodeMirror {
-    flex: 1;
-    height: auto !important;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    line-height: 1.75;
-    color: var(--color-text-primary);
-    background: var(--color-background-primary);
-    border: none;
-    outline: none;
-    padding: 14px;
-  }
-  .CodeMirror-gutters {
-    background: var(--color-background-primary);
-    border-right: 0.5px solid var(--color-border-tertiary);
-  }
-</style>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="Sanskrit Dictionary App" />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--ssr-header-->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/pug/pug.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/rulers.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-size: 16px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        height: 100vh;
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg);
+      }
+      .pane {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      .pane-left {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        border-right: 0.5px solid var(--color-border-tertiary);
+      }
+      #pug-editor {
+        flex: 1;
+        overflow: hidden;
+      }
+      .pane-header {
+        padding: 9px 14px;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        background: var(--color-background-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      textarea {
+        flex: 1;
+        resize: none;
+        border: none;
+        outline: none;
+        padding: 14px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.75;
+        color: var(--color-text-primary);
+        background: var(--color-background-primary);
+      }
+      .json-out {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.75;
+        white-space: pre;
+      }
+      .tabs {
+        display: flex;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+        background: var(--color-background-secondary);
+      }
+      .tab {
+        padding: 8px 14px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        color: var(--color-text-secondary);
+      }
+      .tab.active {
+        color: var(--color-text-primary);
+        border-bottom-color: var(--color-text-primary);
+      }
+      .btn-sm {
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 99px;
+        border: 0.5px solid var(--color-border-secondary);
+        background: transparent;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+      }
+      .btn-sm:hover {
+        background: var(--color-background-secondary);
+      }
+      .err {
+        color: var(--color-text-danger);
+        padding: 14px;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+      .tk {
+        color: #185fa5;
+      }
+      .ts {
+        color: #3b6d11;
+      }
+      .tn {
+        color: #854f0b;
+      }
+      .tb {
+        color: #993556;
+      }
+      .tg {
+        color: #888780;
+      }
+      .CodeMirror {
+        flex: 1;
+        height: auto !important;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.75;
+        color: var(--color-text-primary);
+        background: var(--color-background-primary);
+        border: none;
+        outline: none;
+        padding: 14px;
+      }
+      .CodeMirror-gutters {
+        background: var(--color-background-primary);
+        border-right: 0.5px solid var(--color-border-tertiary);
+      }
+    </style>
+  </head>
+  <body>
+    <h2 class="sr-only">
+      Pug to form schema compiler — write Pug markup on the left, see compiled
+      schema JSON on the right
+    </h2>
 
-<h2 class="sr-only">
-  Pug to form schema compiler — write Pug markup on the left, see compiled
-  schema JSON on the right
-</h2>
+    <div class="layout">
+      <div class="pane pane-left">
+        <div class="pane-header">
+          <span>Pug input</span>
+          <div style="display: flex; gap: 5px">
+            <button class="btn-sm" onclick="load('page')">page</button>
+            <button class="btn-sm" onclick="load('card')">card</button>
+            <button class="btn-sm" onclick="load('nav')">nav</button>
+            <button class="btn-sm" onclick="load('form')">form2</button>
+          </div>
+        </div>
+        <div id="pug-editor"></div>
+      </div>
 
-<div class="layout">
-  <div class="pane pane-left">
-    <div class="pane-header">
-      <span>Pug input</span>
-      <div style="display: flex; gap: 5px">
-        <button class="btn-sm" onclick="load('page')">page</button>
-        <button class="btn-sm" onclick="load('card')">card</button>
-        <button class="btn-sm" onclick="load('nav')">nav</button>
-        <button class="btn-sm" onclick="load('form')">form2</button>
+      <div class="pane">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('json')">JSON tree</div>
+          <div class="tab" onclick="switchTab('flat')">Flat / minified</div>
+          <div class="tab" onclick="switchTab('tokens')">Tokens</div>
+        </div>
+        <div id="out" class="json-out"></div>
       </div>
     </div>
-    <div id="pug-editor"></div>
-  </div>
 
-  <div class="pane">
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('json')">JSON tree</div>
-      <div class="tab" onclick="switchTab('flat')">Flat / minified</div>
-      <div class="tab" onclick="switchTab('tokens')">Tokens</div>
-    </div>
-    <div id="out" class="json-out"></div>
-  </div>
-</div>
-
-<script>
-  const EXAMPLES = {
-    page: `//- A simple page layout
+    <script>
+      const EXAMPLES = {
+        page: `//- A simple page layout
 div#app
   header.site-header
     h1 My Website
@@ -192,7 +203,7 @@ div#app
   footer.site-footer
     p Copyright 2025`,
 
-    card: `//- Product card
+        card: `//- Product card
 div.card
   div.card-image(alt="Product image" src="/img/product.jpg")
   div.card-body
@@ -202,7 +213,7 @@ div.card
       span.price $99.00
       button.btn Add to cart`,
 
-    nav: `//- Navigation bar
+        nav: `//- Navigation bar
 nav.navbar
   div.brand
     span.logo-text Acme
@@ -219,7 +230,7 @@ nav.navbar
     button.btn-ghost Login
     button.btn-primary Sign up`,
 
-    form: `//- Form schema
+        form: `//- Form schema
 form#exampleForm22
       select(name="selectUsecase" defaultValue="Plain" error="") Use Case
         validation(required=true minLength=1 maxLength=50)
@@ -277,377 +288,379 @@ form#exampleForm22
           option(value="LinkedIn") LinkedIn
           option(value="Facebook") Facebook
         validation(required=true minLength=1 maxLength=50)`,
-  };
+      };
 
-  let currentTab = "json";
-  let lastResult = null;
+      let currentTab = "json";
+      let lastResult = null;
 
-  const editor = CodeMirror(document.getElementById("pug-editor"), {
-    mode: "pug",
-    lineNumbers: true,
-    indentUnit: 4,
-    tabSize: 4,
-    theme: "default",
-    rulers: Array.from({ length: 20 }, (_, i) => ({
-      column: (i + 1) * 4,
-      color: "rgba(0,0,0,0.1)",
-      width: 1,
-    })),
-  });
+      const editor = CodeMirror(document.getElementById("pug-editor"), {
+        mode: "pug",
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+        theme: "default",
+        rulers: Array.from({ length: 20 }, (_, i) => ({
+          column: (i + 1) * 2,
+          color: "rgba(0,0,0,0.1)",
+          width: 1,
+        })),
+      });
 
-  function switchTab(t) {
-    currentTab = t;
-    document.querySelectorAll(".tab").forEach((el, i) => {
-      el.classList.toggle("active", ["json", "flat", "tokens"][i] === t);
-    });
-    render();
-  }
-
-  function load(name) {
-    editor.setValue(EXAMPLES[name]);
-    compile();
-  }
-
-  function getIndent(line) {
-    let i = 0;
-    while (i < line.length && (line[i] === " " || line[i] === "\t")) i++;
-    return i;
-  }
-
-  function parseTag(raw) {
-    const node = {
-      type: "div",
-      id: null,
-      className: [],
-      attrs: {},
-      text: null,
-      children: [],
-    };
-    let rest = raw.trim();
-
-    if (rest.startsWith("//")) {
-      return { _comment: rest.slice(2).trim() };
-    }
-
-    let i = 0;
-    let type = "";
-    while (i < rest.length && /[a-zA-Z0-9\-\_]/.test(rest[i])) {
-      type += rest[i];
-      i++;
-    }
-    if (type) node.type = type;
-
-    while (i < rest.length && (rest[i] === "." || rest[i] === "#")) {
-      const type = rest[i];
-      i++;
-      let val = "";
-      while (i < rest.length && /[a-zA-Z0-9\-\_]/.test(rest[i])) {
-        val += rest[i];
-        i++;
+      function switchTab(t) {
+        currentTab = t;
+        document.querySelectorAll(".tab").forEach((el, i) => {
+          el.classList.toggle("active", ["json", "flat", "tokens"][i] === t);
+        });
+        render();
       }
-      if (type === "#") node.id = val;
-      else node.className.push(val);
-    }
 
-    if (i < rest.length && rest[i] === "(") {
-      let depth = 1;
-      i++;
-      let attrStr = "";
-      while (i < rest.length && depth > 0) {
-        if (rest[i] === "(") depth++;
-        else if (rest[i] === ")") depth--;
-        if (depth > 0) attrStr += rest[i];
-        i++;
+      function load(name) {
+        editor.setValue(EXAMPLES[name]);
+        compile();
       }
-      parseAttrs(attrStr, node);
-    }
 
-    let text = rest.slice(i).trim();
-    if (text.startsWith("= ")) text = text.slice(2).trim();
-    if (text) node.text = text;
-
-    return node;
-  }
-
-  function parseAttrs(str, node) {
-    const re =
-      /([a-zA-Z\-_][a-zA-Z0-9\-_]*)\s*=\s*"([^"]*)"|([a-zA-Z\-_][a-zA-Z0-9\-_]*)\s*=\s*'([^']*)'|([a-zA-Z\-_][a-zA-Z0-9\-_]*)\s*=\s*([^\s,]+)|([a-zA-Z\-_][a-zA-Z0-9\-_]*)/g;
-    let m;
-    while ((m = re.exec(str)) !== null) {
-      if (m[1]) {
-        const k = m[1],
-          v = coerceValue(m[2]);
-        if (k === "class")
-          node.className.push(...String(v).split(" ").filter(Boolean));
-        else if (k === "id") node.id = v;
-        else node.attrs[k] = v;
-      } else if (m[3]) {
-        const k = m[3],
-          v = coerceValue(m[4]);
-        if (k === "class")
-          node.className.push(...String(v).split(" ").filter(Boolean));
-        else if (k === "id") node.id = v;
-        else node.attrs[k] = v;
-      } else if (m[5]) {
-        const k = m[5],
-          v = coerceValue(m[6]);
-        if (k === "class")
-          node.className.push(...String(v).split(" ").filter(Boolean));
-        else if (k === "id") node.id = v;
-        else node.attrs[k] = v;
-      } else if (m[7]) {
-        node.attrs[m[7]] = true;
+      function getIndent(line) {
+        let i = 0;
+        while (i < line.length && (line[i] === " " || line[i] === "\t")) i++;
+        return i;
       }
-    }
-  }
 
-  function coerceValue(value) {
-    if (value === "true") return true;
-    if (value === "false") return false;
-    if (value === "null") return null;
-    if (value === "undefined") return undefined;
-    if (
-      value !== "" &&
-      !Number.isNaN(Number(value)) &&
-      String(Number(value)) === value
-    ) {
-      return Number(value);
-    }
-    return value;
-  }
+      function parseTag(raw) {
+        const node = {
+          type: "div",
+          id: null,
+          className: [],
+          attrs: {},
+          text: null,
+          children: [],
+        };
+        let rest = raw.trim();
 
-  function cloneAttrs(attrs) {
-    return Object.keys(attrs || {}).reduce((acc, key) => {
-      acc[key] = attrs[key];
-      return acc;
-    }, {});
-  }
+        if (rest.startsWith("//")) {
+          return { _comment: rest.slice(2).trim() };
+        }
 
-  function buildOptions(node) {
-    const optionNodes = node.children?.length
-      ? node.children.filter((child) => child.type === "option")
-      : [];
-    return optionNodes.map((option) => {
-      const out = cloneAttrs(option.attrs);
-      if (option.id) out.id = option.id;
-      if (option.className?.length) out.className = option.className;
-      if (option.text) out.label = option.text;
-      if (out.value === undefined) out.value = "";
-      if (out.label === undefined) out.label = "";
-      return out;
-    });
-  }
+        let i = 0;
+        let type = "";
+        while (i < rest.length && /[a-zA-Z0-9\-\_]/.test(rest[i])) {
+          type += rest[i];
+          i++;
+        }
+        if (type) node.type = type;
 
-  function buildValidation(node) {
-    return cloneAttrs(node.attrs);
-  }
+        while (i < rest.length && (rest[i] === "." || rest[i] === "#")) {
+          const type = rest[i];
+          i++;
+          let val = "";
+          while (i < rest.length && /[a-zA-Z0-9\-\_]/.test(rest[i])) {
+            val += rest[i];
+            i++;
+          }
+          if (type === "#") node.id = val;
+          else node.className.push(val);
+        }
 
-  function buildField(node) {
-    const source =
-      node.type === "field" ? node.attrs : { ...node.attrs, type: node.type };
-    const out = { ...cloneAttrs(source) };
+        if (i < rest.length && rest[i] === "(") {
+          let depth = 1;
+          i++;
+          let attrStr = "";
+          while (i < rest.length && depth > 0) {
+            if (rest[i] === "(") depth++;
+            else if (rest[i] === ")") depth--;
+            if (depth > 0) attrStr += rest[i];
+            i++;
+          }
+          parseAttrs(attrStr, node);
+        }
 
-    if (node.id) out.id = node.id;
-    if (node.className?.length) out.className = node.className;
-    if (node.text && node.type !== "field") out.label = node.text;
+        let text = rest.slice(i).trim();
+        if (text.startsWith("= ")) text = text.slice(2).trim();
+        if (text) node.text = text;
 
-    for (const child of node.children || []) {
-      if (child.type === "options") {
-        out.options = buildOptions(child);
-      } else if (child.type === "children") {
-        out.children = buildOptions(child);
-      } else if (child.type === "validation") {
-        out.validation = buildValidation(child);
-      } else if (child.type === "option") {
-        out.children = out.children || [];
-        out.children.push(buildOptions({ children: [child] })[0]);
-      } else if (
-        child.type === "field" ||
-        child.type === "select" ||
-        child.type === "text" ||
-        child.type === "email" ||
-        child.type === "password" ||
-        child.type === "checkbox" ||
-        child.type === "textarea"
-      ) {
-        out.children = out.children || [];
-        out.children.push(buildField(child));
+        return node;
       }
-    }
 
-    return out;
-  }
-
-  function buildFormSchema(root) {
-    const form = {
-      id: root.id || root.attrs.id || "",
-      className: root.className?.join(" ") || root.attrs.className || "",
-      children: [],
-    };
-
-    for (const child of root.children || []) {
-      if (
-        child.type === "field" ||
-        [
-          "select",
-          "text",
-          "email",
-          "password",
-          "checkbox",
-          "textarea",
-        ].includes(child.type)
-      ) {
-        form.children.push(buildField(child));
-      } else if (child.type === "more") {
-        for (const branch of child.children || []) {
-          const branchName =
-            branch.attrs.name || branch.text || branch.id || branch.type;
-          form.more[branchName] = {
-            children: (branch.children || [])
-              .filter(
-                (c) =>
-                  c.type === "field" ||
-                  [
-                    "select",
-                    "text",
-                    "email",
-                    "password",
-                    "checkbox",
-                    "textarea",
-                  ].includes(c.type),
-              )
-              .map(buildField),
-          };
+      function parseAttrs(str, node) {
+        const re =
+          /([a-zA-Z\-_][a-zA-Z0-9\-_]*)\s*=\s*"([^"]*)"|([a-zA-Z\-_][a-zA-Z0-9\-_]*)\s*=\s*'([^']*)'|([a-zA-Z\-_][a-zA-Z0-9\-_]*)\s*=\s*([^\s,]+)|([a-zA-Z\-_][a-zA-Z0-9\-_]*)/g;
+        let m;
+        while ((m = re.exec(str)) !== null) {
+          if (m[1]) {
+            const k = m[1],
+              v = coerceValue(m[2]);
+            if (k === "class")
+              node.className.push(...String(v).split(" ").filter(Boolean));
+            else if (k === "id") node.id = v;
+            else node.attrs[k] = v;
+          } else if (m[3]) {
+            const k = m[3],
+              v = coerceValue(m[4]);
+            if (k === "class")
+              node.className.push(...String(v).split(" ").filter(Boolean));
+            else if (k === "id") node.id = v;
+            else node.attrs[k] = v;
+          } else if (m[5]) {
+            const k = m[5],
+              v = coerceValue(m[6]);
+            if (k === "class")
+              node.className.push(...String(v).split(" ").filter(Boolean));
+            else if (k === "id") node.id = v;
+            else node.attrs[k] = v;
+          } else if (m[7]) {
+            node.attrs[m[7]] = true;
+          }
         }
       }
-    }
 
-    return { form };
-  }
-
-  function tokenize(src) {
-    const lines = src.split("\n");
-    const tokens = [];
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      const indent = getIndent(line);
-      tokens.push({ indent, raw: trimmed, line: i + 1 });
-    }
-    return tokens;
-  }
-
-  function buildTree(tokens, start, parentIndent) {
-    const children = [];
-    let i = start;
-    while (i < tokens.length) {
-      const tok = tokens[i];
-      if (tok.indent <= parentIndent) break;
-
-      const node = parseTag(tok.raw);
-      if (node._comment !== undefined) {
-        i++;
-        continue;
+      function coerceValue(value) {
+        if (value === "true") return true;
+        if (value === "false") return false;
+        if (value === "null") return null;
+        if (value === "undefined") return undefined;
+        if (
+          value !== "" &&
+          !Number.isNaN(Number(value)) &&
+          String(Number(value)) === value
+        ) {
+          return Number(value);
+        }
+        return value;
       }
 
-      const childIndent = i + 1 < tokens.length ? tokens[i + 1].indent : -1;
-      if (childIndent > tok.indent) {
-        const [subtree, next] = buildTree(tokens, i + 1, tok.indent);
-        node.children = subtree;
-        i = next;
-      } else {
-        i++;
+      function cloneAttrs(attrs) {
+        return Object.keys(attrs || {}).reduce((acc, key) => {
+          acc[key] = attrs[key];
+          return acc;
+        }, {});
       }
-      children.push(node);
-    }
-    return [children, i];
-  }
 
-  function nodeToJSON(node) {
-    if (node.type === "form") {
-      return buildFormSchema(node);
-    }
-
-    if (node.type === "field") {
-      return buildField(node);
-    }
-
-    if (node.type === "options") {
-      return buildOptions(node);
-    }
-
-    if (node.type === "validation") {
-      return buildValidation(node);
-    }
-
-    const out = { type: node.type };
-    if (node.id) out.id = node.id;
-    if (node.className.length) out.className = node.className;
-    if (Object.keys(node.attrs).length) out.attrs = node.attrs;
-    if (node.text) out.text = node.text;
-    if (node.children.length) out.children = node.children.map(nodeToJSON);
-    return out;
-  }
-
-  function compile() {
-    const src = editor.getValue();
-    if (!src.trim()) {
-      lastResult = null;
-      render();
-      return;
-    }
-    try {
-      const tokens = tokenize(src);
-      if (!tokens.length) {
-        lastResult = null;
-        render();
-        return;
+      function buildOptions(node) {
+        const optionNodes = node.children?.length
+          ? node.children.filter((child) => child.type === "option")
+          : [];
+        return optionNodes.map((option) => {
+          const out = cloneAttrs(option.attrs);
+          if (option.id) out.id = option.id;
+          if (option.className?.length) out.className = option.className;
+          if (option.text) out.label = option.text;
+          if (out.value === undefined) out.value = "";
+          if (out.label === undefined) out.label = "";
+          return out;
+        });
       }
-      const minIndent = Math.min(...tokens.map((t) => t.indent));
-      const [tree] = buildTree(tokens, 0, minIndent - 1);
-      const json =
-        tree.length === 1 ? nodeToJSON(tree[0]) : tree.map(nodeToJSON);
-      lastResult = { json, tokens };
-      render();
-    } catch (e) {
-      document.getElementById("out").innerHTML =
-        `<div class="err">Parse error: ${e.message}</div>`;
-    }
-  }
 
-  function highlight(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(
-        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?)/g,
-        (m) => {
-          if (/:$/.test(m)) return `<span class="tk">${m}</span>`;
-          if (/^"/.test(m)) return `<span class="ts">${m}</span>`;
-          if (/true|false/.test(m)) return `<span class="tb">${m}</span>`;
-          if (/null/.test(m)) return `<span class="tg">${m}</span>`;
-          return `<span class="tn">${m}</span>`;
-        },
-      );
-  }
+      function buildValidation(node) {
+        return cloneAttrs(node.attrs);
+      }
 
-  function renderTokenTable(tokens) {
-    const rows = tokens
-      .map((t) => {
-        let type = "type";
-        if (t.raw.startsWith("//")) type = "comment";
-        else if (t.raw.startsWith("|")) type = "text";
-        const parsed = type === "type" ? parseTag(t.raw) : null;
-        const tagName = parsed && !parsed._comment ? parsed.type : "—";
-        const cls = parsed ? parsed.className.join(", ") : "—";
-        const id = parsed && parsed.id ? parsed.id : "—";
-        const attrs = parsed
-          ? Object.keys(parsed.attrs).join(", ") || "—"
-          : "—";
-        const text = parsed && parsed.text ? parsed.text : "—";
-        return `<tr>
+      function buildField(node) {
+        const source =
+          node.type === "field"
+            ? node.attrs
+            : { ...node.attrs, type: node.type };
+        const out = { ...cloneAttrs(source) };
+
+        if (node.id) out.id = node.id;
+        if (node.className?.length) out.className = node.className;
+        if (node.text && node.type !== "field") out.label = node.text;
+
+        for (const child of node.children || []) {
+          if (child.type === "options") {
+            out.options = buildOptions(child);
+          } else if (child.type === "children") {
+            out.children = buildOptions(child);
+          } else if (child.type === "validation") {
+            out.validation = buildValidation(child);
+          } else if (child.type === "option") {
+            out.children = out.children || [];
+            out.children.push(buildOptions({ children: [child] })[0]);
+          } else if (
+            child.type === "field" ||
+            child.type === "select" ||
+            child.type === "text" ||
+            child.type === "email" ||
+            child.type === "password" ||
+            child.type === "checkbox" ||
+            child.type === "textarea"
+          ) {
+            out.children = out.children || [];
+            out.children.push(buildField(child));
+          }
+        }
+
+        return out;
+      }
+
+      function buildFormSchema(root) {
+        const form = {
+          id: root.id || root.attrs.id || "",
+          className: root.className?.join(" ") || root.attrs.className || "",
+          children: [],
+        };
+
+        for (const child of root.children || []) {
+          if (
+            child.type === "field" ||
+            [
+              "select",
+              "text",
+              "email",
+              "password",
+              "checkbox",
+              "textarea",
+            ].includes(child.type)
+          ) {
+            form.children.push(buildField(child));
+          } else if (child.type === "more") {
+            for (const branch of child.children || []) {
+              const branchName =
+                branch.attrs.name || branch.text || branch.id || branch.type;
+              form.more[branchName] = {
+                children: (branch.children || [])
+                  .filter(
+                    (c) =>
+                      c.type === "field" ||
+                      [
+                        "select",
+                        "text",
+                        "email",
+                        "password",
+                        "checkbox",
+                        "textarea",
+                      ].includes(c.type),
+                  )
+                  .map(buildField),
+              };
+            }
+          }
+        }
+
+        return { form };
+      }
+
+      function tokenize(src) {
+        const lines = src.split("\n");
+        const tokens = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          const indent = getIndent(line);
+          tokens.push({ indent, raw: trimmed, line: i + 1 });
+        }
+        return tokens;
+      }
+
+      function buildTree(tokens, start, parentIndent) {
+        const children = [];
+        let i = start;
+        while (i < tokens.length) {
+          const tok = tokens[i];
+          if (tok.indent <= parentIndent) break;
+
+          const node = parseTag(tok.raw);
+          if (node._comment !== undefined) {
+            i++;
+            continue;
+          }
+
+          const childIndent = i + 1 < tokens.length ? tokens[i + 1].indent : -1;
+          if (childIndent > tok.indent) {
+            const [subtree, next] = buildTree(tokens, i + 1, tok.indent);
+            node.children = subtree;
+            i = next;
+          } else {
+            i++;
+          }
+          children.push(node);
+        }
+        return [children, i];
+      }
+
+      function nodeToJSON(node) {
+        if (node.type === "form") {
+          return buildFormSchema(node);
+        }
+
+        if (node.type === "field") {
+          return buildField(node);
+        }
+
+        if (node.type === "options") {
+          return buildOptions(node);
+        }
+
+        if (node.type === "validation") {
+          return buildValidation(node);
+        }
+
+        const out = { type: node.type };
+        if (node.id) out.id = node.id;
+        if (node.className.length) out.className = node.className;
+        if (Object.keys(node.attrs).length) out.attrs = node.attrs;
+        if (node.text) out.text = node.text;
+        if (node.children.length) out.children = node.children.map(nodeToJSON);
+        return out;
+      }
+
+      function compile() {
+        const src = editor.getValue();
+        if (!src.trim()) {
+          lastResult = null;
+          render();
+          return;
+        }
+        try {
+          const tokens = tokenize(src);
+          if (!tokens.length) {
+            lastResult = null;
+            render();
+            return;
+          }
+          const minIndent = Math.min(...tokens.map((t) => t.indent));
+          const [tree] = buildTree(tokens, 0, minIndent - 1);
+          const json =
+            tree.length === 1 ? nodeToJSON(tree[0]) : tree.map(nodeToJSON);
+          lastResult = { json, tokens };
+          render();
+        } catch (e) {
+          document.getElementById("out").innerHTML =
+            `<div class="err">Parse error: ${e.message}</div>`;
+        }
+      }
+
+      function highlight(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(
+            /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?)/g,
+            (m) => {
+              if (/:$/.test(m)) return `<span class="tk">${m}</span>`;
+              if (/^"/.test(m)) return `<span class="ts">${m}</span>`;
+              if (/true|false/.test(m)) return `<span class="tb">${m}</span>`;
+              if (/null/.test(m)) return `<span class="tg">${m}</span>`;
+              return `<span class="tn">${m}</span>`;
+            },
+          );
+      }
+
+      function renderTokenTable(tokens) {
+        const rows = tokens
+          .map((t) => {
+            let type = "type";
+            if (t.raw.startsWith("//")) type = "comment";
+            else if (t.raw.startsWith("|")) type = "text";
+            const parsed = type === "type" ? parseTag(t.raw) : null;
+            const tagName = parsed && !parsed._comment ? parsed.type : "—";
+            const cls = parsed ? parsed.className.join(", ") : "—";
+            const id = parsed && parsed.id ? parsed.id : "—";
+            const attrs = parsed
+              ? Object.keys(parsed.attrs).join(", ") || "—"
+              : "—";
+            const text = parsed && parsed.text ? parsed.text : "—";
+            return `<tr>
       <td style="color:var(--color-text-tertiary);padding:5px 10px;font-size:11px">${t.line}</td>
       <td style="padding:5px 10px;font-size:11px;font-weight:500">${tagName}</td>
       <td style="padding:5px 10px;font-size:11px;color:var(--color-text-info)">${id}</td>
@@ -655,10 +668,10 @@ form#exampleForm22
       <td style="padding:5px 10px;font-size:11px;color:var(--color-text-secondary)">${attrs}</td>
       <td style="padding:5px 10px;font-size:11px;color:var(--color-text-secondary);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${text}</td>
     </tr>`;
-      })
-      .join("");
+          })
+          .join("");
 
-    return `<div style="overflow:auto;height:100%">
+        return `<div style="overflow:auto;height:100%">
     <table style="width:100%;border-collapse:collapse;font-family:var(--font-mono)">
       <thead>
         <tr style="background:var(--color-background-secondary);font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.05em;text-transform:uppercase">
@@ -673,31 +686,33 @@ form#exampleForm22
       <tbody>${rows}</tbody>
     </table>
   </div>`;
-  }
+      }
 
-  function render() {
-    const out = document.getElementById("out");
-    if (!lastResult) {
-      out.className = "json-out";
-      out.innerHTML =
-        '<span style="color:var(--color-text-tertiary)">Output appears here...</span>';
-      return;
-    }
-    const { json, tokens } = lastResult;
+      function render() {
+        const out = document.getElementById("out");
+        if (!lastResult) {
+          out.className = "json-out";
+          out.innerHTML =
+            '<span style="color:var(--color-text-tertiary)">Output appears here...</span>';
+          return;
+        }
+        const { json, tokens } = lastResult;
 
-    if (currentTab === "json") {
-      out.className = "json-out";
-      out.innerHTML = highlight(JSON.stringify(json, null, 2));
-    } else if (currentTab === "flat") {
-      out.className = "json-out";
-      out.innerHTML = highlight(JSON.stringify(json));
-    } else if (currentTab === "tokens") {
-      out.className = "json-out";
-      out.style.padding = "0";
-      out.innerHTML = renderTokenTable(tokens);
-    }
-  }
+        if (currentTab === "json") {
+          out.className = "json-out";
+          out.innerHTML = highlight(JSON.stringify(json, null, 2));
+        } else if (currentTab === "flat") {
+          out.className = "json-out";
+          out.innerHTML = highlight(JSON.stringify(json));
+        } else if (currentTab === "tokens") {
+          out.className = "json-out";
+          out.style.padding = "0";
+          out.innerHTML = renderTokenTable(tokens);
+        }
+      }
 
-  editor.on("change", compile);
-  load("page");
-</script>
+      editor.on("change", compile);
+      load("page");
+    </script>
+  </body>
+</html>
