@@ -215,7 +215,7 @@ const ArrayCompVirtual = ({ arr: _arr }) => {
   }, [_arr]);
 
   // Your custom render function for each item
-  const renderListItem = (item) => <Number n={item} />;
+  const renderListItem = (item, idx) => <Number key={"k" + idx} n={item} />;
 
   return (
     <section>
@@ -677,28 +677,28 @@ export function App(props) {
   }, []);
 
   const MySwitch = ({ type, cp }) => {
-    // switch (type) {
-    //   case "built-in":
-    //     return <BuiltInSwitch curPath={cp} />;
-    //   case "dyn":
-    //     return <RouterAdv routeObj={routeObj} />;
-    //   case "switch":
-    //   default:
-    //     return <MyRouteSwitch curPath={cp} />;
-    // }
-    return (
-      <Switch value={type}>
-        <Switch.Case
-          when="built-in"
-          render={() => <BuiltInSwitch curPath={cp} />}
-        />
-        <Switch.Case
-          when="dyn"
-          render={() => <RouterAdv routeObj={routeObj} />}
-        />
-        <Switch.Default render={() => <MyRouteSwitch curPath={cp} />} />
-      </Switch>
-    );
+    switch (type) {
+      case "built-in":
+        return <BuiltInSwitch curPath={cp} />;
+      case "dyn":
+        return <RouterAdv routeObj={routeObj} />;
+      case "switch":
+      default:
+        return <MyRouteSwitch curPath={cp} />;
+    }
+    // return (
+    //   <Switch value={type}>
+    //     <Switch.Case
+    //       when="built-in"
+    //       render={() => <BuiltInSwitch curPath={cp} />}
+    //     />
+    //     <Switch.Case
+    //       when="dyn"
+    //       render={() => <RouterAdv routeObj={routeObj} />}
+    //     />
+    //     <Switch.Default render={() => <MyRouteSwitch curPath={cp} />} />
+    //   </Switch>
+    // );
   };
 
   return (
