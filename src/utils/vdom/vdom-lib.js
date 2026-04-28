@@ -84,6 +84,7 @@ const microframe = (() => {
 
       funcCache[cacheKey] = {
         name: cacheKey,
+        // parent: stack[stack.length - 2]?.comp, // this might be useful
         mount: true,
         unMount: null,
         // props: props,
@@ -103,8 +104,7 @@ const microframe = (() => {
 
       // return { ...rv, $c: type.name, children: rv.children }; //perfect
 
-      // IMP: If we dont want Compo nodes
-      // return rv.fragChildLen > 0 ? rv.children : rv;
+      // IMP: If we dont want Compo nodes (Switch compo will not work)
 
       // return rv;
 
@@ -725,7 +725,9 @@ if (typeof window !== "undefined") {
     );
 
     function wrapper($parent, newNode, oldNode, index = 0) {
+      // logt("TED");
       let stk = domListIterator(rootNode);
+      // logte("TED");
 
       let CTR = 0;
       let last = null;
@@ -807,15 +809,20 @@ if (typeof window !== "undefined") {
             });
 
             if (dNode?.nodeType === 1) {
-              while (CTR < stk.length) {
-                if (dNode.contains(stk[CTR])) {
-                  // console.log("remove", stk[CTR]);
-                  // stk.splice(CTR, 1);
-                  CTR++;
-                } else {
-                  // CTR--;
-                  break;
-                }
+              // while (CTR < stk.length) {
+              //   if (dNode.contains(stk[CTR])) {
+              //     // console.log("remove", stk[CTR]);
+              //     // stk.splice(CTR, 1);
+              //     CTR++;
+              //   } else {
+              //     // CTR--;
+              //     break;
+              //   }
+              // }
+              while (dNode.contains(stk[CTR])) {
+                // console.log("remove", stk[CTR]);
+                // stk.splice(CTR, 1);
+                CTR++;
               }
             }
 
@@ -853,6 +860,8 @@ if (typeof window !== "undefined") {
               if (oldNode?.children)
                 oldNode = oldNode.children = oldNode.props = null;
 
+              CTR++;
+
               while (CTR < stk.length) {
                 if (el.contains(stk[CTR])) {
                   // console.log("remove", stk[CTR]);
@@ -863,7 +872,7 @@ if (typeof window !== "undefined") {
                   break;
                 }
               }
-              CTR++;
+              CTR--;
             } else {
               // this is specifically for Switch comp
               if (oldNode?.value)
@@ -996,15 +1005,18 @@ if (typeof window !== "undefined") {
           });
 
           if (domNode?.nodeType === 1) {
-            while (CTR < stk.length) {
-              if (domNode.contains(stk[CTR])) {
-                // console.log("remove", stk[CTR]);
-                // stk.splice(CTR, 1);
-                CTR++;
-              } else {
-                // CTR--;
-                break;
-              }
+            // while (CTR < stk.length) {
+            //   if (domNode.contains(stk[CTR])) {
+            //     // console.log("remove", stk[CTR]);
+            //     // stk.splice(CTR, 1);
+            //     CTR++;
+            //   } else {
+            //     // CTR--;
+            //     break;
+            //   }
+            // }
+            while (domNode.contains(stk[CTR])) {
+              CTR++;
             }
           }
 
@@ -1031,15 +1043,19 @@ if (typeof window !== "undefined") {
           // log(domNode, stk, CTR);
           // const toSkip = domNode.querySelectorAll("*").length;
           // CTR += toSkip;
-          while (CTR < stk.length) {
-            if (domNode.contains(stk[CTR])) {
-              // console.log("remove", stk[CTR]);
-              // stk.splice(CTR, 1);
-              CTR++;
-            } else {
-              // CTR--;
-              break;
-            }
+          // while (CTR < stk.length) {
+          //   if (domNode.contains(stk[CTR])) {
+          //     // console.log("remove", stk[CTR]);
+          //     // stk.splice(CTR, 1);
+          //     CTR++;
+          //   } else {
+          //     // CTR--;
+          //     break;
+          //   }
+          // }
+
+          while (domNode.contains(stk[CTR])) {
+            CTR++;
           }
 
           patches.push({
@@ -1133,19 +1149,41 @@ if (typeof window !== "undefined") {
             disposalPromises.push(disposeNodes(patch.c));
             break;
 
+          // case "REMOVEALL":
+          //   logt("REMOVEALL");
+          //   const childrenToDispose = Array.from(patch.p.childNodes);
+          //   disposalPromises.push(
+          //     Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
+          //   );
+
+          //   if (patch.p.replaceChildren) {
+          //     patch.p.replaceChildren();
+          //   } else {
+          //     while (patch.p.firstChild) {
+          //       patch.p.removeChild(patch.p.firstChild);
+          //     }
+          //   }
+          //   logte("REMOVEALL");
+          //   break;
+
           case "REMOVEALL":
-            const childrenToDispose = Array.from(patch.p.childNodes);
+            // const childrenToDispose = Array.from(patch.p.childNodes);
+            const oldParent = patch.p;
+
+            // Create fresh parent element with same properties
+            const newParent = oldParent.cloneNode(false); // false = no children
+
+            // Swap immediately (instant, single DOM operation)
+            oldParent.parentNode.replaceChild(newParent, oldParent);
+
+            // Update patch.p reference for any subsequent operations
+            patch.p = newParent;
+
+            // Async disposal of old parent and all its children
             disposalPromises.push(
-              Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
+              Promise.resolve().then(() => disposeNodes(oldParent)),
             );
 
-            if (patch.p.replaceChildren) {
-              patch.p.replaceChildren();
-            } else {
-              while (patch.p.firstChild) {
-                patch.p.removeChild(patch.p.firstChild);
-              }
-            }
             break;
 
           case "REPLACE":
