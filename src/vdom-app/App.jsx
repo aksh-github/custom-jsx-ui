@@ -468,50 +468,28 @@ export const SimpleRoute = () => {
   );
 };
 
-const Header = () => (
-  <ul className="nav">
-    <li>
-      <LinkV2 key="/" to="/">
-        Complex
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/embed" to="/embed">
-        Embed YT,MD
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/route2" to="/route2">
-        Simple
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/topics" to="/topics">
-        Topics
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/frag" to="/frag">
-        Fragments
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/sans" to="/sans">
-        Sanskrit
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/heavy" to="/heavy">
-        Heavy
-      </LinkV2>
-    </li>
-    <li>
-      <LinkV2 key="/json-form" to="/json-form">
-        Dynamic JSON
-      </LinkV2>
-    </li>
-  </ul>
-);
+const links = [
+  { to: "/", name: "Complex" },
+  { to: "/embed", name: "Embed YT,MD" },
+  { to: "/route2", name: "Simple" },
+  { to: "/topics", name: "Topics" },
+  { to: "/frag", name: "Fragments" },
+  { to: "/sans", name: "Sanskrit" },
+  { to: "/heavy", name: "Heavy" },
+  { to: "/json-form", name: "Dynamic JSON" },
+];
+
+const Header = () => {
+  return (
+    <ul className="nav">
+      {links.map((link) => (
+        <li key={link.to}>
+          <LinkV2 to={link.to}>{link.name}</LinkV2>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 const MyRouteSwitch = ({ curPath }) => {
   switch (curPath) {
