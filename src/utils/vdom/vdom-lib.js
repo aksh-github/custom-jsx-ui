@@ -1098,7 +1098,8 @@ if (typeof window !== "undefined") {
 
           patches.push({ p: domNode, op: "APPENDDF", c: df });
         } else {
-          for (let i = 0; i < newLength || i < oldLength; i++) {
+          let len = newLength > oldLength ? newLength : oldLength;
+          for (let i = 0; i < len; i++) {
             // if (newNode.type === "df" && oldNode.type === "df") {
             //   doMain(newNode.children[i], oldNode.children[i]);
             // } else {
