@@ -900,45 +900,64 @@ if (typeof window !== "undefined") {
             el = null;
           } else {
             //special case Compo with Array manipulation or no type (parent) for updating
-            if ($parent?.appendChild) {
-              // log("changed append: ");
-              if (newNode?.type) {
-                // its dom node
-                // log("use df");
-                if (optiPossible) {
-                  // gdf.appendChild(newEl);
+            // if ($parent?.appendChild) {
+            //   // log("changed append: ");
+            //   if (newNode?.type) {
+            //     // its dom node
+            //     // log("use df");
+            //     if (optiPossible) {
+            //       // gdf.appendChild(newEl);
 
-                  patches.push({
-                    p: gdf,
-                    op: "APPEND",
-                    c: newNode,
-                  });
-                } else {
-                  // $parent.appendChild(newEl);
+            //       patches.push({
+            //         p: gdf,
+            //         op: "APPEND",
+            //         c: newNode,
+            //       });
+            //     } else {
+            //       // $parent.appendChild(newEl);
 
-                  patches.push({
-                    p: $parent,
-                    op: "APPEND",
-                    c: newNode,
-                  });
-                }
-              }
+            //       patches.push({
+            //         p: $parent,
+            //         op: "APPEND",
+            //         c: newNode,
+            //       });
+            //     }
+            //   }
 
-              // its text
-              else {
-                // $parent.textContent = newEl?.textContent;
+            //   // its text
+            //   else {
+            //     // $parent.textContent = newEl?.textContent;
 
-                patches.push({
-                  p: $parent,
-                  op: "CONTENT",
-                  c: createElement(newNode)?.textContent,
-                });
-              }
-            } else {
-              // $parent?.parentNode?.appendChild(createElement(newNode));
+            //     log("-- ", newNode);
+
+            //     patches.push({
+            //       p: $parent,
+            //       op: "CONTENT",
+            //       c: createElement(newNode)?.textContent,
+            //     });
+            //   }
+            // } else {
+            //   // $parent?.parentNode?.appendChild(createElement(newNode));
+
+            //   patches.push({
+            //     p: $parent?.parentNode,
+            //     op: "APPEND",
+            //     c: newNode,
+            //   });
+            // }
+            if (optiPossible) {
+              // gdf.appendChild(newEl);
 
               patches.push({
-                p: $parent?.parentNode,
+                p: gdf,
+                op: "APPEND",
+                c: newNode,
+              });
+            } else {
+              // $parent.appendChild(newEl);
+
+              patches.push({
+                p: $parent,
                 op: "APPEND",
                 c: newNode,
               });
