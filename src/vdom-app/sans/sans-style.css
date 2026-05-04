@@ -119,6 +119,12 @@ body {
       background: cornsilk;
     }
 
+    .load-more-sentinel {
+      padding: 1em;
+      text-align: center;
+      color: var(--primary-text-color);
+    }
+
     .search {
       display: flex;
       flex-wrap: wrap;

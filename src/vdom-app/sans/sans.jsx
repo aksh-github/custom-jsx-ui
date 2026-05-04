@@ -68,6 +68,8 @@ const dictionaryData = {
 
 // const [filtered, setFiltered] = createState([]);
 let currentSearch = null;
+let currentLazyResultCount = 0;
+let lazyLoadFrame = null;
 
 // const searchCtx = context("");
 
@@ -177,7 +179,9 @@ const UIObj = {
   },
 };
 
-const TOP = 10;
+const TOP = -1;
+const INITIAL_RESULTS_LIMIT = 15;
+const RESULTS_BATCH_SIZE = 15;
 
 const loadLocalData = () => {
   const { get } = localStore();
@@ -309,10 +313,14 @@ const fetchData = (jsonFile) =>
 
 function GenericTab({ prop, search: srch, dkey }) {
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
+  const [visibleLimit, setVisibleLimit] = createState(INITIAL_RESULTS_LIMIT);
   currentSearch = srch;
   const filtered = srch
     ? dictionaryData[`${dkey}`].d.filter(filterFunc)
     : dictionaryData[`${dkey}`].d?.slice(0, TOP);
+  currentLazyResultCount = filtered.length;
+  const visibleResults = filtered.slice(0, visibleLimit);
+  const hasMoreResults = visibleLimit < filtered.length;
   // let filtered = [];
 
   // if (srch) {
@@ -323,7 +331,49 @@ function GenericTab({ prop, search: srch, dkey }) {
 
   // console.log("exec", searchCtx.get());
 
-  const RR = filtered.map((d) =>
+  createEffect(() => {
+    setVisibleLimit(INITIAL_RESULTS_LIMIT);
+  }, [srch, dkey]);
+
+  const loadMore = () => {
+    setVisibleLimit((prev) =>
+      Math.min(prev + RESULTS_BATCH_SIZE, currentLazyResultCount),
+    );
+  };
+
+  const loadMoreIfNearBottom = () => {
+    if (lazyLoadFrame) return;
+
+    lazyLoadFrame = requestAnimationFrame(() => {
+      lazyLoadFrame = null;
+
+      const scrollBottom = window.innerHeight + window.scrollY;
+      const pageBottom = document.documentElement.scrollHeight - 250;
+
+      if (scrollBottom >= pageBottom) loadMore();
+    });
+  };
+
+  createEffect(() => {
+    window.addEventListener("scroll", loadMoreIfNearBottom, { passive: true });
+    let timeoutId = setTimeout(loadMoreIfNearBottom, 0);
+
+    return () => {
+      window.removeEventListener("scroll", loadMoreIfNearBottom);
+      clearTimeout(timeoutId);
+      timeoutId = null;
+      if (lazyLoadFrame) {
+        cancelAnimationFrame(lazyLoadFrame);
+        lazyLoadFrame = null;
+      }
+    };
+  }, []);
+
+  createEffect(() => {
+    setTimeout(loadMoreIfNearBottom, 0);
+  }, [srch, dkey, filtered.length]);
+
+  const RR = visibleResults.map((d) =>
     d?.ev || d?.ew ? <RowComponent row={d} /> : null,
   );
 
@@ -343,6 +393,9 @@ function GenericTab({ prop, search: srch, dkey }) {
       ) : (
         <div className="search">{RR}</div>
       )}
+      {hasMoreResults ? (
+        <div className="load-more-sentinel">Loading more...</div>
+      ) : null}
     </div>
   );
 }
@@ -393,6 +446,11 @@ export function Sans() {
       // setSearch("");
       // searchCtx.set("");
       currentSearch = chatIcon = null;
+      currentLazyResultCount = 0;
+      if (lazyLoadFrame) {
+        cancelAnimationFrame(lazyLoadFrame);
+        lazyLoadFrame = null;
+      }
       clearTimeout(timeoutId);
       timeoutId = null;
     };
