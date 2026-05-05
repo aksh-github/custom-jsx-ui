@@ -737,7 +737,7 @@ if (typeof window !== "undefined") {
       let _C = 0;
 
       if (navigate.routeChange) {
-        updateComps.clear();
+        // updateComps.clear();
         navigate.set(false);
       }
 
