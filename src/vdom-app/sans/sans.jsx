@@ -272,7 +272,9 @@ const checkProcessUpdates = () => {
             dditem.d = uio?.setDatacb ? uio.setDatacb(item.data) : item.data;
             dditem.updateReqd = false;
             // update local storage
-            requestIdleCallback(() => {
+            let reqId = requestIdleCallback(() => {
+              cancelIdleCallback(reqId);
+              reqId = null;
               updateData(item.type, dditem.hash, dditem.d);
             });
           }
@@ -412,7 +414,9 @@ export function Sans() {
 
   createEffect(() => {
     // console.log("tab changed to", currTab);
-    setTimeout(() => {
+    let tid = setTimeout(() => {
+      clearTimeout(tid);
+      tid = null;
       window.scrollTo({
         top: 0,
         behavior: "smooth",
@@ -424,7 +428,10 @@ export function Sans() {
     console.log("mount for Sans");
 
     // 1. check and load local data
-    const updateReqd = loadLocalData();
+    loadLocalData();
+    // Local cache is already available, so render immediately.
+    // Remote hash checks can continue in the background.
+    setIsLoaded(true);
 
     // 2. load remote hash data
     loadRemoteHashData().then((res) => {
@@ -437,7 +444,6 @@ export function Sans() {
         if (!res) {
           console.log("** something wrong in checkProcessUpdates");
         }
-        setIsLoaded(true);
       });
     });
 
