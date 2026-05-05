@@ -329,7 +329,7 @@ form#exampleForm22
         const node = {
           type: "div",
           id: null,
-          className: [],
+          className: "",
           attrs: {},
           text: null,
           children: [],
@@ -357,7 +357,7 @@ form#exampleForm22
             i++;
           }
           if (type === "#") node.id = val;
-          else node.className.push(val);
+          else node.className += (node.className ? " " : "") + val;
         }
 
         if (i < rest.length && rest[i] === "(") {
@@ -389,21 +389,36 @@ form#exampleForm22
             const k = m[1],
               v = coerceValue(m[2]);
             if (k === "class")
-              node.className.push(...String(v).split(" ").filter(Boolean));
+              node.className +=
+                (node.className ? " " : "") +
+                String(v)
+                  .split(" ")
+                  .filter(Boolean)
+                  .join(" ");
             else if (k === "id") node.id = v;
             else node.attrs[k] = v;
           } else if (m[3]) {
             const k = m[3],
               v = coerceValue(m[4]);
             if (k === "class")
-              node.className.push(...String(v).split(" ").filter(Boolean));
+              node.className +=
+                (node.className ? " " : "") +
+                String(v)
+                  .split(" ")
+                  .filter(Boolean)
+                  .join(" ");
             else if (k === "id") node.id = v;
             else node.attrs[k] = v;
           } else if (m[5]) {
             const k = m[5],
               v = coerceValue(m[6]);
             if (k === "class")
-              node.className.push(...String(v).split(" ").filter(Boolean));
+              node.className +=
+                (node.className ? " " : "") +
+                String(v)
+                  .split(" ")
+                  .filter(Boolean)
+                  .join(" ");
             else if (k === "id") node.id = v;
             else node.attrs[k] = v;
           } else if (m[7]) {
@@ -494,7 +509,7 @@ form#exampleForm22
       function buildFormSchema(root) {
         const form = {
           id: root.id || root.attrs.id || "",
-          className: root.className?.join(" ") || root.attrs.className || "",
+          className: root.className || root.attrs.className || "",
           children: [],
         };
 
@@ -654,7 +669,7 @@ form#exampleForm22
             else if (t.raw.startsWith("|")) type = "text";
             const parsed = type === "type" ? parseTag(t.raw) : null;
             const tagName = parsed && !parsed._comment ? parsed.type : "—";
-            const cls = parsed ? parsed.className.join(", ") : "—";
+            const cls = parsed && parsed.className ? parsed.className : "—";
             const id = parsed && parsed.id ? parsed.id : "—";
             const attrs = parsed
               ? Object.keys(parsed.attrs).join(", ") || "—"
