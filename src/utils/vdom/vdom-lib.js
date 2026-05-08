@@ -165,7 +165,9 @@ const microframe = (() => {
           // or 2. simple node
           return {
             $c: cacheKey,
-            value: rv,
+            type: "df",
+            // value: rv,
+            children: [rv],
             props: props || {},
             // $p: curParent,
           };
@@ -679,16 +681,20 @@ if (typeof window !== "undefined") {
       // let tout = setTimeout(() => {
       //   clearTimeout(tout);
 
-      wrapper(rootNode, current, old);
+      // wrapper(rootNode, current, old);
+      diff(current, old);
+      // examplePatchUsage(patches, rootNode);
 
       callUnmountAll();
 
       // 3. update dom
       // log(patches, propsPatches);
       // console.log(patches);
+
       if (propsPatches) applyPropsPatches(propsPatches);
       if (patches) applyPatches(patches);
       patches = propsPatches = null;
+      updateComps.clear();
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
 
@@ -1129,7 +1135,7 @@ if (typeof window !== "undefined") {
       last = gdf = null;
       stk.length = 0;
 
-      updateComps.clear();
+      // updateComps.clear();
       // updateCtx.clear();
 
       log(_C);
@@ -1139,6 +1145,8 @@ if (typeof window !== "undefined") {
     function applyPropsPatches(patches) {
       while (patches.length) {
         const patch = patches.shift();
+
+        patch.$target = getDOMNodeByPath(rootNode, patch.pathArray);
 
         updateProps(patch.$target, patch.newProps, patch.oldProps);
 
@@ -1155,6 +1163,9 @@ if (typeof window !== "undefined") {
 
       while (patches.length) {
         const patch = patches.shift();
+
+        patch.p = getParentByPath(rootNode, patch.pathArray);
+        patch.c = patch.newNode || getDOMNodeByPath(rootNode, patch.pathArray);
 
         switch (patch.op) {
           case "APPENDDF":
@@ -1207,8 +1218,14 @@ if (typeof window !== "undefined") {
             break;
 
           case "REPLACE":
-            patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
-            disposalPromises.push(disposeNodes(patch.c[1]));
+            // patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
+            // patch.c[1].replaceWith(createElement(patch.c[0]));
+            // disposalPromises.push(disposeNodes(patch.c[1]));
+
+            // for new diff
+            let oldNode = getDOMNodeByPath(rootNode, patch.pathArray);
+            oldNode?.replaceWith(createElement(patch.newNode));
+            disposalPromises.push(disposeNodes(oldNode));
             break;
 
           case "CONTENT":
@@ -1230,6 +1247,439 @@ if (typeof window !== "undefined") {
           });
       }
     }
+
+    // new diff and patch implementation
+
+    /**
+     * Navigate to a node in the vdom tree using path array
+     * Path: [0, 2, 4] means children[0].children[2].children[4]
+     *
+     * @param {Object} node - Root vdom node
+     * @param {Array} pathArray - Array of indices
+     * @returns {Object} The node at the path
+     */
+    function getNodeByPath(node, pathArray) {
+      if (!pathArray || pathArray.length === 0) {
+        return node;
+      }
+
+      let current = node;
+
+      for (const index of pathArray) {
+        const visibleChildren = getVisibleChildren(current);
+        if (visibleChildren[index] === undefined) {
+          return null;
+        }
+        current = visibleChildren[index];
+      }
+
+      return current;
+    }
+
+    /**
+     * Navigate to a parent node in the vdom tree
+     * Useful for applying patches that modify children
+     *
+     * @param {Object} node - Root vdom node
+     * @param {Array} pathArray - Array of indices to child
+     * @returns {Object} The parent node containing the target child
+     */
+    function getParentByPath(node, pathArray) {
+      if (!pathArray || pathArray.length === 0) {
+        return node;
+      }
+
+      const parentPath = pathArray.slice(0, -1);
+      // return getNodeByPath(node, parentPath);
+      return getDOMNodeByPath(node, parentPath);
+    }
+
+    /**
+     * Find the actual DOM node using patch path
+     * Traverses the real DOM tree to find the element at the vdom path location
+     *
+     * @param {Element} rootDOM - Root DOM element
+     * @param {Array} pathArray - Path to the target node
+     * @returns {Element|null} The DOM element or null if not found
+     */
+    function getDOMNodeByPath(rootDOM, pathArray) {
+      if (!pathArray || pathArray.length === 0) {
+        return rootDOM;
+      }
+
+      let current = rootDOM;
+
+      for (const index of pathArray) {
+        // Get children (excluding text nodes for simplicity)
+        const children = Array.from(current.childNodes).filter(
+          (node) =>
+            node.nodeType === 1 || node.nodeType === 3 || node.nodeType === 8,
+        );
+
+        if (!children[index]) {
+          return null;
+        }
+
+        current = children[index];
+      }
+
+      return current;
+    }
+
+    /**
+     * Example: How to apply patches to the DOM
+     * This shows the structure of how patches can be used
+     */
+    function examplePatchUsage(patches, domRoot) {
+      console.log("Example patch application:");
+
+      patches.forEach((patch) => {
+        const domNode = getDOMNodeByPath(domRoot, patch.pathArray);
+
+        console.log(`\nPatch: ${patch.op}`);
+        console.log(`Path: ${patch.path || "root"}`);
+
+        switch (patch.op) {
+          case "APPEND":
+            applyPatches({
+              p: getParentByPath(null, patch.pathArray),
+              op: "APPEND",
+              c: patch.newNode,
+            });
+            break;
+          case "REMOVE":
+            // console.log("  → Would remove:", domNode?.tagName);
+            applyPatches({
+              p: getParentByPath(null, patch.pathArray),
+              op: "REMOVE",
+              c: domNode,
+            });
+            break;
+          case "REPLACE":
+            // console.log("  → Would replace:", domNode?.tagName);
+            // console.log("  → Old node:", patch.oldNode.type);
+            // console.log("  → New node:", patch.newNode.type);
+
+            // domNode.replaceWith(createElement(patch.newNode));
+            applyPatches({
+              p: getParentByPath(null, patch.pathArray),
+              op: "REPLACE",
+              c: [patch.newNode, domNode],
+            });
+            break;
+          case "UPDATE_PROPS":
+            // console.log("  → Would update props on:", domNode?.tagName);
+            // console.log("  → From:", patch.oldProps);
+            // console.log("  → To:", patch.newProps);
+            applyPropsPatches([
+              {
+                $target: domNode,
+                newProps: patch.newProps,
+                oldProps: patch.oldProps,
+              },
+            ]);
+            break;
+        }
+      });
+    }
+
+    /**
+     * Diff algorithm for virtual DOM nodes
+     * Calculates patches needed to transform one vdom tree into another
+     * Patches can be applied to actual DOM using applyPatches function
+     */
+
+    /**
+     * Check if a value is valid (not undefined or null for nodes)
+     */
+    function isValidNode(node) {
+      return node != null;
+    }
+
+    /**
+     * Create a complete snapshot of a node for storage in patches.
+     * Keeps vnode structure intact while preserving function-valued props
+     * and other non-JSON fields that would be lost by stringify/parse.
+     */
+    function snapshotNode(node) {
+      if (!node) return node;
+
+      // For primitives, just return as-is
+      if (typeof node !== "object") {
+        return node;
+      }
+
+      return cloneVNode(node);
+    }
+
+    /**
+     * Deep clone a vnode while preserving functions and nested arrays/objects.
+     * This avoids the data loss from JSON serialization when props include
+     * event handlers or other callable values.
+     */
+    function cloneVNode(value, seen = new WeakMap()) {
+      if (value === null || typeof value !== "object") {
+        return value;
+      }
+
+      if (seen.has(value)) {
+        return seen.get(value);
+      }
+
+      if (Array.isArray(value)) {
+        const clone = [];
+        seen.set(value, clone);
+        for (const item of value) {
+          clone.push(cloneVNode(item, seen));
+        }
+        return clone;
+      }
+
+      const clone = {};
+      seen.set(value, clone);
+
+      for (const key of Object.keys(value)) {
+        clone[key] = cloneVNode(value[key], seen);
+      }
+
+      return clone;
+    }
+
+    /**
+     * Functional vnodes are wrapper nodes produced by components.
+     * They should not add an extra level to traversal paths.
+     */
+    function isFunctionalVNode(node) {
+      return Boolean(node && (node.$c != null || node.type === "df"));
+    }
+
+    // function getVisibleChildren(node) {
+    //   const children = Array.isArray(node?.children) ? node.children : [];
+    //   const visibleChildren = [];
+
+    //   for (const child of children) {
+    //     if (
+    //       isFunctionalVNode(child) &&
+    //       Array.isArray(child.children) &&
+    //       child.children.length > 0
+    //     ) {
+    //       visibleChildren.push(...getVisibleChildren(child));
+    //     } else {
+    //       visibleChildren.push(child);
+    //     }
+    //   }
+
+    //   return visibleChildren;
+    // }
+
+    /**
+     * Check if two nodes have changed
+     * Returns true if nodes are different and require patching
+     */
+    function hasChanged(newNode, oldNode) {
+      if (newNode === oldNode) return false; // Fast path for identical references
+
+      if (newNode?.updtFlag === undefined || oldNode?.updtFlag === undefined) {
+        return (
+          String(newNode?.value ?? newNode) !==
+          String(oldNode?.value ?? oldNode)
+        );
+      }
+      // Both are component nodes (df type)
+      if (newNode?.type === "df" && oldNode?.type === "df") {
+        return newNode?.$c !== oldNode?.$c;
+      }
+
+      // Type mismatch
+      if (typeof newNode !== typeof oldNode) {
+        return true;
+      }
+
+      // Both are primitives (text, number, boolean, etc.)
+      if (!newNode?.type && !oldNode?.type) {
+        return newNode !== oldNode;
+      }
+
+      // DOM elements with different types
+      if (newNode?.type !== oldNode?.type) {
+        return true;
+      }
+
+      // DOM elements with different values (for text-like nodes)
+      if (newNode?.value !== oldNode?.value) {
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
+     * Check if props have changed between two nodes
+     */
+    // function propsChanged(newProps, oldProps) {
+    //   if (newProps === oldProps) return false;
+    //   if (!newProps || !oldProps) return true;
+
+    //   const newKeys = Object.keys(newProps);
+    //   const oldKeys = Object.keys(oldProps);
+
+    //   if (newKeys.length !== oldKeys.length) return true;
+
+    //   for (const key of newKeys) {
+    //     if (!(key in oldProps) || newProps[key] !== oldProps[key]) {
+    //       return true;
+    //     }
+    //   }
+
+    //   return false;
+    // }
+
+    /**
+     * Create a patch object for a single operation
+     * @deprecated - Patches are now created directly in the diff function with complete information
+     */
+    function createPatch(operation, node = null, props = null, index = 0) {
+      return {
+        op: operation,
+        node,
+        props,
+        index,
+      };
+    }
+
+    /**
+     * Main diff function
+     * Compares two vdom trees and returns an array of patches
+     *
+     * @param {Object} newNode - The new virtual DOM node
+     * @param {Object} oldNode - The old virtual DOM node
+     * @returns {Array} Array of patch objects describing DOM changes
+     *
+     * Patch operations and their properties:
+     * - APPEND: { op, newNode, path, pathArray } - Add a new child node
+     * - REMOVE: { op, oldNode, path, pathArray } - Remove an existing node
+     * - REPLACE: { op, newNode, oldNode, path, pathArray } - Replace an entire node
+     * - UPDATE_PROPS: { op, newProps, oldProps, path, pathArray } - Update node props only
+     *
+     * Properties in all patches:
+     * - path: string like "0.2.4" (easier for logging)
+     * - pathArray: array like [0, 2, 4] (easier for programmatic use)
+     */
+    function diff(newNode, oldNode) {
+      // const patches = [];
+
+      function walk(newNode, oldNode, pathArray = []) {
+        // Case 1: Both nodes don't exist - nothing to do
+        if (!isValidNode(newNode) && !isValidNode(oldNode)) {
+          return;
+        }
+
+        const path = pathArray.join(".");
+
+        // oldNode is null
+        if (oldNode === null) {
+          patches.push({
+            op: "REPLACE",
+            newNode: snapshotNode(newNode),
+            // oldNode: snapshotNode(oldNode),
+            path,
+            pathArray: [...pathArray.slice(0, -1)],
+          });
+          return;
+        }
+
+        // newNode is null
+        if (newNode === null) {
+          patches.push({
+            op: "REPLACE",
+            newNode: snapshotNode(newNode),
+            // oldNode: snapshotNode(oldChildren[i]),
+            path,
+            pathArray: [...pathArray.slice(0, -1)],
+          });
+          return;
+        }
+
+        // Case 2: Old node doesn't exist - append new node
+        if (!isValidNode(oldNode) && isValidNode(newNode)) {
+          patches.push({
+            op: "APPEND",
+            newNode: snapshotNode(newNode),
+            path,
+            pathArray: [...pathArray],
+          });
+          return;
+        }
+
+        // Case 3: New node doesn't exist - remove old node
+        if (!isValidNode(newNode) && isValidNode(oldNode)) {
+          patches.push({
+            op: "REMOVE",
+            oldNode: snapshotNode(oldNode),
+            path,
+            pathArray: [...pathArray],
+          });
+          return;
+        }
+
+        // Case 4: Nodes have fundamentally changed - replace
+        if (hasChanged(newNode, oldNode)) {
+          patches.push({
+            op: "REPLACE",
+            newNode: snapshotNode(newNode),
+            oldNode: snapshotNode(oldNode),
+            path,
+            pathArray: [...pathArray],
+          });
+          return;
+        }
+
+        // Case 5: Same type, check props and maybe children
+        if (newNode?.type) {
+          // Props are always checked for same-type nodes.
+          if (newNode?.updtFlag && propsChanged(newNode.props, oldNode.props)) {
+            propsPatches.push({
+              // op: "UPDATE_PROPS",
+              newProps: newNode.props,
+              oldProps: oldNode.props,
+              node: snapshotNode(newNode),
+              path,
+              pathArray: [...pathArray],
+            });
+          }
+
+          // Only walk children when the vnode explicitly opts in.
+          const newChildren = newNode?.children || [];
+          const oldChildren = oldNode?.children || [];
+
+          if (newChildren.length > 0 || oldChildren.length > 0) {
+            processChildren(newChildren, oldChildren, pathArray, patches, walk);
+          }
+        }
+      }
+
+      walk(newNode, oldNode);
+      // return patches;
+    }
+
+    /**
+     * Helper function to process children arrays
+     */
+    function processChildren(
+      newChildren,
+      oldChildren,
+      parentPath,
+      patches,
+      walk,
+    ) {
+      const maxLen = Math.max(newChildren.length, oldChildren.length);
+
+      for (let i = 0; i < maxLen; i++) {
+        walk(newChildren[i], oldChildren[i], [...parentPath, i]);
+      }
+    }
+
+    // end
 
     const disposeNodes = async (node) => {
       // let domList = domListIterator(node);
