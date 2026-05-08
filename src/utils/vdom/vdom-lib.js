@@ -155,6 +155,7 @@ const microframe = (() => {
           // }
           return {
             $c: cacheKey,
+
             // value: rv,
             // ...rv,
             children: [rv],
@@ -166,8 +167,9 @@ const microframe = (() => {
           return {
             $c: cacheKey,
             type: "df",
-            // value: rv,
-            children: [rv],
+            value: rv,
+
+            // children: [rv],
             props: props || {},
             // $p: curParent,
           };
@@ -1453,24 +1455,24 @@ if (typeof window !== "undefined") {
       return Boolean(node && (node.$c != null || node.type === "df"));
     }
 
-    // function getVisibleChildren(node) {
-    //   const children = Array.isArray(node?.children) ? node.children : [];
-    //   const visibleChildren = [];
+    function getVisibleChildren(node) {
+      const children = Array.isArray(node?.children) ? node.children : [];
+      const visibleChildren = [];
 
-    //   for (const child of children) {
-    //     if (
-    //       isFunctionalVNode(child) &&
-    //       Array.isArray(child.children) &&
-    //       child.children.length > 0
-    //     ) {
-    //       visibleChildren.push(...getVisibleChildren(child));
-    //     } else {
-    //       visibleChildren.push(child);
-    //     }
-    //   }
+      for (const child of children) {
+        if (
+          isFunctionalVNode(child) &&
+          Array.isArray(child.children) &&
+          child.children.length > 0
+        ) {
+          visibleChildren.push(...getVisibleChildren(child));
+        } else {
+          visibleChildren.push(child);
+        }
+      }
 
-    //   return visibleChildren;
-    // }
+      return visibleChildren;
+    }
 
     /**
      * Check if two nodes have changed
@@ -1576,29 +1578,29 @@ if (typeof window !== "undefined") {
 
         const path = pathArray.join(".");
 
-        // oldNode is null
-        if (oldNode === null) {
-          patches.push({
-            op: "REPLACE",
-            newNode: snapshotNode(newNode),
-            // oldNode: snapshotNode(oldNode),
-            path,
-            pathArray: [...pathArray.slice(0, -1)],
-          });
-          return;
-        }
+        // // oldNode is null
+        // if (oldNode === null) {
+        //   patches.push({
+        //     op: "REPLACE",
+        //     newNode: snapshotNode(newNode),
+        //     oldNode: snapshotNode(oldNode),
+        //     path,
+        //     pathArray: [...pathArray.slice(0, -1)],
+        //   });
+        //   return;
+        // }
 
-        // newNode is null
-        if (newNode === null) {
-          patches.push({
-            op: "REPLACE",
-            newNode: snapshotNode(newNode),
-            // oldNode: snapshotNode(oldChildren[i]),
-            path,
-            pathArray: [...pathArray.slice(0, -1)],
-          });
-          return;
-        }
+        // // newNode is null
+        // if (newNode === null) {
+        //   patches.push({
+        //     op: "REPLACE",
+        //     newNode: snapshotNode(newNode),
+        //     oldNode: snapshotNode(oldNode),
+        //     path,
+        //     pathArray: [...pathArray],
+        //   });
+        //   return;
+        // }
 
         // Case 2: Old node doesn't exist - append new node
         if (!isValidNode(oldNode) && isValidNode(newNode)) {
@@ -1649,8 +1651,8 @@ if (typeof window !== "undefined") {
           }
 
           // Only walk children when the vnode explicitly opts in.
-          const newChildren = newNode?.children || [];
-          const oldChildren = oldNode?.children || [];
+          const newChildren = getVisibleChildren(newNode);
+          const oldChildren = getVisibleChildren(oldNode);
 
           if (newChildren.length > 0 || oldChildren.length > 0) {
             processChildren(newChildren, oldChildren, pathArray, patches, walk);
