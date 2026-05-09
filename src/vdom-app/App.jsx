@@ -64,14 +64,19 @@ const Topics = (props) => {
       <h2>Topics</h2>
       <ul>
         {items.map(({ name, slug }) => (
-          <li key={name}>
-            <LinkV2 to={`${basepath}/${slug}`}>{name}</LinkV2>
+          <li>
+            <LinkV2 key={name} to={`${basepath}/${slug}`}>
+              {name}
+            </LinkV2>
           </li>
         ))}
       </ul>
       <h3>Sub routes</h3>
 
-      <Topic topicId={(item?.name || "") + " on " + pathname} />
+      <Topic
+        key={item?.slug}
+        topicId={(item?.name || "") + " on " + pathname}
+      />
     </div>
   );
 };

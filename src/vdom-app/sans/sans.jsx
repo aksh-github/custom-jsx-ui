@@ -375,8 +375,8 @@ function GenericTab({ prop, search: srch, dkey }) {
     setTimeout(loadMoreIfNearBottom, 0);
   }, [srch, dkey, filtered.length]);
 
-  const RR = visibleResults.map((d) =>
-    d?.ev || d?.ew ? <RowComponent row={d} /> : null,
+  const RR = visibleResults.map((d, idx) =>
+    d?.ev || d?.ew ? <RowComponent row={d} key={"k" + idx} /> : null,
   );
 
   return (
