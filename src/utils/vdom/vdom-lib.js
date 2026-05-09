@@ -73,9 +73,12 @@ const microframe = (() => {
 
       if (lastFn) {
         // this is not beneficial it seems for sans cmopo
-        // if (propsChanged(lastFn.props, props)) {
-        //   updateComps.add(cacheKey);
-        // }
+        if (
+          updateComps.has(stack[stack.length - 2]?.comp) &&
+          propsChanged(lastFn.props, props)
+        ) {
+          updateComps.add(cacheKey);
+        }
       } else {
         updateComps.add(cacheKey);
       }
@@ -84,10 +87,10 @@ const microframe = (() => {
 
       funcCache[cacheKey] = {
         name: cacheKey,
-        // parent: stack[stack.length - 2]?.comp, // this might be useful
+        parent: stack[stack.length - 2]?.comp, // this might be useful
         mount: true,
         unMount: null,
-        // props: props,
+        props: props,
       };
 
       stack.pop();
@@ -166,7 +169,7 @@ const microframe = (() => {
           // or 2. simple node
           return {
             $c: cacheKey,
-            type: "df",
+            // type: "df",
             value: rv,
 
             // children: [rv],
@@ -503,7 +506,13 @@ if (typeof window !== "undefined") {
         // console.warn(
         //   "fragment support is experimental and nested fragments NOT supported!!!"
         // );
+
         const $el2 = $d.createDocumentFragment();
+
+        if (node.hasOwnProperty("value")) {
+          $el2.appendChild(createElement(node.value));
+          return $el2;
+        }
 
         // node.children.map(createElement).forEach($el2.appendChild.bind($el2));
         if (node.children.length > 100) {
@@ -1481,7 +1490,17 @@ if (typeof window !== "undefined") {
     function hasChanged(newNode, oldNode) {
       if (newNode === oldNode) return false; // Fast path for identical references
 
-      if (newNode?.updtFlag === undefined || oldNode?.updtFlag === undefined) {
+      if (newNode?.updtFlag === undefined) {
+        // newNode = {$c: "Comp:Some", type: "df", value: null or str}
+        if (newNode?.$c && newNode?.type !== oldNode?.type) {
+          return true;
+        }
+
+        // oldNode = {$c: "Comp:Some", type: "df", value: null or str}
+        if (oldNode?.$c && oldNode?.type !== newNode?.type) {
+          return true;
+        }
+
         return (
           String(newNode?.value ?? newNode) !==
           String(oldNode?.value ?? oldNode)
