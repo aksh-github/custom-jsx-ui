@@ -1052,7 +1052,7 @@ if (typeof window !== "undefined") {
         const newLength = newNode.children.length;
         const oldLength = oldNode.children.length;
 
-        if (newLength > 100) {
+        if (newLength > 100 && oldLength !== 0) {
           optiPossible = true;
           gdf = $d.createDocumentFragment();
           log(
@@ -1089,17 +1089,11 @@ if (typeof window !== "undefined") {
             old = oldNode.children = oldNode.props = null;
           }
         } else if (oldLength === 0) {
-          // log("** APPEND: This is NOT BENEFICIAL");
-          const df = $d.createDocumentFragment();
-
-          for (let i = 0; i < newLength; ++i)
-            patches.push({
-              p: df,
-              op: "APPEND",
-              c: newNode.children[i],
-            });
-
-          patches.push({ p: domNode, op: "APPENDDF", c: df });
+          patches.push({
+            p: domNode,
+            op: "APPEND_CHILDREN",
+            c: newNode.children,
+          });
         } else {
           let len = newLength > oldLength ? newLength : oldLength;
           for (let i = 0; i < len; i++) {
@@ -1139,9 +1133,9 @@ if (typeof window !== "undefined") {
       _C = 0;
     }
 
-    function applyPropsPatches(patches) {
-      while (patches.length) {
-        const patch = patches.shift();
+    function applyPropsPatches(_patches) {
+      for (let i = 0; i < _patches.length; i++) {
+        const patch = _patches[i];
 
         updateProps(patch.$target, patch.newProps, patch.oldProps);
 
@@ -1150,14 +1144,14 @@ if (typeof window !== "undefined") {
         patch.oldProps = null;
         // patch = null;
       }
-      patches.length = 0;
+      _patches.length = 0;
     }
 
-    function applyPatches(patches) {
+    function applyPatches(_patches) {
       const disposalPromises = [];
 
-      while (patches.length) {
-        const patch = patches.shift();
+      for (let i = 0; i < _patches.length; i++) {
+        const patch = _patches[i];
 
         switch (patch.op) {
           case "APPENDDF":
@@ -1166,6 +1160,16 @@ if (typeof window !== "undefined") {
           case "APPEND":
             patch.p.appendChild(createElement(patch.c));
             break;
+          case "APPEND_CHILDREN": {
+            const df = $d.createDocumentFragment();
+
+            for (let i = 0, len = patch.c.length; i < len; ++i) {
+              df.appendChild(createElement(patch.c[i]));
+            }
+
+            patch.p.appendChild(df);
+            break;
+          }
 
           case "REMOVE":
             patch.p.removeChild(patch.c);
@@ -1222,7 +1226,7 @@ if (typeof window !== "undefined") {
         patch.p = patch.c = null;
       }
 
-      patches.length = 0;
+      _patches.length = 0;
 
       // Cleanup all references after all disposals complete
       if (disposalPromises.length > 0) {
