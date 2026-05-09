@@ -212,16 +212,17 @@ export const SsrApp = ({ currentUrl }) => {
   };
 
   const Decide = ({ count }) => {
-    return count % 2 === 0 ? <Even /> : <Odd />;
+    // return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
+    return count % 2 === 0 ? <p>this is odd</p> : null;
   };
 
   return (
     <div>
       <h2>SSR App</h2>
-      {/* <p>Counter: {count}</p>
+      <p>Counter: {count}</p>
       <p
         style={{
           backgroundColor: "lightblue",
@@ -243,7 +244,7 @@ export const SsrApp = ({ currentUrl }) => {
       <hr />
       <Decide count={count} />
       <hr />
-      <Switch value={10}>
+      <Switch value={20}>
         <Switch.Case when={10} render={() => "this is 10"} />
         <Switch.Case
           when={20}
@@ -251,7 +252,7 @@ export const SsrApp = ({ currentUrl }) => {
             <div
               className="some-20"
               style={{
-                background: "beige",
+                background: "blue",
               }}
             >
               this is 20
@@ -286,7 +287,7 @@ export const SsrApp = ({ currentUrl }) => {
         error="Error loading data"
         key={"api/2"}
         onLoad={(data) => <LoaderTest2 data={data} />}
-      /> */}
+      />
       <Form />
     </div>
   );

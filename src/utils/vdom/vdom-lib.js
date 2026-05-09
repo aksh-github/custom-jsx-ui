@@ -168,6 +168,7 @@ const microframe = (() => {
           // or 2. simple node
           return {
             $c: cacheKey,
+            // type: "df",
             value: rv,
             props: props || {},
             // $p: curParent,
