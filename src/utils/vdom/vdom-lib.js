@@ -73,9 +73,12 @@ const microframe = (() => {
 
       if (lastFn) {
         // this is not beneficial it seems for sans cmopo
-        // if (propsChanged(lastFn.props, props)) {
-        //   updateComps.add(cacheKey);
-        // }
+        if (
+          updateComps.has(stack[stack.length - 2]?.comp) &&
+          propsChanged(lastFn.props, props)
+        ) {
+          updateComps.add(cacheKey);
+        }
       } else {
         updateComps.add(cacheKey);
       }
@@ -87,7 +90,7 @@ const microframe = (() => {
         // parent: stack[stack.length - 2]?.comp, // this might be useful
         mount: true,
         unMount: null,
-        // props: props,
+        props: props,
       };
 
       stack.pop();
