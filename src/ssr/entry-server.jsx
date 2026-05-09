@@ -36,12 +36,13 @@ export async function render(url) {
 <meta property="og:description" content="Sanskrit Dictionary App${Date.now()}">
   `;
 
-  // const { result, err } = await getData("http://localhost:3000/api/1");
+  const { result, err } = await getData("http://localhost:3000/api/1");
+  console.log("Data fetched for SSR:", { result, err });
 
   const html = renderToString(
     // IMP: NEED TO BE SAME AS entry-server.jsx except for url
-    <SsrApp currentUrl={url} />,
-    // <App type="dyn" url={url} />,
+    // <SsrApp currentUrl={url} />,
+    <App type="dyn" url={url} />,
   );
   return { header, html };
 }
