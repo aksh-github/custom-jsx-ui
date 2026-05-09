@@ -227,18 +227,20 @@ const Jumbotron = ({ dispatch }) => (
   </div>
 );
 
+const style = { background: "red" };
+
 const TBody = () => {
   const data = dataCtx.get();
   const selected = -1;
   return (
     <tbody
       id="tbody"
-      style={{ background: "red" }}
-      onClick={() => console.log("tbody clicked")}
+      style={style}
+      // onClick={() => console.log("tbody clicked")}
     >
       {data.map((item) => (
         <Row
-          // key={item.id}
+          key={item.id}
           item={item}
           selected={selected === item.id}
           // dispatch={listReducer}
