@@ -8,6 +8,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node ./tests/ssr/SsrApp.test.mjs",
     "build-vdom": "vite build --config lib-vdom-vite.config.js",
     "build-router": "vite build --config lib-router-vite.config.js",
     "NOOP": "",
