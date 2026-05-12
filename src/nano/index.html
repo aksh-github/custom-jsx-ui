@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nano.js — Component Framework Demo</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --accent: #6366f1;
+        --border: #e2e8f0;
+        --radius: 12px;
+      }
+
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        padding: 40px 20px 80px;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 56px;
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 900;
+        font-size: 1.3rem;
+      }
+
+      .logo-text {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .tagline {
+        font-size: 1rem;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #ede9fe;
+        color: #6d28d9;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 99px;
+      }
+
+      .feature-pills {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 28px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .section-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+      }
+
+      .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .badge {
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+
+      .badge-lazy {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-live {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .badge-async {
+        background: #e0e7ff;
+        color: #3730a3;
+      }
+
+      .section-body {
+        padding: 24px;
+      }
+
+      .code-block {
+        background: #1e1e2e;
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 0.8rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        margin-top: 16px;
+      }
+
+      .code-block code {
+        font-family: "Fira Code", "Cascadia Code", monospace;
+        color: #cdd6f4;
+      }
+
+      .kw {
+        color: #cba6f7;
+      }
+      .str {
+        color: #a6e3a1;
+      }
+      .fn {
+        color: #89b4fa;
+      }
+      .cm {
+        color: #6c7086;
+      }
+      .tag {
+        color: #f38ba8;
+      }
+      .attr {
+        color: #fab387;
+      }
+
+      /* Nano component loading states */
+      [nano-state="pending"],
+      [nano-state="loading"] {
+        opacity: 0.5;
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      [nano-state="mounted"] {
+        animation: fadeIn 0.25s ease;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .stat-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      .stat {
+        flex: 1;
+        text-align: center;
+        padding: 14px 10px;
+        background: var(--bg);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+
+      .stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--accent);
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      #event-log {
+        font-family: monospace;
+        font-size: 0.78rem;
+        color: var(--muted);
+        padding: 10px;
+        background: var(--bg);
+        border-radius: 8px;
+        margin-top: 12px;
+        min-height: 40px;
+        border: 1px solid var(--border);
+      }
+
+      .section-wide {
+        grid-column: 1 / -1;
+      }
+
+      .arch-diagram {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow-x: auto;
+        padding: 12px 0;
+      }
+
+      .arch-box {
+        flex: 1;
+        min-width: 110px;
+        text-align: center;
+        padding: 12px 8px;
+        background: #ede9fe;
+        border: 1px solid #c4b5fd;
+        border-radius: 10px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #5b21b6;
+      }
+
+      .arch-arrow {
+        flex-shrink: 0;
+        padding: 0 6px;
+        color: #c4b5fd;
+        font-size: 1.2rem;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 60px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="logo">
+        <div class="logo-icon">n</div>
+        <span class="logo-text">nano.js</span>
+      </div>
+      <p class="tagline">
+        Lightweight component framework — no build step required
+      </p>
+      <div class="feature-pills">
+        <span class="pill">⚡ Reactive Signals</span>
+        <span class="pill">📦 Lazy Loading</span>
+        <span class="pill">🔀 Code Splitting</span>
+        <span class="pill">🎨 Scoped Styles</span>
+        <span class="pill">🗺 Client Router</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Counter: signals + reactive state -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            ⚡ Reactive Signals
+            <span class="badge badge-live">live</span>
+          </div>
+        </div>
+        <div class="section-body">
+          <nano-counter step="1" label="One" start="0"></nano-counter>
+          <nano-counter step="2" label="Two" start="1"></nano-counter>
+          <div id="event-log">Events appear here…</div>
+          <div class="code-block">
+            <code
+              ><span class="cm"
+                >// nano-counter.html — Single File Component</span
+              >
+              <span class="tag">&lt;template&gt;</span>
+              <span class="tag">&lt;div</span>
+              <span class="attr">class</span>=<span class="str"
+                >"counter-wrap"</span
+              ><span class="tag">&gt;</span> <span class="tag">&lt;div</span>
+              <span class="attr">:style</span>=<span class="str"
+                >"colorStyle"</span
+              ><span class="tag">&gt;</span>{{ count }}<span class="tag"
+                >&lt;/div&gt;</span
+              >
+              <span class="tag">&lt;button</span>
+              <span class="attr">@click</span>=<span class="str"
+                >"increment"</span
+              ><span class="tag">&gt;</span>+<span class="tag"
+                >&lt;/button&gt;</span
+              >
+              <span class="tag">&lt;/div&gt;</span>
+              <span class="tag">&lt;/template&gt;</span>
+
+              <span class="tag">&lt;style&gt;</span
+              ><span class="cm"> /* scoped automatically */ </span
+              ><span class="tag">&lt;/style&gt;</span>
+
+              <span class="tag">&lt;script&gt;</span>
+              <span class="kw">export default function</span>
+              <span class="fn">setup</span>(ctx) { ctx.count = ctx.<span
+                class="fn"
+                >signal</span
+              >(0); ctx.colorStyle = ctx.<span class="fn">computed</span>(() =>
+              ...); ctx.increment = () => ctx.count.<span class="fn">set</span
+              >(v => v + 1); } <span class="tag">&lt;/script&gt;</span></code
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Router Demo -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            🗺 Client Router
+            <span class="badge badge-live">live</span>
+          </div>
+        </div>
+        <div class="section-body">
+          <nano-router-demo></nano-router-demo>
+          <div class="code-block">
+            <code
+              ><span class="cm">// Router component SFC</span>
+              <span class="kw">route</span>(<span class="str">"/"</span>,
+              <span class="str">"nano-route-home"</span>, () =&gt;
+              <span class="fn">fetchSFC</span>(<span class="str"
+                >"./route-home.html"</span
+              >));
+              <span class="kw">route</span>(<span class="str">"/about"</span>,
+              <span class="str">"nano-route-about"</span>, () =&gt;
+              <span class="fn">fetchSFC</span>(<span class="str"
+                >"./route-about.html"</span
+              >));
+              <span class="fn">initRouter</span>(<span class="str"
+                >"#nano-router-outlet"</span
+              >);</code
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile: lazy load + async fetch -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            🦥 Lazy Load + Async Setup
+            <span class="badge badge-lazy">lazy</span>
+          </div>
+        </div>
+        <div class="section-body">
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px">
+            This component is registered with
+            <code
+              style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px"
+              >lazy</code
+            >
+            attribute — JS only loads when it enters the viewport.
+          </p>
+          <nano-profile userid="3" lazy></nano-profile>
+          <nano-profile userid="7" lazy></nano-profile>
+          <div class="code-block">
+            <code
+              ><span class="cm">// Viewport-aware lazy mount</span>
+              <span class="tag">&lt;nano-profile</span>
+              <span class="attr">userid</span>=<span class="str">"3"</span>
+              <span class="attr">lazy</span
+              ><span class="tag">&gt;&lt;/nano-profile&gt;</span>
+
+              <span class="cm">// async setup — fetch data, show skeleton</span>
+              <span class="kw">async</span> <span class="fn">setup</span>(ctx) {
+              ctx.el.innerHTML = skeletonHtml;
+              <span class="kw">const</span> user = <span class="kw">await</span>
+              <span class="fn">fetchUser</span>(id); ctx.el.innerHTML =
+              <span class="fn">renderUser</span>(user); }</code
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture overview -->
+      <div class="section section-wide">
+        <div class="section-header">
+          <div class="section-title">🏗 Architecture</div>
+        </div>
+        <div class="section-body">
+          <div class="arch-diagram">
+            <div class="arch-box">
+              HTML<br /><small style="font-weight: 400; color: #7c3aed"
+                >&lt;nano-x&gt; tags</small
+              >
+            </div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box">
+              Registry<br /><small style="font-weight: 400; color: #7c3aed"
+                >defineComponent()</small
+              >
+            </div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box">
+              Loader<br /><small style="font-weight: 400; color: #7c3aed"
+                >import() chunks</small
+              >
+            </div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box">
+              Mount<br /><small style="font-weight: 400; color: #7c3aed"
+                >setup() lifecycle</small
+              >
+            </div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-box">
+              Signals<br /><small style="font-weight: 400; color: #7c3aed"
+                >fine-grained updates</small
+              >
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <div class="stat">
+              <span class="stat-value">~4kb</span>
+              <span class="stat-label">core runtime (gzip)</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">0</span>
+              <span class="stat-label">dependencies</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">ESM</span>
+              <span class="stat-label">native modules</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">∞</span>
+              <span class="stat-label">lazy chunks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      nano.js — built with native ES modules, no bundler, no build step
+    </footer>
+
+    <!-- Bootstrap nano.js -->
+    <script type="module">
+      import { defineComponent, fetchSFC, boot } from "./nano.js";
+
+      // nano-counter uses the new SFC format (.html with <template>/<style>/<script>)
+      defineComponent("nano-counter", () => fetchSFC("./counter.html"));
+      defineComponent("nano-router-demo", () => fetchSFC("./router-demo.html"));
+
+      // Listen for counter events (custom event bubbling)
+      document.addEventListener("change", (e) => {
+        if (e.target.tagName?.toLowerCase() !== "nano-counter") return;
+        const log = document.getElementById("event-log");
+        if (log) {
+          log.textContent = `[${new Date().toLocaleTimeString()}] counter:change → value = ${e.detail?.value}`;
+        }
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

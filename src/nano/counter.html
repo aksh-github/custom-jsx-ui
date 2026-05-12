@@ -1,0 +1,143 @@
+<template>
+  <div class="counter-wrap">
+    <span class="label">{{ label }}</span>
+    <div class="count-display" :style="colorStyle">{{ count }}</div>
+    <div class="btn-row">
+      <button class="btn-dec" @click="decrement">− {{ step }}</button>
+      <button class="btn-inc" @click="increment">+ {{ step }}</button>
+    </div>
+    <button class="btn-reset" @click="reset">Reset</button>
+  </div>
+</template>
+
+<style>
+  .counter-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fafafa;
+  }
+
+  .count-display {
+    font-size: 3rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    transition: transform 0.1s ease;
+  }
+
+  .count-display.bump {
+    transform: scale(1.15);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+
+  button:hover {
+    filter: brightness(0.92);
+    transform: translateY(-1px);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+
+  .btn-dec {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  .btn-inc {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  .btn-reset {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.85rem;
+    padding: 6px 14px;
+  }
+  .label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  @keyframes bump {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+</style>
+
+<script>
+  export default function setup(ctx) {
+    // console.log("Counter component setup", ctx);
+    const { signal, computed, props, emit } = ctx;
+
+    const start = parseInt(props.start ?? "0", 10);
+    const step = parseInt(props.step ?? "1", 10);
+
+    // Expose to template as ctx properties
+    ctx.label = props.label ?? "Count";
+    ctx.step = String(step);
+
+    ctx.count = signal(start);
+    ctx.colorStyle = computed(() => {
+      const v = ctx.count();
+      return v < 0
+        ? "color:#dc2626"
+        : v === 0
+          ? "color:#1a1a2e"
+          : "color:#2563eb";
+    });
+
+    function bump() {
+      const el = ctx.el.closest(".count-display");
+      el?.classList.add("bump");
+      setTimeout(() => el?.classList.remove("bump"), 120);
+    }
+
+    ctx.increment = () => {
+      ctx.count.set((v) => v + step);
+      bump();
+      emit("change", { value: ctx.count() });
+    };
+    ctx.decrement = () => {
+      ctx.count.set((v) => v - step);
+      bump();
+      emit("change", { value: ctx.count() });
+    };
+    ctx.reset = () => {
+      ctx.count.set(start);
+      emit("change", { value: start });
+    };
+
+    ctx.onDestroy(() => {
+      // console.log("Counter component destroyed", ctx);
+      ctx.count = null; // Clean up reactive state
+      ctx.el = null; // Clear element reference
+      ctx = null; // Clear context reference
+    });
+  }
+</script>

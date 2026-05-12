@@ -1,0 +1,106 @@
+<template>
+  <div class="router-wrap">
+    <div class="nav-row">
+      <a href="#/" nano-link="/" :class="homeClass">Home</a>
+      <a href="#/about" nano-link="/about" :class="aboutClass">About</a>
+    </div>
+    <div :id="outletId" class="router-outlet"></div>
+  </div>
+</template>
+
+<style>
+  .router-wrap {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 18px;
+  }
+
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: #1e40af;
+    background: #dbeafe;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .nav-link.active {
+    background: #1e40af;
+    color: #ffffff;
+    border-color: #1d4ed8;
+  }
+
+  .router-outlet {
+    min-height: 90px;
+  }
+</style>
+
+<script>
+  export default function setup(ctx) {
+    const {
+      defineComponent,
+      route,
+      initRouter,
+      fetchSFC,
+      signal,
+      computed,
+      onMount,
+      onDestroy,
+    } = ctx;
+    ctx.outletId = "nano-router-outlet";
+    const readPath = () => {
+      if (window.location.protocol === "file:") {
+        const hash = window.location.hash || "#/";
+        const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+        return raw || "/";
+      }
+      return window.location.pathname || "/";
+    };
+    const path = signal(readPath());
+
+    ctx.homeClass = computed(() =>
+      path() === "/" ? "nav-link active" : "nav-link",
+    );
+    ctx.aboutClass = computed(() =>
+      path() === "/about" ? "nav-link active" : "nav-link",
+    );
+
+    const syncPath = () => path.set(readPath());
+    const syncPathDeferred = () => queueMicrotask(syncPath);
+
+    onMount(() => {
+      const baseDir = window.location.pathname.replace(/[^/]*$/, "/");
+      const homeUrl = new URL("route-home.html", window.location.origin + baseDir)
+        .href;
+      const aboutUrl = new URL(
+        "route-about.html",
+        window.location.origin + baseDir,
+      ).href;
+
+      defineComponent("nano-route-home", () => fetchSFC(homeUrl));
+      defineComponent("nano-route-about", () => fetchSFC(aboutUrl));
+      route("/", "nano-route-home");
+      route("/about", "nano-route-about");
+      route("*", "nano-route-home");
+      initRouter("#" + ctx.outletId, { mode: "hash" });
+      window.addEventListener("popstate", syncPath);
+      window.addEventListener("hashchange", syncPath);
+      window.addEventListener("click", syncPathDeferred);
+    });
+
+    onDestroy(() => {
+      window.removeEventListener("popstate", syncPath);
+      window.removeEventListener("hashchange", syncPath);
+      window.removeEventListener("click", syncPathDeferred);
+    });
+  }
+</script>
