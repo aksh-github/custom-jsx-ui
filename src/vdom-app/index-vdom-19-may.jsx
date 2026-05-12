@@ -29,9 +29,15 @@ import { ArrayWithFragments, Parent } from "../compos/ComponentPatterns";
 // smartRegisterCallback(forceUpdate, 50);
 
 const root = document.getElementById("root");
-// mount(root, () => <App type="built-in" />);
+mount(root, () => <App type="built-in" />);
 // mount(root, () => <Sans />);
-mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
-// mount(root, () => <PerfTest />);
+// mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
+// mount(root, () => (
+//   <df>
+//     <p>before</p>
+//     <ArrayWithFragments />
+//     <p>after</p>
+//   </df>
+// ));
 
 // Usage

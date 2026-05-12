@@ -59,6 +59,11 @@ export const DynTextArea = () => (
     importFn={TextAreaComp}
     resolve="TextArea"
     key="TextArea"
+    error={
+      <section>
+        Test error scenario for TextArea: Component can't be loaded at this time
+      </section>
+    }
     fallback={<section>Loading TextArea...</section>}
   />
 );
@@ -67,7 +72,7 @@ export const DynCompo = () => (
   <Lazy
     importFn={DynCompoPromise}
     key="PropsDriven"
-    resolve="PropsDriven"
+    resolve="PropsDriven33"
     fallback={<div>Loading Props driven compo...</div>}
     n="This is a props driven component"
     error={
