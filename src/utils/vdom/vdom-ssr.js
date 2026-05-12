@@ -136,7 +136,12 @@ export function renderToString(jsx) {
 
       // is it required in below if? && typeof jsx.value !== "undefined"
       if (jsx?.$c) {
-        return escapeHtml(jsx.value) + "<!--|-->";
+        if (
+          jsx.hasOwnProperty(jsx.value) &&
+          (jsx.value == null || typeof jsx.value === "boolean")
+        ) {
+          return `<!--${jsx.value}-->`;
+        } else return escapeHtml(jsx.value) + "<!--|-->";
       } else {
         console.log("Inner else Unknown jsx type:", jsx);
         throw new Error("Not implemented.");

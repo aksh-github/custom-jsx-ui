@@ -710,7 +710,7 @@ if (typeof window !== "undefined") {
     }
 
     function isValid(v) {
-      return v !== undefined || v !== "";
+      return v !== undefined;
     }
 
     // variation impl
@@ -729,15 +729,6 @@ if (typeof window !== "undefined") {
     );
 
     function wrapper($parent, newNode, oldNode, index = 0) {
-      // logt("TED");
-      let stk = domListIterator(rootNode);
-      // logte("TED");
-
-      let CTR = 0;
-      let last = null;
-      let optiPossible = false;
-      let gdf = null;
-
       let _C = 0;
 
       if (navigate.routeChange) {
@@ -746,386 +737,306 @@ if (typeof window !== "undefined") {
       }
 
       const updateCompsSize = updateComps.size;
-      let currComp = null;
-      let checkAll = updateCompsSize === 0 || !hydrated;
+      const checkAll = updateCompsSize === 0 || !hydrated;
+      const oldVNodeCleanupQueue = [];
 
-      let actualComparison = !hydrated ? true : false;
-      let comparisonsReqd = 0;
-      let compareTill = 0;
+      function getDomChild(parent, childIndex) {
+        return parent?.childNodes?.[childIndex] ?? null;
+      }
 
-      function diffElement($parent, newNode, oldNode, index = 0) {
-        // this is SKIP condition
-        // if (!actualComparison && updateCompsSize) {
-        if (!newNode?.updtFlag && updateCompsSize) {
-          if (newNode?.type && oldNode?.type) return doMain(newNode, oldNode);
-          // if (newNode?.type === oldNode?.type) return;
-          if (newNode === oldNode) return;
+      function getDomRange(parent, startIndex, length) {
+        if (!parent || length < 1) return [];
+        return Array.from(parent.childNodes).slice(
+          startIndex,
+          startIndex + length,
+        );
+      }
+
+      function isFragment(node) {
+        return node?.type === "df";
+      }
+
+      function isPassThroughComponent(node) {
+        return !node?.type && node?.$c && node.children;
+      }
+
+      function getNodeChildren(node) {
+        return Array.isArray(node?.children) ? node.children : [];
+      }
+
+      function renderedDomLength(node) {
+        if (!isValid(node)) return 0;
+
+        if (isFragment(node) || isPassThroughComponent(node)) {
+          const children = getNodeChildren(node);
+          const childLength = children.reduce(
+            (sum, child) => sum + renderedDomLength(child),
+            0,
+          );
+
+          return node.fragChildLen || childLength;
         }
-        _C++;
 
-        // log("compare: ", newNode);
+        return 1;
+      }
 
-        if (!isValid(oldNode)) {
-          // if (oldNode?.type) {
-          log("append: ");
-          patches.push({ p: $parent, op: "APPEND", c: newNode });
-        } else if (!isValid(newNode)) {
-          // $parent.removeChild($parent.childNodes[index]);
-          let el = $parent.childNodes[index];
-
+      function queueInsert(parent, node, beforeNode) {
+        if (beforeNode) {
           patches.push({
-            p: $parent,
-            op: "REMOVE",
-            c: el,
+            p: parent,
+            op: "INSERT_BEFORE",
+            c: [node, beforeNode],
           });
-
-          if (el?.nodeType === 1) {
-            while (CTR < stk.length) {
-              CTR++;
-
-              if (stk[CTR] === el) {
-                const allChildLen = el.querySelectorAll("*").length;
-                // log(CTR, " CTR BEFORE", stk[CTR]);
-                // CTR += allChildLen;
-                stk.splice(CTR, allChildLen);
-                // log(CTR, " CTR AFTER", stk[CTR]);
-
-                break;
-              }
-              // console.log(CTR, stk[CTR]);
-            }
-          }
-          el = null;
-          if (oldNode?.children) {
-            old = oldNode.children = oldNode.props = null;
-          }
-        } else if (changed(newNode, oldNode)) {
-          if (
-            (newNode?.type === "df" && oldNode?.type === "df") ||
-            (newNode?.type && oldNode?.type)
-          ) {
-            ++CTR;
-            const dNode = stk[CTR];
-            patches.push({
-              p: dNode.parentNode,
-              op: "REPLACE",
-              c: [newNode, dNode],
-            });
-
-            if (dNode?.nodeType === 1) {
-              // while (CTR < stk.length) {
-              //   if (dNode.contains(stk[CTR])) {
-              //     // console.log("remove", stk[CTR]);
-              //     // stk.splice(CTR, 1);
-              //     CTR++;
-              //   } else {
-              //     // CTR--;
-              //     break;
-              //   }
-              // }
-              while (dNode.contains(stk[CTR])) {
-                // console.log("remove", stk[CTR]);
-                // stk.splice(CTR, 1);
-                CTR++;
-              }
-            }
-
-            CTR--;
-            // console.log(CTR, stk[CTR], stk);
-          } else if ($parent?.childNodes[index]) {
-            let el = $parent.childNodes[index];
-
-            // if (oldNode == null) {
-            //   log("=== do something for this case");
-            // }
-
-            patches.push({
-              p: $parent,
-              op: "REPLACE",
-              c: [newNode, el],
-            });
-
-            if (el?.nodeType === 1) {
-              // while (CTR < stk.length) {
-              //   CTR++;
-
-              //   if (stk[CTR] === el) {
-              //     const allChildLen = el.querySelectorAll("*").length;
-              //     // log(CTR, " CTR BEFORE", stk[CTR]);
-              //     // CTR += allChildLen;
-              //     stk.splice(CTR, allChildLen);
-              //     // log(CTR, " CTR AFTER", stk[CTR]);
-
-              //     break;
-              //   }
-              //   // console.log(CTR, stk[CTR]);
-              // }
-
-              if (oldNode?.children)
-                oldNode = oldNode.children = oldNode.props = null;
-
-              CTR++;
-
-              while (CTR < stk.length) {
-                if (el.contains(stk[CTR])) {
-                  // console.log("remove", stk[CTR]);
-                  // stk.splice(CTR, 1);
-                  CTR++;
-                } else {
-                  // CTR--;
-                  break;
-                }
-              }
-              CTR--;
-            } else {
-              // this is specifically for Switch comp
-              if (oldNode?.value)
-                oldNode = oldNode.value = oldNode.props = null;
-            }
-
-            // additoinal logic for frag modify. This changed on 2-sep
-            const fragChildLen = oldNode?.fragChildLen;
-            // for frag case remove additional as well
-            if (oldNode?.type === "df" && fragChildLen) {
-              // for (let i = 1; i < fragChildLen; ++i) {
-              for (let i = fragChildLen - 1; i >= 1; --i) {
-                // log("remove: ", $parent.childNodes[index + i]);
-                // $parent?.removeChild($parent.childNodes[index + i]);
-                patches.push({
-                  p: $parent,
-                  op: "REMOVE",
-                  c: $parent.childNodes[index + i],
-                });
-                // need to increment CTR as well 13-Dec
-                CTR += 1;
-              }
-            }
-
-            el = null;
-          } else {
-            //special case Compo with Array manipulation or no type (parent) for updating
-            // if ($parent?.appendChild) {
-            //   // log("changed append: ");
-            //   if (newNode?.type) {
-            //     // its dom node
-            //     // log("use df");
-            //     if (optiPossible) {
-            //       // gdf.appendChild(newEl);
-
-            //       patches.push({
-            //         p: gdf,
-            //         op: "APPEND",
-            //         c: newNode,
-            //       });
-            //     } else {
-            //       // $parent.appendChild(newEl);
-
-            //       patches.push({
-            //         p: $parent,
-            //         op: "APPEND",
-            //         c: newNode,
-            //       });
-            //     }
-            //   }
-
-            //   // its text
-            //   else {
-            //     // $parent.textContent = newEl?.textContent;
-
-            //     log("-- ", newNode);
-
-            //     patches.push({
-            //       p: $parent,
-            //       op: "CONTENT",
-            //       c: createElement(newNode)?.textContent,
-            //     });
-            //   }
-            // } else {
-            //   // $parent?.parentNode?.appendChild(createElement(newNode));
-
-            //   patches.push({
-            //     p: $parent?.parentNode,
-            //     op: "APPEND",
-            //     c: newNode,
-            //   });
-            // }
-            if (optiPossible) {
-              // gdf.appendChild(newEl);
-
-              patches.push({
-                p: gdf,
-                op: "APPEND",
-                c: newNode,
-              });
-            } else {
-              // $parent.appendChild(newEl);
-
-              patches.push({
-                p: $parent,
-                op: "APPEND",
-                c: newNode,
-              });
-            }
-          }
-
-          if (oldNode?.children) {
-            old = oldNode.children = oldNode.props = null;
-          }
-        } else if (newNode?.type) {
-          doMain(newNode, oldNode);
+        } else {
+          patches.push({ p: parent, op: "APPEND", c: node });
         }
       }
 
-      function doMain(newNode, oldNode) {
-        if (newNode?.type !== "df") {
-          // genNode = genObj.next();
+      function queueRemoveRange(parent, startIndex, oldNode) {
+        const nodes = getDomRange(
+          parent,
+          startIndex,
+          renderedDomLength(oldNode),
+        );
 
-          CTR += 1;
-        } else {
-          // log(newNode.props, oldNode.props);
-
-          // currComp = `${newNode.$c}:${newNode.$p}:${newNode.key}`;
-          currComp = newNode.$c;
+        for (let i = nodes.length - 1; i >= 0; --i) {
+          patches.push({
+            p: parent,
+            op: "REMOVE",
+            c: nodes[i],
+          });
         }
 
-        const domNode = stk[CTR];
+        queueOldVNodeCleanup(oldNode);
+      }
 
-        if (last !== domNode) {
-          // updateProps(domNode, newNode.props, oldNode.props);
-          // this is available in 24jun25 br in commented form
+      function queueReplace(parent, startIndex, newNode, oldNode) {
+        const nodes = getDomRange(
+          parent,
+          startIndex,
+          renderedDomLength(oldNode),
+        );
+        queueOldVNodeCleanup(oldNode);
 
-          // if (newNode?.props?.ignoreNode) return;
+        if (nodes.length === 1) {
+          patches.push({
+            p: parent,
+            op: "REPLACE",
+            c: [newNode, nodes[0]],
+          });
+          return;
+        }
 
+        if (nodes.length > 1) {
+          patches.push({
+            p: parent,
+            op: "REPLACE_RANGE",
+            c: [newNode, nodes],
+          });
+          return;
+        }
+
+        queueInsert(parent, newNode, getDomChild(parent, startIndex));
+      }
+
+      function queueOldVNodeCleanup(node) {
+        if (node && typeof node === "object") {
+          oldVNodeCleanupQueue.push(node);
+        }
+      }
+
+      function cleanupOldVNode(node) {
+        if (!node || typeof node !== "object") return;
+
+        const children = node.children;
+
+        if (Array.isArray(children)) {
+          for (let i = 0; i < children.length; i++) {
+            cleanupOldVNode(children[i]);
+          }
+        }
+
+        // Do this only after diff traversal so old rendered lengths stay stable.
+        node.children = null;
+        node.props = null;
+
+        if ("value" in node) {
+          node.value = null;
+        }
+
+        node.updtFlag = null;
+      }
+
+      function isTextOrCommentDomNode(node) {
+        return (
+          node?.nodeType === Node.TEXT_NODE ||
+          node?.nodeType === Node.COMMENT_NODE
+        );
+      }
+
+      function getLeafValue(node) {
+        return node?.$c ? node.value : node;
+      }
+
+      function getExpectedDomNodeType(node) {
+        const value = getLeafValue(node);
+        return value == null || typeof value === "boolean"
+          ? Node.COMMENT_NODE
+          : Node.TEXT_NODE;
+      }
+
+      function diffChildren(parent, newChildren, oldChildren, startIndex = 0) {
+        let domIndex = startIndex;
+        const len = Math.max(newChildren.length, oldChildren.length);
+
+        for (let i = 0; i < len; i++) {
+          const oldDomLength = renderedDomLength(oldChildren[i]);
+          diffElement(parent, newChildren[i], oldChildren[i], domIndex);
+          domIndex += oldDomLength;
+        }
+      }
+
+      function diffElement(parent, newNode, oldNode, childIndex = 0) {
+        if (!newNode?.updtFlag && updateCompsSize) {
+          if (newNode?.type && oldNode?.type) {
+            return doMain(
+              parent,
+              getDomChild(parent, childIndex),
+              newNode,
+              oldNode,
+              childIndex,
+            );
+          }
+          if (newNode === oldNode) return;
+        }
+
+        _C++;
+
+        if (!isValid(oldNode)) {
+          queueInsert(parent, newNode, getDomChild(parent, childIndex));
+          return;
+        }
+
+        if (!isValid(newNode)) {
+          queueRemoveRange(parent, childIndex, oldNode);
+          return;
+        }
+
+        if (
+          isPassThroughComponent(newNode) ||
+          isPassThroughComponent(oldNode)
+        ) {
+          diffElement(
+            parent,
+            isPassThroughComponent(newNode) ? newNode.children[0] : newNode,
+            isPassThroughComponent(oldNode) ? oldNode.children[0] : oldNode,
+            childIndex,
+          );
+          return;
+        }
+
+        if (changed(newNode, oldNode)) {
+          const domNode = getDomChild(parent, childIndex);
+
+          if (
+            !newNode?.type &&
+            !oldNode?.type &&
+            isTextOrCommentDomNode(domNode) &&
+            getExpectedDomNodeType(newNode) === getExpectedDomNodeType(oldNode)
+          ) {
+            patches.push({
+              p: domNode,
+              op: "TEXT",
+              c: createElement(newNode).nodeValue,
+            });
+          } else {
+            queueReplace(parent, childIndex, newNode, oldNode);
+          }
+
+          return;
+        }
+
+        if (newNode?.type) {
+          doMain(
+            parent,
+            getDomChild(parent, childIndex),
+            newNode,
+            oldNode,
+            childIndex,
+          );
+        }
+      }
+
+      function doMain(parent, domNode, newNode, oldNode, childIndex) {
+        if (newNode?.type !== "df" && !domNode) {
+          queueInsert(parent, newNode, getDomChild(parent, childIndex));
+          return;
+        }
+
+        if (newNode?.type !== "df") {
           if (newNode?.updtFlag || checkAll) {
             if (
               oldNode.type === newNode.type &&
-              // ===
-              //   domNode?.tagName?.toLowerCase()
               propsChanged(oldNode.props, newNode.props)
-            )
+            ) {
               propsPatches.push({
                 $target: domNode,
                 newProps: newNode.props,
                 oldProps: oldNode.props,
               });
+            }
           }
-
-          last = domNode;
         }
 
         if (newNode?.props?.ignoreNode) return;
 
-        // if (newNode?.props?.cacheKey) {
-        // this is available in 24jun25 br in commented form
-
         if (oldNode?.type === "df" && newNode?.type !== "df") {
           log("special handling");
+          queueReplace(parent, childIndex, newNode, oldNode);
 
-          patches.push({
-            op: "REPLACE",
-            p: domNode.parentNode,
-            c: [newNode, domNode],
-          });
-
-          if (domNode?.nodeType === 1) {
-            // while (CTR < stk.length) {
-            //   if (domNode.contains(stk[CTR])) {
-            //     // console.log("remove", stk[CTR]);
-            //     // stk.splice(CTR, 1);
-            //     CTR++;
-            //   } else {
-            //     // CTR--;
-            //     break;
-            //   }
-            // }
-            while (domNode.contains(stk[CTR])) {
-              CTR++;
-            }
-          }
-
-          if (oldNode?.children) {
-            old = oldNode.children = oldNode.props = null;
-          }
-
-          CTR--;
           return;
         }
-        const newLength = newNode.children.length;
-        const oldLength = oldNode.children.length;
 
-        if (newLength > 100 && oldLength !== 0) {
-          optiPossible = true;
-          gdf = $d.createDocumentFragment();
-          log(
-            "have for loop custom component or see how this can be optimized",
-          );
-        }
+        const newChildren = getNodeChildren(newNode);
+        const oldChildren = getNodeChildren(oldNode);
+        const newLength = newChildren.length;
+        const oldLength = oldChildren.length;
 
         if (newLength + oldLength === 0) {
         } else if (newLength === 0) {
-          // log(domNode, stk, CTR);
-          // const toSkip = domNode.querySelectorAll("*").length;
-          // CTR += toSkip;
-          // while (CTR < stk.length) {
-          //   if (domNode.contains(stk[CTR])) {
-          //     // console.log("remove", stk[CTR]);
-          //     // stk.splice(CTR, 1);
-          //     CTR++;
-          //   } else {
-          //     // CTR--;
-          //     break;
-          //   }
-          // }
-
-          while (domNode.contains(stk[CTR])) {
-            CTR++;
-          }
-
-          patches.push({
-            p: domNode,
-            op: "REMOVEALL",
-          });
-
-          if (oldNode?.children) {
-            old = oldNode.children = oldNode.props = null;
+          if (newNode?.type === "df") {
+            queueRemoveRange(parent, childIndex, oldNode);
+          } else {
+            patches.push({
+              p: domNode,
+              op: "REMOVEALL",
+            });
+            queueOldVNodeCleanup(oldNode);
           }
         } else if (oldLength === 0) {
-          patches.push({
-            p: domNode,
-            op: "APPEND_CHILDREN",
-            c: newNode.children,
-          });
-        } else {
-          let len = newLength > oldLength ? newLength : oldLength;
-          for (let i = 0; i < len; i++) {
-            // if (newNode.type === "df" && oldNode.type === "df") {
-            //   doMain(newNode.children[i], oldNode.children[i]);
-            // } else {
-            //   diffElement(domNode, newNode.children[i], oldNode.children[i], i);
-            // }
-            diffElement(domNode, newNode.children[i], oldNode.children[i], i);
+          const targetParent = newNode?.type === "df" ? parent : domNode;
+          const beforeNode =
+            newNode?.type === "df" ? getDomChild(parent, childIndex) : null;
+
+          for (let i = 0; i < newLength; i++) {
+            queueInsert(targetParent, newChildren[i], beforeNode);
           }
-        }
-
-        if (optiPossible) {
-          // log("after for", domNode);
-          // domNode.appendChild(gdf);
-
-          patches.push({
-            p: domNode,
-            op: "APPENDDF",
-            c: gdf,
-          });
-
-          optiPossible = false;
-          gdf = null;
+        } else {
+          diffChildren(
+            newNode?.type === "df" ? parent : domNode,
+            newChildren,
+            oldChildren,
+            newNode?.type === "df" ? childIndex : 0,
+          );
         }
       }
 
       diffElement($parent, newNode, oldNode, index);
 
-      last = gdf = null;
-      stk.length = 0;
+      for (let i = 0; i < oldVNodeCleanupQueue.length; i++) {
+        cleanupOldVNode(oldVNodeCleanupQueue[i]);
+      }
+      oldVNodeCleanupQueue.length = 0;
 
       updateComps.clear();
       // updateCtx.clear();
@@ -1161,6 +1072,9 @@ if (typeof window !== "undefined") {
           case "APPEND":
             patch.p.appendChild(createElement(patch.c));
             break;
+          case "INSERT_BEFORE":
+            patch.p.insertBefore(createElement(patch.c[0]), patch.c[1]);
+            break;
           case "APPEND_CHILDREN": {
             const df = $d.createDocumentFragment();
 
@@ -1173,6 +1087,8 @@ if (typeof window !== "undefined") {
           }
 
           case "REMOVE":
+            if (!patch.c) break;
+            if (patch.c.parentNode !== patch.p) break;
             patch.p.removeChild(patch.c);
             disposalPromises.push(disposeNodes(patch.c));
             break;
@@ -1195,28 +1111,44 @@ if (typeof window !== "undefined") {
           //   break;
 
           case "REMOVEALL":
-            // const childrenToDispose = Array.from(patch.p.childNodes);
-            const oldParent = patch.p;
+            const childrenToDispose = Array.from(patch.p.childNodes);
 
-            // Create fresh parent element with same properties
-            const newParent = oldParent.cloneNode(false); // false = no children
+            if (patch.p.replaceChildren) {
+              patch.p.replaceChildren();
+            } else {
+              while (patch.p.firstChild) {
+                patch.p.removeChild(patch.p.firstChild);
+              }
+            }
 
-            // Swap immediately (instant, single DOM operation)
-            oldParent.parentNode.replaceChild(newParent, oldParent);
-
-            // Update patch.p reference for any subsequent operations
-            patch.p = newParent;
-
-            // Async disposal of old parent and all its children
             disposalPromises.push(
-              Promise.resolve().then(() => disposeNodes(oldParent)),
+              Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
             );
 
             break;
 
           case "REPLACE":
+            if (patch.c[1]?.parentNode !== patch.p) break;
             patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
             disposalPromises.push(disposeNodes(patch.c[1]));
+            break;
+
+          case "REPLACE_RANGE": {
+            const [newVNode, oldNodes] = patch.c;
+            const firstOldNode = oldNodes[0];
+
+            patch.p.insertBefore(createElement(newVNode), firstOldNode);
+
+            for (let j = oldNodes.length - 1; j >= 0; --j) {
+              if (oldNodes[j]?.parentNode !== patch.p) continue;
+              patch.p.removeChild(oldNodes[j]);
+              disposalPromises.push(disposeNodes(oldNodes[j]));
+            }
+            break;
+          }
+
+          case "TEXT":
+            patch.p.nodeValue = patch.c;
             break;
 
           case "CONTENT":
@@ -1314,53 +1246,32 @@ if (typeof window !== "undefined") {
     // alternate 1 (non recursive) for walkDom // tested and works
     // inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
     function domListIterator(_rootNode) {
-      // pass rootNode if its not global
-      // log(next);
-      let arr = [_rootNode];
-      let next = _rootNode;
+      const arr = [];
+      const stack = [_rootNode];
 
-      function iterChild() {
-        while (next) {
-          // log(next);
-          // arr.push(next);
-          // const notToSkip = !next.getAttribute("ignorenode");
-          const notToSkip = !(
-            next?.getAttribute("ignorenode") != null ||
-            next.tagName === "IFRAME" ||
-            isWebComponent(next)
-          );
+      while (stack.length) {
+        const node = stack.pop();
+        arr.push(node);
 
-          if (next.firstElementChild && notToSkip) {
-            next = next.firstElementChild;
-            // log(next);
-            arr.push(next);
-          } else {
-            iterSibling();
-          }
+        if (shouldSkipChildren(node)) continue;
+
+        for (let i = node.childNodes.length - 1; i >= 0; --i) {
+          stack.push(node.childNodes[i]);
         }
       }
 
-      function iterSibling() {
-        while (next) {
-          if (next.nextElementSibling) {
-            next = next.nextElementSibling;
-
-            // log(next);
-            arr.push(next);
-            return;
-          }
-
-          next = next.parentElement;
-
-          if (next === _rootNode) {
-            next = null;
-          }
-        }
-      }
-
-      iterChild();
-      next = _rootNode = null;
       return arr;
+    }
+
+    function shouldSkipChildren(node) {
+      return (
+        node?.nodeType === Node.ELEMENT_NODE &&
+        (node.getAttribute("ignorenode") != null ||
+          node.tagName === "IFRAME" ||
+          node.tagName === "SCRIPT" ||
+          node.tagName === "TEMPLATE" ||
+          isWebComponent(node))
+      );
     }
 
     function yieldToMain() {
