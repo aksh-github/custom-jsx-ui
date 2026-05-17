@@ -1,7 +1,7 @@
 {
   "form": {
     "id": "exampleForm22",
-    "className": "",
+    "className": "special-form",
     "children": [
       {
         "name": "selectUsecase",
