@@ -2,6 +2,56 @@ import JsonForm from "./jsonform";
 import { h, createEffect, createState } from "../../utils/vdom/vdom-lib";
 import { loadUI } from "./utils";
 
+const Playground = () => {
+  const [json, setJson] = createState(null);
+  const [parseResult, setParseResult] = createState(null);
+
+  // const effect = createEffect();
+
+  return (
+    <div>
+      <h1>Playground</h1>
+      <div
+        className="pg-container"
+        style={{
+          display: "flex",
+          gap: "1em",
+          border: "1px solid #ccc",
+          borderRadius: ".2em",
+          padding: "1em",
+        }}
+      >
+        <div>
+          <textarea
+            name=""
+            id=""
+            onInput={(e) => {
+              setJson(JSON.parse(e.target.value));
+              console.log(e.target.value);
+            }}
+            value={JSON.stringify(json, null, 2)}
+            cols="30"
+            rows="10"
+          ></textarea>
+        </div>
+        {/* <div>{JSON.stringify(json())}</div> */}
+        <div>
+          {json?.form?.children.map((field, idx) => (
+            <Field
+              // key={field.name + idx + field.name}
+              field={field}
+              state={field}
+            />
+          ))}
+        </div>
+      </div>
+      <pre>
+        <code>{parseResult}</code>
+      </pre>
+    </div>
+  );
+};
+
 export const JsonFormConsumer = () => {
   const [uiJson, setUiJson] = createState(null);
   const [usecaseChanged, setUsecaseChanged] = createState(false);
@@ -27,6 +77,10 @@ export const JsonFormConsumer = () => {
     } else {
       setUsecaseChanged(false);
     }
+  };
+
+  const onFormSubmit = ({ formState }) => {
+    console.log("submitted form state", formState);
   };
 
   createEffect(() => {
@@ -55,8 +109,13 @@ export const JsonFormConsumer = () => {
         setIsFormValid={() => {}}
         uiJson={uiJson}
         onFormChange={onFormChange}
+        onSubmit={onFormSubmit}
         usecaseChanged={usecaseChanged}
       />
+      <div>
+        <Playground />
+      </div>
+      <template id="template">this is a template</template>
     </div>
   );
 };

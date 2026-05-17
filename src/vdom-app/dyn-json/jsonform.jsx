@@ -1,56 +1,6 @@
 import { h, createState, createEffect } from "@vdom-lib";
 import { isFormValid, loadUI, setGlobalUIJson, validate } from "./utils";
 
-const Playground = () => {
-  const [json, setJson] = createState(null);
-  const [parseResult, setParseResult] = createState(null);
-
-  // const effect = createEffect();
-
-  return (
-    <div>
-      <h1>Playground</h1>
-      <div
-        className="pg-container"
-        style={{
-          display: "flex",
-          gap: "1em",
-          border: "1px solid #ccc",
-          borderRadius: ".2em",
-          padding: "1em",
-        }}
-      >
-        <div>
-          <textarea
-            name=""
-            id=""
-            onInput={(e) => {
-              setJson(JSON.parse(e.target.value));
-              console.log(e.target.value);
-            }}
-            value={JSON.stringify(json, null, 2)}
-            cols="30"
-            rows="10"
-          ></textarea>
-        </div>
-        {/* <div>{JSON.stringify(json())}</div> */}
-        <div>
-          {json?.form?.children.map((field, idx) => (
-            <Field
-              // key={field.name + idx + field.name}
-              field={field}
-              state={field}
-            />
-          ))}
-        </div>
-      </div>
-      <pre>
-        <code>{parseResult}</code>
-      </pre>
-    </div>
-  );
-};
-
 const ErrorMessage = ({ name, error }) => {
   return (
     <div>
@@ -87,7 +37,7 @@ const Field = (props) => {
             name={field.name}
             placeholder={field.placeholder || ""}
             required={field.required}
-            value={field.defaultValue || state?.value || ""}
+            value={state?.value ?? field.value ?? field.defaultValue ?? ""}
           />
         </div>
       );
@@ -105,7 +55,7 @@ const Field = (props) => {
             name={field.name}
             // required={field.required}
             // defaultValue={field.value || state?.value}
-            value={field.defaultValue || state?.value || ""}
+            value={state?.value ?? field.value ?? field.defaultValue ?? ""}
           >
             {field.children.map((option) => (
               <option key={option.value} value={option.value}>
@@ -126,7 +76,7 @@ const Field = (props) => {
             name={field.name}
             required={field.required}
             // defaultValue={state?.value}
-            checked={field.defaultValue || state?.value || false}
+            checked={state?.value ?? field.value ?? field.defaultValue ?? false}
           />
           <label className="form-check-label" htmlFor={field.name}>
             {field.label}
@@ -148,7 +98,7 @@ const Field = (props) => {
             required={field.required}
             rows={field.rows}
             cols={field.cols}
-            value={field.defaultValue || state?.value || ""}
+            value={state?.value ?? field.value ?? field.defaultValue ?? ""}
           ></textarea>
         </div>
       );
@@ -169,11 +119,16 @@ const Field = (props) => {
   ) : null;
 };
 
+const getInitialFieldValue = (field) => {
+  return field.value ?? field.defaultValue ?? "";
+};
+
 const JsonForm = ({
   setIsFormValid,
   setRequestObj,
   uiJson,
   onFormChange,
+  onSubmit,
   usecaseChanged,
 }) => {
   // const [uiJson, setUiJson] = createState(null);
@@ -186,9 +141,12 @@ const JsonForm = ({
     console.log("uiJson changed");
     if (uiJson) {
       const newState = uiJson.form?.children.reduce((acc, field) => {
+        const existingField = formState?.[field.name];
         acc[field.name] = {
-          value: formState?.[field.name]?.value || field.defaultValue || "",
-          error: formState?.[field.name]?.error || field.error || "",
+          value: existingField
+            ? existingField.value
+            : getInitialFieldValue(field),
+          error: existingField?.error ?? field.error ?? "",
         };
         return acc;
       }, {});
@@ -211,12 +169,12 @@ const JsonForm = ({
   }, [uiJson, formState]);
 
   const validateForm = () => {
-    // console.log("validateForm", formState());
+    // console.log("validateForm", formState);
     // const errors = {};
     let isValid = true;
 
-    for (const fieldName in formState()) {
-      const field = formState()[fieldName];
+    for (const fieldName in formState) {
+      const field = formState[fieldName];
       const { value } = field;
       const error = validate(fieldName, value);
       if (error) {
@@ -269,8 +227,11 @@ const JsonForm = ({
     const isValid = validateForm();
     // console.log("isValid", isValid);
     if (isValid) {
-      // Submit the form
       console.log("Form submitted successfully");
+      onSubmit?.({
+        formState,
+        // uiJson,  // dont think we need this
+      });
     } else {
       console.log("Form submission failed");
     }
@@ -339,6 +300,12 @@ const JsonForm = ({
           className={uiJson.form.className}
           onBlur={(e) => {
             const { name, value, type, checked } = e.target;
+
+            if (type === "submit") {
+              // return when submit button is blurred to avoid validating form on submit button click
+              return;
+            }
+
             if (type === "checkbox") {
               setError(name, validate(name, checked));
             } else {
@@ -355,13 +322,10 @@ const JsonForm = ({
               state={formState[field.name]}
             />
           ))}
+          <button type="submit">Submit</button>
         </form>
       )}
       <pre>{JSON.stringify(formState, null, 2)}</pre>
-      <div>
-        <Playground />
-      </div>
-      <template id="template">this is a template</template>
     </div>
   );
 };
