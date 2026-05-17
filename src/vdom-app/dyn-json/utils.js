@@ -57,14 +57,23 @@ export const validate = (name, value) => {
     return "";
   }
 
+  const isStringValue = typeof value === "string";
   let error = "";
   if (validation.required && !value) {
     error = `Please enter Field`;
-  } else if (value.length < validation.minLength) {
+  } else if (
+    isStringValue &&
+    validation.minLength != null &&
+    value.length < validation.minLength
+  ) {
     error = `Field should be at least ${validation.minLength} characters`;
-  } else if (value.length > validation.maxLength) {
+  } else if (
+    isStringValue &&
+    validation.maxLength != null &&
+    value.length > validation.maxLength
+  ) {
     error = `Field should be at most ${validation.maxLength} characters`;
-  } else if (validation.pattern) {
+  } else if (isStringValue && validation.pattern) {
     const regex = new RegExp(validation.pattern);
     if (!regex.test(value)) {
       error = `Field does not match the required pattern`;
