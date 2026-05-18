@@ -3,8 +3,6 @@ export const loadUI = async (url) => {
     const response = await fetch(url);
     const data = await response.json();
 
-    uiJson = data;
-
     return data;
   } catch (error) {
     console.error("Error loading UI JSON:", error);
@@ -12,13 +10,7 @@ export const loadUI = async (url) => {
   }
 };
 
-let uiJson = null;
-
-export const setGlobalUIJson = (data) => {
-  uiJson = data;
-};
-
-export const validate = (name, value) => {
+export const validate = (uiJson, name, value) => {
   if (!uiJson || !uiJson.form || !uiJson.form.children) {
     console.error("UI JSON not loaded yet");
     return "";
@@ -83,7 +75,7 @@ export const validate = (name, value) => {
   return error;
 };
 
-export const isFormValid = (formState) => {
+export const isFormValid = (uiJson, formState) => {
   if (!uiJson || !formState) {
     console.error("UI JSON or form state not loaded yet");
     return false;
@@ -93,7 +85,7 @@ export const isFormValid = (formState) => {
   for (const fieldName in formState) {
     const field = formState[fieldName];
     const { value } = field;
-    const error = validate(fieldName, value);
+    const error = validate(uiJson, fieldName, value);
     if (error) {
       isValid = false;
       break; // Stop on first error

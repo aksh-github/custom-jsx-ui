@@ -17,7 +17,7 @@ import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
 import { PerfTest } from "../compos/PerfTest";
 import { SsrApp } from "../ssr/SsrApp";
 import { Sans } from "./sans/sans";
-import { ArrayWithFragments, Parent } from "../compos/ComponentPatterns";
+import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
 // =======================
 
@@ -29,7 +29,7 @@ import { ArrayWithFragments, Parent } from "../compos/ComponentPatterns";
 // smartRegisterCallback(forceUpdate, 50);
 
 const root = document.getElementById("root");
-mount(root, () => <App type="built-in" />);
+mount(root, () => <App type="dyn" />);
 // mount(root, () => <Sans />);
 // mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 // mount(root, () => (

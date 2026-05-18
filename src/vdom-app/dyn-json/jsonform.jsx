@@ -1,11 +1,13 @@
 import { h, createState, createEffect } from "@vdom-lib";
-import { isFormValid, loadUI, setGlobalUIJson, validate } from "./utils";
+import { isFormValid, validate } from "./utils";
 
-const ErrorMessage = ({ name, error }) => {
+let nextJsonFormInstanceId = 0;
+
+const ErrorMessage = ({ id, error }) => {
   return (
     <div>
       <div className="col-sm-2"></div>
-      <p id={name + "Error"} className="message-invalid danger col-sm-10">
+      <p id={id} className="message-invalid danger col-sm-10">
         {/* {error ? (
 <Icon name="exclamation-triangle" className="sl-icon_color_error" />
 ) : null}
@@ -19,7 +21,9 @@ const ErrorMessage = ({ name, error }) => {
 const Field = (props) => {
   // console.log("field", field);
   let control;
-  const { field, state } = props;
+  const { field, state, formInstanceId } = props;
+  const fieldId = `${formInstanceId}-${field.id || field.name}`;
+  const errorId = `${fieldId}-error`;
 
   switch (field.type) {
     case "text":
@@ -27,14 +31,15 @@ const Field = (props) => {
     case "password":
       control = (
         <div>
-          <label htmlFor={field.name} className="form-label">
+          <label htmlFor={fieldId} className="form-label">
             {field.label}
           </label>
           <input
             type={field.type}
             className={"col-sm-10 " + field.className}
-            id={field.id}
+            id={fieldId}
             name={field.name}
+            aria-describedby={errorId}
             placeholder={field.placeholder || ""}
             required={field.required}
             value={state?.value ?? field.value ?? field.defaultValue ?? ""}
@@ -45,14 +50,15 @@ const Field = (props) => {
     case "select":
       control = (
         <div>
-          <label htmlFor={field.name} className="form-label">
+          <label htmlFor={fieldId} className="form-label">
             {field.label}
           </label>
           <select
             aria-label={field.label}
             className={"col-sm-101 " + field.className}
-            id={field.id || field.name}
+            id={fieldId}
             name={field.name}
+            aria-describedby={errorId}
             // required={field.required}
             // defaultValue={field.value || state?.value}
             value={state?.value ?? field.value ?? field.defaultValue ?? ""}
@@ -72,13 +78,14 @@ const Field = (props) => {
           <input
             type="checkbox"
             className={field.className}
-            id={field.id}
+            id={fieldId}
             name={field.name}
+            aria-describedby={errorId}
             required={field.required}
             // defaultValue={state?.value}
             checked={state?.value ?? field.value ?? field.defaultValue ?? false}
           />
-          <label className="form-check-label" htmlFor={field.name}>
+          <label className="form-check-label" htmlFor={fieldId}>
             {field.label}
           </label>
         </div>
@@ -87,13 +94,14 @@ const Field = (props) => {
     case "textarea":
       control = (
         <div>
-          <label htmlFor={field.name} className="form-label">
+          <label htmlFor={fieldId} className="form-label">
             {field.label}
           </label>
           <textarea
             className={"col-sm-10 " + field.className}
-            id={field.id}
+            id={fieldId}
             name={field.name}
+            aria-describedby={errorId}
             placeholder={field.placeholder || ""}
             required={field.required}
             rows={field.rows}
@@ -111,7 +119,7 @@ const Field = (props) => {
     <div className="mb-3">
       {control}
       <ErrorMessage
-        name={field.name}
+        id={errorId}
         // error={formState()?.[field.name]?.error}
         error={state?.error}
       />
@@ -130,10 +138,19 @@ const JsonForm = ({
   onFormChange,
   onSubmit,
   usecaseChanged,
+  instanceId,
 }) => {
   // const [uiJson, setUiJson] = createState(null);
+  const [generatedInstanceId] = createState(
+    `json-form-${++nextJsonFormInstanceId}`,
+  );
+  const [uiJsonRef] = createState({ current: uiJson });
   const [formState, setFormState] = createState(null);
   const [formValid, setFormValid] = createState(false);
+  const formInstanceId = instanceId || generatedInstanceId;
+  uiJsonRef.current = uiJson;
+
+  const getLatestUiJson = () => uiJsonRef.current;
 
   let formRef;
 
@@ -155,8 +172,6 @@ const JsonForm = ({
         usecaseChanged ? { ...newState } : { ...prevState, ...newState },
       );
       // setFormValid(isFormValid(initialState));
-
-      setGlobalUIJson(uiJson);
     }
   }, [uiJson]);
 
@@ -165,56 +180,34 @@ const JsonForm = ({
       return;
     }
 
-    setFormValid(isFormValid(formState));
+    setFormValid(isFormValid(uiJson, formState));
   }, [uiJson, formState]);
 
   const validateForm = () => {
     // console.log("validateForm", formState);
     // const errors = {};
     let isValid = true;
+    const nextState = {};
 
     for (const fieldName in formState) {
       const field = formState[fieldName];
       const { value } = field;
-      const error = validate(fieldName, value);
+      const error = validate(getLatestUiJson(), fieldName, value);
       if (error) {
         // errors[fieldName] = error;
         isValid = false;
-
-        setFormValid(false);
-        // break; // Stop on first error
-
-        setFormState((prevState) => {
-          // console.log("prevState", prevState);
-
-          return {
-            ...prevState,
-            [fieldName]: {
-              value: prevState[fieldName].value,
-              error,
-            },
-          };
-        });
-      } else {
-        setFormState((prevState) => {
-          // console.log("prevState", prevState);
-
-          return {
-            ...prevState,
-            [fieldName]: {
-              value: prevState[fieldName].value,
-              error: "",
-            },
-          };
-        });
       }
+
+      nextState[fieldName] = {
+        value,
+        error,
+      };
     }
 
     // console.log("errors", errors);
 
-    if (isValid) {
-      setFormValid(true);
-    }
+    setFormState(nextState);
+    setFormValid(isValid);
 
     // return { isValid, errors };
     return isValid;
@@ -242,7 +235,8 @@ const JsonForm = ({
     const fieldVal = type === "checkbox" ? checked : value;
 
     setFormState((prevState) => {
-      const err = validate(name, fieldVal);
+      const currentUiJson = getLatestUiJson();
+      const err = validate(currentUiJson, name, fieldVal);
       const newState = {
         ...prevState,
         [name]: {
@@ -290,7 +284,8 @@ const JsonForm = ({
       <p>JsonForm valid: {formValid ? "true" : "false"}</p>
       {uiJson && formState && (
         <form
-          id={uiJson.form.id}
+          id={`${formInstanceId}-${uiJson.form.id || "form"}`}
+          noValidate
           // ref={(el) => {
           //   formRef = el;
 
@@ -307,9 +302,9 @@ const JsonForm = ({
             }
 
             if (type === "checkbox") {
-              setError(name, validate(name, checked));
+              setError(name, validate(getLatestUiJson(), name, checked));
             } else {
-              setError(name, validate(name, value));
+              setError(name, validate(getLatestUiJson(), name, value));
             }
           }}
           onChange={handleChange}
@@ -317,9 +312,10 @@ const JsonForm = ({
         >
           {uiJson.form.children.map((field, idx) => (
             <Field
-              key={field.name}
+              key={`${formInstanceId}-${field.name}`}
               field={field}
               state={formState[field.name]}
+              formInstanceId={formInstanceId}
             />
           ))}
           <button type="submit">Submit</button>

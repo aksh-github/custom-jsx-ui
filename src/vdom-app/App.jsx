@@ -575,7 +575,14 @@ const routeObj = {
     ),
   },
   "/heavy": Heavy,
-  "/json-form": JsonFormConsumer,
+  "/json-form": {
+    render: () => (
+      <div>
+        <JsonFormConsumer key="form1" />
+        <JsonFormConsumer key="form2" />
+      </div>
+    ),
+  },
   "/route2": SimpleRoute,
   "/topics": { render: () => <Topics basepath="/topics" /> },
   "/topics/*": { render: () => <Topics basepath="/topics" /> },
