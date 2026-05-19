@@ -51,8 +51,8 @@ export function Lazy(
   }, []);
 
   if (err) {
-    // return <div>{error}</div>;
-    return error;
+    return <div>{error}</div>;
+    // return error;
     // return render({ error: err, loading: false, data: null });
   }
 
@@ -64,8 +64,8 @@ export function Lazy(
   // return render({ error: null, loading: false, data: Comp });
 
   if (!Comp) {
-    // return <section>{fallback}</section>;
-    return fallback;
+    return <section>{fallback}</section>;
+    // return fallback;
   }
   // pass only relevant props
   const { importFn: ifn, fallback: fb, error: er, resolve: re, ...p2 } = other;
