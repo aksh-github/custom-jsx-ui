@@ -1162,6 +1162,7 @@ if (typeof window !== "undefined") {
           patches.push({
             p: domNode,
             op: "REMOVEALL",
+            ref: newNode?.props?.ref,
           });
 
           if (oldNode?.children) {
@@ -1284,6 +1285,7 @@ if (typeof window !== "undefined") {
 
             // Update patch.p reference for any subsequent operations
             patch.p = newParent;
+            patch?.ref?.(newParent);
 
             // Async disposal of old parent and all its children
             disposalPromises.push(
