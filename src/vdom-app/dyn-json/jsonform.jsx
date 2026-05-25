@@ -21,7 +21,7 @@ const ErrorMessage = ({ id, error }) => {
 const Field = (props) => {
   // console.log("field", field);
   let control;
-  const { field, state, formInstanceId } = props;
+  const { field, state, formInstanceId, onBlur } = props;
   const fieldId = `${formInstanceId}-${field.id || field.name}`;
   const errorId = `${fieldId}-error`;
 
@@ -43,6 +43,7 @@ const Field = (props) => {
             placeholder={field.placeholder || ""}
             required={field.required}
             value={state?.value ?? field.value ?? field.defaultValue ?? ""}
+            onBlur={onBlur}
           />
         </div>
       );
@@ -59,6 +60,7 @@ const Field = (props) => {
             id={fieldId}
             name={field.name}
             aria-describedby={errorId}
+            onBlur={onBlur}
             // required={field.required}
             // defaultValue={field.value || state?.value}
             value={state?.value ?? field.value ?? field.defaultValue ?? ""}
@@ -84,6 +86,7 @@ const Field = (props) => {
             required={field.required}
             // defaultValue={state?.value}
             checked={state?.value ?? field.value ?? field.defaultValue ?? false}
+            onBlur={onBlur}
           />
           <label className="form-check-label" htmlFor={fieldId}>
             {field.label}
@@ -107,6 +110,7 @@ const Field = (props) => {
             rows={field.rows}
             cols={field.cols}
             value={state?.value ?? field.value ?? field.defaultValue ?? ""}
+            onBlur={onBlur}
           ></textarea>
         </div>
       );
@@ -144,13 +148,13 @@ const JsonForm = ({
   const [generatedInstanceId] = createState(
     `json-form-${++nextJsonFormInstanceId}`,
   );
-  const [uiJsonRef] = createState({ current: uiJson });
+  // const [uiJsonRef] = createState({ current: uiJson });
   const [formState, setFormState] = createState(null);
   const [formValid, setFormValid] = createState(false);
   const formInstanceId = instanceId || generatedInstanceId;
-  uiJsonRef.current = uiJson;
 
-  const getLatestUiJson = () => uiJsonRef.current;
+  // uiJsonRef.current = uiJson;
+  // const getLatestUiJson = () => uiJsonRef.current;
 
   let formRef;
 
@@ -192,7 +196,7 @@ const JsonForm = ({
     for (const fieldName in formState) {
       const field = formState[fieldName];
       const { value } = field;
-      const error = validate(getLatestUiJson(), fieldName, value);
+      const error = validate(uiJson, fieldName, value);
       if (error) {
         // errors[fieldName] = error;
         isValid = false;
@@ -235,8 +239,8 @@ const JsonForm = ({
     const fieldVal = type === "checkbox" ? checked : value;
 
     setFormState((prevState) => {
-      const currentUiJson = getLatestUiJson();
-      const err = validate(currentUiJson, name, fieldVal);
+      // const currentUiJson = getLatestUiJson();
+      const err = validate(uiJson, name, fieldVal);
       const newState = {
         ...prevState,
         [name]: {
@@ -255,6 +259,21 @@ const JsonForm = ({
 
       return newState;
     });
+  };
+
+  const onBlur = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    if (type === "submit") {
+      // return when submit button is blurred to avoid validating form on submit button click
+      return;
+    }
+
+    if (type === "checkbox") {
+      setError(name, validate(uiJson, name, checked));
+    } else {
+      setError(name, validate(uiJson, name, value));
+    }
   };
 
   const setError = (id, error) => {
@@ -293,20 +312,7 @@ const JsonForm = ({
           //   el = null;
           // }}
           className={uiJson.form.className}
-          onBlur={(e) => {
-            const { name, value, type, checked } = e.target;
-
-            if (type === "submit") {
-              // return when submit button is blurred to avoid validating form on submit button click
-              return;
-            }
-
-            if (type === "checkbox") {
-              setError(name, validate(getLatestUiJson(), name, checked));
-            } else {
-              setError(name, validate(getLatestUiJson(), name, value));
-            }
-          }}
+          onBlur={onBlur}
           onChange={handleChange}
           onSubmit={handleSubmit}
         >
@@ -316,6 +322,8 @@ const JsonForm = ({
               field={field}
               state={formState[field.name]}
               formInstanceId={formInstanceId}
+              onBlur={onBlur}
+              handleChange={handleChange}
             />
           ))}
           <button type="submit">Submit</button>

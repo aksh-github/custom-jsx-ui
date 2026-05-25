@@ -165,11 +165,30 @@ const Form = () => {
   );
 };
 
-// const Parent = (props, children) => {
-//   console.log(props, children);
-//   children[0].props = { ...children[0].props, data: 100 };
-//   return children[0];
-// };
+const CustomSwitch = ({ value, elements }) => {
+  let defaultCase = undefined;
+
+  const caseToRender = elements.find((child) => {
+    // console.log("child", child);
+    if (child.when === value) {
+      return true;
+    }
+    if (child.default) {
+      defaultCase = child;
+    }
+    return false;
+  });
+
+  if (caseToRender) {
+    return caseToRender.render();
+  } else {
+    if (defaultCase) {
+      return defaultCase.render();
+    } else {
+      return null;
+    }
+  }
+};
 
 export const SsrApp = ({ currentUrl }) => {
   const [count, setCount] = createState(0);
@@ -245,7 +264,7 @@ export const SsrApp = ({ currentUrl }) => {
       <hr />
       <Decide count={count} />
       <hr />
-      <Switch value={20}>
+      {/*<Switch value={20}>
         <Switch.Case when={10} render={() => "this is 10"} />
         <Switch.Case
           when={20}
@@ -263,7 +282,22 @@ export const SsrApp = ({ currentUrl }) => {
         <Switch.Default>
           <div>This is the default case</div>
         </Switch.Default>
-      </Switch>
+      </Switch> */}
+      <CustomSwitch
+        value={455845}
+        elements={[
+          { when: 10, render: () => "this is 10" },
+          {
+            when: 20,
+            render: () => (
+              <div className="some-20" style={{ background: "blue" }}>
+                this is 20
+              </div>
+            ),
+          },
+          { default: true, render: () => <div>This is the default case</div> },
+        ]}
+      />
       <hr />
       <DynTextArea />
       <form onSubmit={submit}>

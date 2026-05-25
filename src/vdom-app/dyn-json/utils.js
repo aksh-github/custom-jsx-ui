@@ -6,7 +6,8 @@ export const loadUI = async (url) => {
     return data;
   } catch (error) {
     console.error("Error loading UI JSON:", error);
-    return null;
+    // return null;
+    throw error;
   }
 };
 
