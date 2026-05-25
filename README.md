@@ -13,6 +13,8 @@
 **LATEST STABLE Branch**
 3apr26: stable branch as of 7-Apr-26 (branch off 15jan26-ssr)
 
-#### 22apr26: stable branch as of 27-Apr-26 (branch off 3apr26)
+22apr26: stable branch as of 27-Apr-26 (branch off 3apr26)
 
 #### 12may26: A variation to wrapper, diff functions etc and Ai gen, support Fragments (seems to be very promising, more testing required) (branch off 22apr26)
+
+#### 25may26: stable branch as of 25-May-26 (Returns only html vdom nodes (no compo nodes), Event delegation impl) (branch off 22apr26)
