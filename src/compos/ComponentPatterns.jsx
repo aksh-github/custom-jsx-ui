@@ -132,9 +132,9 @@ export const ArrayWithFragments = (props) => {
 
   const [st, setSt] = createState(null);
 
-  setTimeout(() => {
-    setSt("dynamic delayed value");
-  }, 2000);
+  // setTimeout(() => {
+  //   setSt("dynamic delayed value");
+  // }, 2000);
 
   // setTimeout(() => {
   //   setSt(null);
@@ -144,7 +144,7 @@ export const ArrayWithFragments = (props) => {
 
   // return () => <p>10</p>;
   return (
-    <df>
+    <section>
       {/* <p>10</p>
       <p>20</p> */}
       {st}
@@ -161,7 +161,7 @@ export const ArrayWithFragments = (props) => {
         return <Row key={idx} n={el} />;
       })}
       {st}
-    </df>
+    </section>
   );
 };
 
