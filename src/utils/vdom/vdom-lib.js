@@ -109,72 +109,74 @@ const microframe = (() => {
 
       // IMP: If we dont want Compo nodes (Switch compo will not work)
 
-      // return rv;
+      return rv;
+
+      // Below is only required to see compo node, but logic may not work beyond 20th may 2026
 
       //complex node
-      if (rv?.type) {
-        return {
-          ...rv,
-          // props: rv.props,
-          $c: cacheKey,
-          // children: rv.children,
-          children: [rv],
-          // dont think its reqd
-          // fragChildLen: rv?.children.length || undefined,
-          // $p: curParent,
-          key: props?.key,
-          props: props || {},
-          type: "df",
-        };
-      }
-      // str, null etc
-      else if (Array.isArray(rv)) {
-        console.warn(
-          "Your component named `",
-          type.name,
-          "` is returning Array, manipulation to this Array is currently NOT supported and can lead to Unexpected behavior",
-        );
+      // if (rv?.type) {
+      //   return {
+      //     ...rv,
+      //     // props: rv.props,
+      //     $c: cacheKey,
+      //     // children: rv.children,
+      //     children: [rv],
+      //     // dont think its reqd
+      //     // fragChildLen: rv?.children.length || undefined,
+      //     // $p: curParent,
+      //     key: props?.key,
+      //     props: props || {},
+      //     type: "df",
+      //   };
+      // }
+      // // str, null etc
+      // else if (Array.isArray(rv)) {
+      //   console.warn(
+      //     "Your component named `",
+      //     type.name,
+      //     "` is returning Array, manipulation to this Array is currently NOT supported and can lead to Unexpected behavior",
+      //   );
 
-        //special case return value Array and may be no type  (parent)
-        return {
-          $c: cacheKey,
-          type: "df", //assign doc fragment type
-          children: rv,
-          // $p: curParent,
-        };
-      }
-      // return {
-      //   $c: type.name,
-      //   value: rv,
-      //   $p: curParent,
-      // };
-      else {
-        // there are 2 possiblities
-        // 1. complex node but with no type
+      //   //special case return value Array and may be no type  (parent)
+      //   return {
+      //     $c: cacheKey,
+      //     type: "df", //assign doc fragment type
+      //     children: rv,
+      //     // $p: curParent,
+      //   };
+      // }
+      // // return {
+      // //   $c: type.name,
+      // //   value: rv,
+      // //   $p: curParent,
+      // // };
+      // else {
+      //   // there are 2 possiblities
+      //   // 1. complex node but with no type
 
-        if (rv?.$c) {
-          // if (!rv.type) {
-          //   rv.type = "df";
-          // }
-          return {
-            $c: cacheKey,
-            // value: rv,
-            // ...rv,
-            children: [rv],
-            // type: "df", // sure that type is unavailable hence using df
-            // $p: curParent,
-          };
-        } else {
-          // or 2. simple node
-          return {
-            $c: cacheKey,
-            // type: "df",
-            value: rv,
-            props: props || {},
-            // $p: curParent,
-          };
-        }
-      }
+      //   if (rv?.$c) {
+      //     // if (!rv.type) {
+      //     //   rv.type = "df";
+      //     // }
+      //     return {
+      //       $c: cacheKey,
+      //       // value: rv,
+      //       // ...rv,
+      //       children: [rv],
+      //       // type: "df", // sure that type is unavailable hence using df
+      //       // $p: curParent,
+      //     };
+      //   } else {
+      //     // or 2. simple node
+      //     return {
+      //       $c: cacheKey,
+      //       // type: "df",
+      //       value: rv,
+      //       props: props || {},
+      //       // $p: curParent,
+      //     };
+      //   }
+      // }
     }
 
     // log(children);
@@ -235,6 +237,28 @@ let dom = {};
 
 if (typeof window !== "undefined") {
   const _dom = () => {
+    const _bubblesCache = new Map();
+    function isNonBubblingEvent(eventName) {
+      if (!_bubblesCache.has(eventName)) {
+        _bubblesCache.set(eventName, new Event(eventName).bubbles);
+      }
+      return !_bubblesCache.get(eventName); // true = non-bubbling
+    }
+
+    function ensureGlobalListener(eventName) {
+      if (!_bubblesCache.has(eventName)) {
+        _bubblesCache.set(eventName, new Event(eventName).bubbles);
+      }
+      if (
+        _bubblesCache.get(eventName) &&
+        !_registeredGlobalEvents.has(eventName)
+      ) {
+        rootNode.addEventListener(eventName, globalEventListener, false);
+        _registeredGlobalEvents.add(eventName);
+      }
+    }
+    const _registeredGlobalEvents = new Set();
+
     // mount n unmount
     let mountFns = [];
 
@@ -305,7 +329,14 @@ if (typeof window !== "undefined") {
     function setProp($target, name, value) {
       // log(name, value);
       if (isCustomProp(name)) {
-        if (name === "onSubmit") $target[`__onSubmit`] = value;
+        if (isEventProp(name)) {
+          const extratedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extratedName);
+          // For bubbling events, store handler reference for global listener
+          if (!isNonBubbling) {
+            $target[`__${name}`] = value;
+          }
+        }
         return;
       } else if (name === "className") {
         $target.setAttribute("class", value);
@@ -359,13 +390,25 @@ if (typeof window !== "undefined") {
       if (!newVal && (newVal === undefined || newVal === null)) {
         removeProp($target, name, oldVal);
       } else if (isCustomProp(name)) {
-        // if (isEventProp(name)) {
-        //   if (name === "onSubmit") addEventListeners($target, { [name]: newVal });
-        // }
-        const extratedName = extractEventName(name);
+        if (isEventProp(name)) {
+          const extratedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extratedName);
 
-        if ($target._events && $target._events[`${extratedName}`]) {
-        } else addEventListeners($target, { [name]: newVal });
+          if (isNonBubbling) {
+            // Non-bubbling events: update via addEventListeners
+            if ($target._events && $target._events[`${extratedName}`]) {
+              $target.removeEventListener(
+                extratedName,
+                $target._events[`${extratedName}`],
+                false,
+              );
+            }
+            addEventListeners($target, { [name]: newVal });
+          } else {
+            // Bubbling events: update handler reference
+            $target[`__${name}`] = newVal;
+          }
+        }
       } else if (!oldVal || newVal !== oldVal) {
         setProp($target, name, newVal);
       }
@@ -377,36 +420,51 @@ if (typeof window !== "undefined") {
       // }
       const props = Object.assign({}, newProps, oldProps);
       for (const name in props) {
-        if (name === "onSubmit") {
-          // addEventListeners($target, { [name]: newProps[name] });
+        if (isEventProp(name)) {
+          const extratedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extratedName);
 
-          $target[`__${name}`] = newProps[name];
-          // Reqd for SSR case
-          if ($target.getAttribute("onsubmit") !== null)
-            $target.removeAttribute("onsubmit");
-        } else updateProp($target, name, newProps[name], oldProps[name]);
+          if (isNonBubbling) {
+            // Non-bubbling events: update directly
+            updateProp($target, name, newProps[name], oldProps[name]);
+          } else {
+            // Bubbling events: store on element for global handler
+            $target[`__${name}`] = newProps[name];
+            // Reqd for SSR case
+            const eventLowerCase = extratedName;
+            if ($target.getAttribute(eventLowerCase) !== null)
+              $target.removeAttribute(eventLowerCase);
+          }
+        } else {
+          updateProp($target, name, newProps[name], oldProps[name]);
+        }
       }
     }
 
     function addEventListeners($target, props) {
       for (const name in props) {
-        // onSubmit is handled differently at mount n hydrate
-        if (isEventProp(name) && name !== "onSubmit") {
-          const extratedName = extractEventName(name);
+        if (isEventProp(name)) {
+          const extractedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extractedName);
 
-          // if (!eventListeners.has($target))
-          //   eventListeners.set($target, new Set());
           if (!$target._events) $target._events = {};
 
-          if ($target._events[`${extratedName}`]) {
-            $target.removeEventListener(
-              extratedName,
-              $target._events[`${extratedName}`],
-              true,
-            );
+          if (isNonBubbling) {
+            // Direct binding — same as before
+            if ($target._events[extractedName]) {
+              $target.removeEventListener(
+                extractedName,
+                $target._events[extractedName],
+                false,
+              );
+            }
+            $target._events[extractedName] = props[name];
+            $target.addEventListener(extractedName, props[name], false);
+          } else {
+            // ✅ Register global listener lazily — no hardcoded list needed
+            ensureGlobalListener(extractedName);
+            $target[`__${name}`] = props[name];
           }
-          $target._events[`${extratedName}`] = props[name];
-          $target.addEventListener(extratedName, props[name], true);
         }
       }
     }
@@ -526,7 +584,15 @@ if (typeof window !== "undefined") {
       if (!node?.$c) {
         setProps($el, node.props);
         addEventListeners($el, node.props);
-        if (node.props?.onSubmit) $el[`__onSubmit`] = node.props?.onSubmit;
+        // Ensure all bubbling event handlers are stored on element for global listener
+        for (const propName in node.props) {
+          if (isEventProp(propName)) {
+            const eventName = extractEventName(propName);
+            if (!isNonBubblingEvent(eventName)) {
+              $el[`__${propName}`] = node.props[propName];
+            }
+          }
+        }
       }
 
       if (node.children.length > 100) {
@@ -565,15 +631,30 @@ if (typeof window !== "undefined") {
 
     function globalEventListener(e) {
       const eventType = e.type;
-      log(eventType);
-      e.target[`__onSubmit`](e);
+      // log(eventType);
+      const handlerName = `__on${eventType.charAt(0).toUpperCase()}${eventType.slice(1)}`;
+
+      // Traverse up the DOM tree calling handlers on parent elements
+      let currentTarget = e.target;
+      while (currentTarget && currentTarget !== rootNode.parentElement) {
+        const handler = currentTarget[handlerName];
+        if (handler) {
+          handler(e);
+        }
+
+        // Stop propagation if requested
+        if (e.cancelBubble) {
+          break;
+        }
+
+        currentTarget = currentTarget.parentElement;
+      }
     }
 
     let hydrated = false;
 
     function mount($root, initCompo) {
       rootNode = $root;
-      rootNode.addEventListener("submit", globalEventListener);
 
       curr = initCompo;
       // log(curr);
@@ -624,12 +705,9 @@ if (typeof window !== "undefined") {
     function hydrate($root, initCompo) {
       hydrated = false;
       rootNode = $root;
-      rootNode.addEventListener("submit", globalEventListener);
+
       curr = initCompo;
       old = curr(); // create latest vdom
-      // log(old);
-      // log(funcCache);
-      // callMountAll();
 
       // Usage
       const removedCount = removeCommentsWithText("|", rootNode);
@@ -1274,10 +1352,15 @@ if (typeof window !== "undefined") {
         // eventListenerInst.unregisterEventListener(current);
         if (current && current._events) {
           for (const evt in current._events) {
-            current.removeEventListener(evt, current._events[evt], true);
+            current.removeEventListener(evt, current._events[evt], false);
           }
           current._events = null;
-          current.__onSubmit = null;
+        }
+        // Clean up all bubbling event handlers
+        for (const key in current) {
+          if (key.startsWith("__on")) {
+            current[key] = null;
+          }
         }
 
         // Add children to stack
@@ -1382,6 +1465,35 @@ if (typeof window !== "undefined") {
     };
   };
 
+  // scheduler
+
+  class Scheduler {
+    constructor() {
+      this.dirty = false;
+
+      this.channel = new MessageChannel();
+      this.channel.port1.onmessage = () => this.flush();
+    }
+
+    schedule() {
+      if (this.dirty) return; // batches all calls until flush runs
+      this.dirty = true;
+      this.channel.port2.postMessage(null); // macrotask — yields to browser
+    }
+
+    flush() {
+      this.dirty = false; // only resets when macrotask fires
+      forceUpdate();
+    }
+  }
+
+  // smartRegisterCallback(forceUpdate);
+
+  const s = new Scheduler();
+  smartRegisterCallback(() => {
+    s.schedule();
+  }, 0);
+
   dom = {
     ..._dom(),
   };
@@ -1429,32 +1541,4 @@ export {
 // This function is still available in 24jun25 br in commented form
 
 if (typeof window !== "undefined") {
-  // scheduler
-
-  class Scheduler {
-    constructor() {
-      this.dirty = false;
-
-      this.channel = new MessageChannel();
-      this.channel.port1.onmessage = () => this.flush();
-    }
-
-    schedule() {
-      if (this.dirty) return; // batches all calls until flush runs
-      this.dirty = true;
-      this.channel.port2.postMessage(null); // macrotask — yields to browser
-    }
-
-    flush() {
-      this.dirty = false; // only resets when macrotask fires
-      forceUpdate();
-    }
-  }
-
-  // smartRegisterCallback(forceUpdate);
-
-  const s = new Scheduler();
-  smartRegisterCallback(() => {
-    s.schedule();
-  }, 0);
 }
