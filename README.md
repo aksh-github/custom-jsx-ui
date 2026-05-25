@@ -15,4 +15,4 @@
 
 #### 22apr26: stable branch as of 27-Apr-26 (branch off 3apr26)
 
-#### 12may26: A variation to wrapper, diff functions etc and Ai gen, support Fragments (seems to be very promising, more testing required)
+#### 12may26: A variation to wrapper, diff functions etc and Ai gen, support Fragments (seems to be very promising, more testing required) (branch off 22apr26)
