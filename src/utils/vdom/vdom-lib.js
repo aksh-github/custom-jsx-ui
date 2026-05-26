@@ -1159,6 +1159,9 @@ if (typeof window !== "undefined") {
             CTR++;
           }
 
+          // if (oldLength >= 1)
+          CTR--;
+
           patches.push({
             p: domNode,
             op: "REMOVEALL",
