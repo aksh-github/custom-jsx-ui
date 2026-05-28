@@ -1271,8 +1271,8 @@ if (typeof window !== "undefined") {
           }
 
           case "REMOVE":
-            patch.p.removeChild(patch.c);
             disposalPromises.push(disposeNodes(patch.c));
+
             break;
 
           // case "REMOVEALL":
