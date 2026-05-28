@@ -294,6 +294,57 @@ if (typeof window !== "undefined") {
     let curr = null;
     let old = null;
 
+    // Tracks the element currently being dragged.
+    // Set on pointerdown (earliest possible signal) so any forceUpdate
+    // triggered by subsequent events already sees it.
+    let _draggingEl = null;
+    let _activeDrag = false;
+
+    function registerDragListeners() {
+      // pointerdown arms _draggingEl before any state change can schedule
+      // a forceUpdate — dragstart fires too late for that.
+      rootNode.addEventListener(
+        "pointerdown",
+        (e) => {
+          const draggable =
+            e.target.closest?.("[draggable='true']") ??
+            (e.target.draggable ? e.target : null);
+          if (draggable) _draggingEl = draggable;
+        },
+        true,
+      );
+
+      // dragstart confirms a real drag session began.
+      rootNode.addEventListener(
+        "dragstart",
+        (e) => {
+          _draggingEl = e.target;
+          _activeDrag = true;
+        },
+        true,
+      );
+
+      // dragend: clear and settle final DOM state.
+      rootNode.addEventListener(
+        "dragend",
+        () => {
+          _draggingEl = null;
+          _activeDrag = false;
+          forceUpdate();
+        },
+        true,
+      );
+
+      // pointerup/cancel: clear if dragstart never fired (plain click).
+      const clearIfNotDragging = () => {
+        requestAnimationFrame(() => {
+          if (_draggingEl && !_activeDrag) _draggingEl = null;
+        });
+      };
+      rootNode.addEventListener("pointerup", clearIfNotDragging, true);
+      rootNode.addEventListener("pointercancel", clearIfNotDragging, true);
+    }
+
     function setBooleanProp($target, name, value) {
       if (value) {
         $target.setAttribute(name, value);
@@ -657,6 +708,7 @@ if (typeof window !== "undefined") {
 
     function mount($root, initCompo) {
       rootNode = $root;
+      registerDragListeners();
 
       curr = initCompo;
       // log(curr);
@@ -707,6 +759,7 @@ if (typeof window !== "undefined") {
     function hydrate($root, initCompo) {
       hydrated = false;
       rootNode = $root;
+      registerDragListeners();
 
       curr = initCompo;
       old = curr(); // create latest vdom
@@ -1256,9 +1309,19 @@ if (typeof window !== "undefined") {
           case "APPENDDF":
             patch.p.appendChild(patch.c);
             break;
-          case "APPEND":
-            patch.p.appendChild(createElement(patch.c));
+          case "APPEND": {
+            // If the vnode being appended matches the dragged element's key,
+            // reuse that exact DOM node instead of creating a new one.
+            // A fresh element wouldn't carry the browser's drag context.
+            const appendEl =
+              _draggingEl &&
+              patch.c?.key != null &&
+              patch.c.key === _draggingEl.getAttribute?.("key")
+                ? _draggingEl
+                : createElement(patch.c);
+            patch.p.appendChild(appendEl);
             break;
+          }
           case "APPEND_CHILDREN": {
             const df = $d.createDocumentFragment();
 
@@ -1271,8 +1334,11 @@ if (typeof window !== "undefined") {
           }
 
           case "REMOVE":
+            // Skip disposal if this is the element being dragged — it is
+            // moving to another list, not being destroyed. Calling .remove()
+            // on it detaches it from the document and breaks the drag session.
+            if (patch.c && patch.c === _draggingEl) break;
             disposalPromises.push(disposeNodes(patch.c));
-
             break;
 
           // case "REMOVEALL":
