@@ -209,6 +209,7 @@ const microframe = (() => {
         type,
         updtFlag: updtFlag,
         props: props || {},
+        key: props?.key,
         // children: props?.ignoreNode ? [] : children,
         children:
           type?.includes("-") ||
@@ -387,6 +388,7 @@ if (typeof window !== "undefined") {
     }
 
     function updateProp($target, name, newVal, oldVal) {
+      // if (!$target) return;
       if (!newVal && (newVal === undefined || newVal === null)) {
         removeProp($target, name, oldVal);
       } else if (isCustomProp(name)) {
@@ -917,11 +919,25 @@ if (typeof window !== "undefined") {
             //   log("=== do something for this case");
             // }
 
-            patches.push({
-              p: $parent,
-              op: "REPLACE",
-              c: [newNode, el],
-            });
+            if (newNode === undefined || typeof newNode === "boolean") {
+              patches.push({
+                p: $parent,
+                op: "REMOVE",
+                c: el,
+              });
+            } else {
+              patches.push({
+                p: $parent,
+                op: "REPLACE",
+                c: [newNode, el],
+              });
+            }
+
+            // patches.push({
+            //   p: $parent,
+            //   op: "REPLACE",
+            //   c: [newNode, el],
+            // });
 
             if (el?.nodeType === 1) {
               // while (CTR < stk.length) {
@@ -1358,6 +1374,7 @@ if (typeof window !== "undefined") {
         if (current && current._events) {
           for (const evt in current._events) {
             current.removeEventListener(evt, current._events[evt], false);
+            current._events[evt] = null;
           }
           current._events = null;
         }
@@ -1370,23 +1387,25 @@ if (typeof window !== "undefined") {
 
         // Add children to stack
         if (current.childNodes) {
-          for (let i = current.childNodes.length - 1; i >= 0; i--) {
-            nodeStack.push(current.childNodes[i]);
-            if (i % 50 === 0) {
-              await yieldToMain();
-            }
+          const _childNodes = current.childNodes;
+          for (let i = _childNodes.length - 1; i >= 0; i--) {
+            nodeStack.push(_childNodes[i]);
           }
         }
 
         // Clear references
-        // current.nodeValue = null;
-        current?.remove?.();
 
+        current?.remove?.();
         current = null;
+
+        if (nodeStack.length % 50 === 0) {
+          await yieldToMain(); // yield between nodes, not mid-childNodes loop
+        }
       }
 
       // Clear final references
 
+      node?.remove?.();
       node = null;
       nodeStack.length = 0;
 
