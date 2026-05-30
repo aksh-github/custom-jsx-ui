@@ -18,3 +18,9 @@
 #### 12may26: A variation to wrapper, diff functions etc and Ai gen, support Fragments (seems to be very promising, more testing required) (branch off 22apr26)
 
 #### 25may26: stable branch as of 25-May-26 (Returns only html vdom nodes (no compo nodes), Event delegation impl) (branch off 22apr26)
+
+==
+
+#### dom-30may26: 
+
+This is dom only based impl. Uses signal-v2 in src/utils. Attributes are auto updated because of signals. You can update dom using propsPatches or patches. Supports onMount and onUnmount on dom elems.
