@@ -230,30 +230,30 @@ if (typeof window !== "undefined") {
             $target[name] = value;
             return;
           }
-        }
 
-        // special handling for select
-        const sid = setTimeout(() => {
-          clearTimeout(sid);
+          // special handling for select
+          const sid = setTimeout(() => {
+            clearTimeout(sid);
+            if (typeof value === "function") {
+              effect(() => {
+                const v = value();
+                $target[name] = v;
+              });
+            } else {
+              $target[name] = value;
+            }
+          }, 0);
+        } else {
           if (typeof value === "function") {
             effect(() => {
               const v = value();
-              $target[name] = v;
+              $target.setAttribute(name, v);
             });
           } else {
-            $target[name] = value;
+            $target.setAttribute(name, value);
           }
-        }, 0);
-        return;
+        }
       }
-      // if (typeof value === "function") {
-      //   effect(() => {
-      //     const v = value();
-      //     $target.setAttribute(name, v);
-      //   });
-      // } else {
-      //   $target.setAttribute(name, value);
-      // }
     }
 
     function removeProp($target, name, value) {
@@ -661,24 +661,24 @@ if (typeof window !== "undefined") {
             disposalPromises.push(disposeNodes(patch.c));
             break;
 
-          // case "REMOVEALL":
-          //   logt("REMOVEALL");
-          //   const childrenToDispose = Array.from(patch.p.childNodes);
-          //   disposalPromises.push(
-          //     Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
-          //   );
-
-          //   if (patch.p.replaceChildren) {
-          //     patch.p.replaceChildren();
-          //   } else {
-          //     while (patch.p.firstChild) {
-          //       patch.p.removeChild(patch.p.firstChild);
-          //     }
-          //   }
-          //   logte("REMOVEALL");
-          //   break;
-
           case "REMOVEALL":
+            logt("REMOVEALL");
+            const childrenToDispose = Array.from(patch.p.childNodes);
+            disposalPromises.push(
+              Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
+            );
+
+            if (patch.p.replaceChildren) {
+              patch.p.replaceChildren();
+            } else {
+              while (patch.p.firstChild) {
+                patch.p.removeChild(patch.p.firstChild);
+              }
+            }
+            logte("REMOVEALL");
+            break;
+
+          case "REMOVEALL-FAST":
             // const childrenToDispose = Array.from(patch.p.childNodes);
             const oldParent = patch.p;
 
@@ -703,7 +703,13 @@ if (typeof window !== "undefined") {
             patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
             disposalPromises.push(disposeNodes(patch.c[1]));
             break;
-
+          case "MOVE":
+            // Implementation for move operation
+            patch.p.insertBefore(
+              patch.p.childNodes[patch.toIndex],
+              patch.p.childNodes[patch.fromIndex],
+            );
+            break;
           case "CONTENT":
             patch.p.textContent = patch.c;
             break;
@@ -920,3 +926,5 @@ export const createElement = dom.createElement || noop;
 
 export const addPatches = dom.addPatches || noop;
 export const addPropsPatches = dom.addPropsPatches || noop;
+
+export { signal, effect } from "@simple-signal";
