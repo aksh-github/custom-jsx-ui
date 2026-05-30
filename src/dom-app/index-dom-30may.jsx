@@ -37,9 +37,10 @@ const Counter = (props) => {
     }
   });
 
-  effect(() => {
+  const stopEffect = effect(() => {
     // subscribe to parent counter for demo
-    console.log("Counter component effect ran for", props.ctr());
+    const v = props.ctr();
+    console.log("Counter component effect ran for", v);
   });
 
   return (
@@ -50,7 +51,11 @@ const Counter = (props) => {
         $div = el;
       }}
       style={style()}
-      onUnmount={() => console.log("Unmounted", props.id)}
+      onUnmount={() => {
+        stopEffect();
+        $div = $p = null;
+        console.log("Unmounted", props.id);
+      }}
     >
       <p ref={(el) => ($p = el)}>Counter: {count()}</p>
       <button
@@ -67,7 +72,6 @@ const Counter = (props) => {
 
 const App = () => {
   const [ctr, setCtr] = signal(0);
-
   const OnMount = () => {
     console.log("App Mounted");
   };
