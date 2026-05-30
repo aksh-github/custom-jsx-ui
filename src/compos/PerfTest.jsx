@@ -2,7 +2,7 @@
 
 import { h, createContext } from "../utils/vdom/vdom-lib";
 
-const SIZE = 1000;
+const SIZE = 4;
 
 const random = (max) => Math.round(Math.random() * SIZE) % max;
 
@@ -65,14 +65,17 @@ const N = [
 const dataCtx = createContext([]);
 const unusedCtx = createContext("something");
 
-let nextId = 0;
+const generateAlphaID = () => {
+  // Convert random number to base-36 string and extract 6 characters
+  return Math.random().toString(36).substring(2, 8);
+};
 
 const buildData = (count) => {
   const data = new Array(count);
 
   for (let i = 0; i < count; i++) {
     data[i] = {
-      id: nextId++,
+      id: generateAlphaID(),
       label: `${A[random(A.length)]} ${C[random(C.length)]} ${
         N[random(N.length)]
       }`,
@@ -153,7 +156,7 @@ const listReducer = (state, action) => {
 };
 
 const Row = ({ selected, item }) => (
-  <tr id={item.id} className={selected ? "danger" : ""}>
+  <tr key={item.id} id={item.id} className={selected ? "danger" : ""}>
     <td className="col-md-1">{item.id}</td>
     <td className="col-md-4">
       <a onClick={() => listReducer(null, { type: "SELECT", id: item.id })}>
@@ -161,7 +164,17 @@ const Row = ({ selected, item }) => (
       </a>
     </td>
     <td className="col-md-1">
-      <a onClick={() => listReducer(null, { type: "REMOVE", id: item.id })}>
+      <a
+        onClick={(e) => {
+          const tr = e.currentTarget.closest("tr");
+          if (tr) {
+            listReducer(null, {
+              type: "REMOVE",
+              id: tr.getAttribute("key"),
+            });
+          }
+        }}
+      >
         <span className="glyphicon glyphicon-remove" aria-hidden="true" />
         Remove
       </a>

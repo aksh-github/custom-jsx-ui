@@ -30,7 +30,7 @@ import { ArrayWithFragments } from "../compos/ComponentPatterns";
 // smartRegisterCallback(forceUpdate, 50);
 
 const root = document.getElementById("root");
-mount(root, () => <App type="dyn" />);
+// mount(root, () => <App type="dyn" />);
 // mount(root, () => <Sans />);
 // mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 // mount(root, () => (
@@ -40,7 +40,7 @@ mount(root, () => <App type="dyn" />);
 //     <p>after</p>
 //   </df>
 // ));
-// mount(root, () => <PerfTest />);
+mount(root, () => <PerfTest />);
 // mount(root, () => <DragDrop />);
 
 // Usage
