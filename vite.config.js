@@ -9,9 +9,9 @@ const shared = {
   alias: {
     // "@vdom-lib": "/src/lib/vdom-lib.js",
     // "@simple-state": "/src/lib/simple-state.js",
-    "@vdom-lib": "/src/utils/vdom/vdom-lib.js",
-    "@vdom-ssr": "/src/utils/vdom/vdom-ssr.js",
-    "@router-v2": "/src/utils/router-v2.jsx",
+    // "@vdom-lib": "/src/utils/vdom/vdom-key-lib-goog.js",
+    "@dom-lib": "/src/utils/dom/dom-lib.js",
+    "@simple-signal": "/src/utils/signal-v2.js",
   },
 };
 

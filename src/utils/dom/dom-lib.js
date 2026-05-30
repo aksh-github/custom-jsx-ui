@@ -1,0 +1,922 @@
+const IS_PROD = false; // typeof window !== "undefined" ? import.meta.env.PROD : false;
+
+const noop = () => {};
+const log = IS_PROD ? noop : console.log;
+const logt = IS_PROD ? noop : console.time,
+  logte = IS_PROD ? noop : console.timeEnd;
+
+const normalizeChildren = (children) => {
+  const flatChildren = [];
+
+  const walk = (child) => {
+    if (child == null) return;
+
+    if (Array.isArray(child)) {
+      for (const nestedChild of child) walk(nestedChild);
+      return;
+    }
+
+    flatChildren.push(child);
+  };
+
+  for (const child of children) walk(child);
+
+  return flatChildren;
+};
+
+export const h = (type, props, ...children) => {
+  const normalizedChildren = normalizeChildren(children);
+
+  if (typeof type === "function") {
+    return type(props || {}, normalizedChildren);
+  }
+  return { type, props: props || {}, children: normalizedChildren };
+};
+
+// all dom related functions
+let dom = {};
+import { signal, effect } from "@simple-signal";
+if (typeof window !== "undefined") {
+  const _dom = () => {
+    const _bubblesCache = new Map();
+    function isNonBubblingEvent(eventName) {
+      if (!_bubblesCache.has(eventName)) {
+        _bubblesCache.set(eventName, new Event(eventName).bubbles);
+      }
+      return !_bubblesCache.get(eventName); // true = non-bubbling
+    }
+
+    function ensureGlobalListener(eventName) {
+      if (!_bubblesCache.has(eventName)) {
+        _bubblesCache.set(eventName, new Event(eventName).bubbles);
+      }
+      if (
+        _bubblesCache.get(eventName) &&
+        !_registeredGlobalEvents.has(eventName)
+      ) {
+        rootNode.addEventListener(eventName, globalEventListener, false);
+        _registeredGlobalEvents.add(eventName);
+      }
+    }
+    const _registeredGlobalEvents = new Set();
+
+    // mount n unmount
+    let mountFns = [];
+
+    function callUnmountAll() {
+      const keysToReset = [];
+
+      for (const key in altFuncCache) {
+        if (!funcCache[key]) {
+          altFuncCache[key].unMount?.();
+          altFuncCache[key].unMount = null;
+
+          delete altFuncCache[key];
+
+          // reset(key);
+          keysToReset.push(key);
+        }
+      }
+      reset(keysToReset);
+    }
+
+    function callMountAll() {
+      while (mountFns?.length) {
+        // log(mountFns.pop());
+        mountFns.pop()();
+      }
+
+      // if (len)
+      init();
+    }
+    // dom helpers
+    let rootNode = null;
+    let curr = null;
+    let old = null;
+
+    // Tracks the element currently being dragged.
+    // Set on pointerdown (earliest possible signal) so any forceUpdate
+    // triggered by subsequent events already sees it.
+    let _draggingEl = null;
+    let _activeDrag = false;
+
+    function registerDragListeners() {
+      // pointerdown arms _draggingEl before any state change can schedule
+      // a forceUpdate — dragstart fires too late for that.
+      rootNode.addEventListener(
+        "pointerdown",
+        (e) => {
+          const draggable =
+            e.target.closest?.("[draggable='true']") ??
+            (e.target.draggable ? e.target : null);
+          if (draggable) _draggingEl = draggable;
+        },
+        true,
+      );
+
+      // dragstart confirms a real drag session began.
+      rootNode.addEventListener(
+        "dragstart",
+        (e) => {
+          _draggingEl = e.target;
+          _activeDrag = true;
+        },
+        true,
+      );
+
+      // dragend: clear and settle final DOM state.
+      rootNode.addEventListener(
+        "dragend",
+        () => {
+          _draggingEl = null;
+          _activeDrag = false;
+          forceUpdate();
+        },
+        true,
+      );
+
+      // pointerup/cancel: clear if dragstart never fired (plain click).
+      const clearIfNotDragging = () => {
+        requestAnimationFrame(() => {
+          if (_draggingEl && !_activeDrag) _draggingEl = null;
+        });
+      };
+      rootNode.addEventListener("pointerup", clearIfNotDragging, true);
+      rootNode.addEventListener("pointercancel", clearIfNotDragging, true);
+    }
+
+    function setBooleanProp($target, name, value) {
+      if (value) {
+        $target.setAttribute(name, value);
+        $target[name] = true;
+      } else {
+        removeBooleanProp($target, name);
+        $target[name] = false;
+      }
+    }
+
+    function removeBooleanProp($target, name) {
+      $target.removeAttribute(name);
+      $target[name] = false;
+    }
+
+    function isEventProp(name) {
+      return /^on[A-Z]/.test(name);
+    }
+
+    function extractEventName(name) {
+      return name.slice(2).toLowerCase();
+    }
+
+    function isCustomProp(name) {
+      return (
+        isEventProp(name) || name === "fragChildLen"
+        // name === "ignoreNode" ||
+        // name === "fallback" ||
+        // name === "importFn" ||
+        // name === "error"
+      );
+    }
+
+    function setProp($target, name, value) {
+      // log(name, value);
+      if (isCustomProp(name)) {
+        if (isEventProp(name)) {
+          const extratedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extratedName);
+          // For bubbling events, store handler reference for global listener
+          if (!isNonBubbling) {
+            $target[`__${name}`] = value;
+          }
+        }
+      } else if (name === "className") {
+        if (typeof value === "function") {
+          effect(() => {
+            const v = value();
+            $target.setAttribute("class", v);
+          });
+        } else {
+          $target.setAttribute("class", value);
+        }
+      } else if (name === "style") {
+        for (const sk in value) {
+          $target.style[sk] = value[sk];
+        }
+      } else if (name === "ref") {
+        value?.($target);
+      } else if (name === "ignoreLater") {
+        // $target["ignorenode"] = true;
+        $target.setAttribute("ignorenode", true);
+        $target.removeAttribute(name.toLowerCase());
+      } else if (typeof value === "boolean") {
+        if (typeof value === "function") {
+          effect(() => {
+            const v = value();
+            setBooleanProp($target, name, v);
+          });
+        } else {
+          setBooleanProp($target, name, value);
+        }
+      } else {
+        if (name === "value" || name === "htmlFor") {
+          // special case
+          if (typeof value === "function") {
+            effect(() => {
+              const v = value();
+              $target[name] = v;
+            });
+            return;
+          } else {
+            $target[name] = value;
+            return;
+          }
+        }
+
+        // special handling for select
+        const sid = setTimeout(() => {
+          clearTimeout(sid);
+          if (typeof value === "function") {
+            effect(() => {
+              const v = value();
+              $target[name] = v;
+            });
+          } else {
+            $target[name] = value;
+          }
+        }, 0);
+        return;
+      }
+      // if (typeof value === "function") {
+      //   effect(() => {
+      //     const v = value();
+      //     $target.setAttribute(name, v);
+      //   });
+      // } else {
+      //   $target.setAttribute(name, value);
+      // }
+    }
+
+    function removeProp($target, name, value) {
+      if (isCustomProp(name)) {
+        return;
+      } else if (name === "className") {
+        $target.removeAttribute("class");
+      } else if (typeof value === "boolean") {
+        removeBooleanProp($target, name);
+      } else {
+        $target.removeAttribute(name);
+      }
+    }
+
+    function setProps($target, props) {
+      for (const name in props) {
+        setProp($target, name, props[name]);
+      }
+    }
+
+    function updateProp($target, name, newVal, oldVal) {
+      // if (!$target) return;
+      if (!newVal && (newVal === undefined || newVal === null)) {
+        removeProp($target, name, oldVal);
+      } else if (isCustomProp(name)) {
+        if (isEventProp(name)) {
+          const extratedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extratedName);
+
+          if (isNonBubbling) {
+            // Non-bubbling events: update via addEventListeners
+            if ($target._events && $target._events[`${extratedName}`]) {
+              $target.removeEventListener(
+                extratedName,
+                $target._events[`${extratedName}`],
+                false,
+              );
+            }
+            addEventListeners($target, { [name]: newVal });
+          } else {
+            // Bubbling events: update handler reference
+            $target[`__${name}`] = newVal;
+          }
+        }
+      } else if (!oldVal || newVal !== oldVal) {
+        setProp($target, name, newVal);
+      }
+    }
+
+    function updateProps($target, newProps, oldProps = {}) {
+      // if (newProps.ignoreNode || newProps.ignoreLater) {
+      //   console.log($target, newProps);
+      // }
+      const props = Object.assign({}, newProps, oldProps);
+      for (const name in props) {
+        if (isEventProp(name)) {
+          const extratedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extratedName);
+
+          if (isNonBubbling) {
+            // Non-bubbling events: update directly
+            updateProp($target, name, newProps[name], oldProps[name]);
+          } else {
+            // Bubbling events: store on element for global handler
+            $target[`__${name}`] = newProps[name];
+            // Reqd for SSR case
+            const eventLowerCase = extratedName;
+            if ($target.getAttribute(eventLowerCase) !== null)
+              $target.removeAttribute(eventLowerCase);
+          }
+        } else {
+          updateProp($target, name, newProps[name], oldProps[name]);
+        }
+      }
+    }
+
+    function addEventListeners($target, props) {
+      for (const name in props) {
+        if (name === "onMount") {
+          continue;
+        }
+        if (isEventProp(name)) {
+          const extractedName = extractEventName(name);
+          const isNonBubbling = isNonBubblingEvent(extractedName);
+
+          if (!$target._events) $target._events = {};
+
+          if (isNonBubbling) {
+            // Direct binding — same as before
+            if ($target._events[extractedName]) {
+              $target.removeEventListener(
+                extractedName,
+                $target._events[extractedName],
+                false,
+              );
+            }
+            $target._events[extractedName] = props[name];
+            $target.addEventListener(extractedName, props[name], false);
+          } else {
+            // ✅ Register global listener lazily — no hardcoded list needed
+            ensureGlobalListener(extractedName);
+            $target[`__${name}`] = props[name];
+          }
+        }
+      }
+    }
+
+    // vdom to dom
+
+    const $d = document;
+    // SVG
+
+    const $sns = "http://www.w3.org/2000/svg";
+
+    const createAndAppendSVG = (tag, attrs, ...children) => {
+      function setPropsNS($target, props) {
+        for (const name in props) {
+          // setProp($target, name, props[name]);
+          $target.setAttributeNS(null, name, props[name]);
+        }
+      }
+
+      const element = $d.createElementNS($sns, "svg");
+      // addAttributes(element, attrs);
+
+      setPropsNS(element, attrs);
+
+      for (const child of children) {
+        const childElement = $d.createElementNS($sns, child.type);
+
+        setPropsNS(childElement, child.props);
+
+        // appendChild(element, childElement);
+        element.appendChild(childElement);
+      }
+
+      return element;
+    };
+
+    // end SVG
+
+    // Use requestIdleCallback to avoid blocking the main thread for large children arrays
+    const appendChildren = (children, parent) => {
+      let i = 0;
+      const len = children.length;
+
+      function processChunk(deadline) {
+        const fragment = document.createDocumentFragment();
+        while (i < len && deadline.timeRemaining() > 1) {
+          fragment.appendChild(createElement(children[i]));
+          i++;
+        }
+        if (fragment.childNodes.length > 0) {
+          parent.appendChild(fragment);
+        }
+        if (i < len) {
+          requestIdleCallback(processChunk);
+        }
+      }
+
+      requestIdleCallback(processChunk);
+    };
+
+    function createElement(node) {
+      if (Array.isArray(node)) {
+        const fragment = $d.createDocumentFragment();
+
+        for (let i = 0, len = node.length; i < len; ++i) {
+          fragment.appendChild(createElement(node[i]));
+        }
+
+        return fragment;
+      }
+
+      if (!node?.type) {
+        if (node?.$c) {
+          // const tnode = $d.createTextNode(
+          //   node?.value == null || node?.value == undefined ? "" : node?.value
+          // );
+          // return tnode;
+          if (!node.children) {
+            const tnode =
+              // node?.value == null || node?.value == undefined
+              node?.value == null || typeof node?.value === "boolean"
+                ? $d.createComment(node.value)
+                : $d.createTextNode(node?.value);
+            return tnode;
+          } else {
+            return createElement(node.children[0]);
+          }
+        } else
+          return node == null || typeof node === "boolean"
+            ? $d.createComment(node)
+            : $d.createTextNode(node);
+      }
+
+      //special case Compo with Array return and no type (parent)
+      // doc fragement case
+      if (node?.type === "df") {
+        // console.warn(
+        //   "fragment support is experimental and nested fragments NOT supported!!!"
+        // );
+        const $el2 = $d.createDocumentFragment();
+
+        // node.children.map(createElement).forEach($el2.appendChild.bind($el2));
+        if (node.children.length > 100) {
+          appendChildren(node.children, $el2);
+        } else {
+          for (let i = 0, len = node.children.length; i < len; ++i) {
+            $el2.appendChild(createElement(node.children[i]));
+          }
+        }
+
+        return $el2;
+      }
+
+      if (node.type === "svg") {
+        return createAndAppendSVG(node.type, node.props, ...node.children);
+      }
+
+      const $el = $d.createElement(node.type);
+
+      if (!node?.$c) {
+        setProps($el, node.props);
+        addEventListeners($el, node.props);
+        // Ensure all bubbling event handlers are stored on element for global listener
+        for (const propName in node.props) {
+          if (isEventProp(propName)) {
+            const eventName = extractEventName(propName);
+            if (!isNonBubblingEvent(eventName)) {
+              $el[`__${propName}`] = node.props[propName];
+            }
+          }
+        }
+      }
+
+      if (node.children.length > 100) {
+        appendChildren(node.children, $el);
+      } else {
+        for (let i = 0, len = node.children.length; i < len; ++i) {
+          $el.appendChild(createElement(node.children[i]));
+        }
+      }
+
+      // node.children.map(createElement).forEach($el.appendChild.bind($el));
+
+      // log(node.props);
+      const mount = node.props?.onMount;
+
+      if (mount) {
+        mount && mount($el);
+        node.props.onMount = null;
+
+        if (node._events) node._events.mount = null;
+      }
+      return $el;
+    }
+
+    // only 1st type (complete rewrite etc)
+
+    function globalEventListener(e) {
+      const eventType = e.type;
+      // log(eventType);
+      const handlerName = `__on${eventType.charAt(0).toUpperCase()}${eventType.slice(1)}`;
+
+      // Traverse up the DOM tree calling handlers on parent elements
+      let currentTarget = e.target;
+      while (currentTarget && currentTarget !== rootNode.parentElement) {
+        const handler = currentTarget[handlerName];
+        if (handler) {
+          handler(e);
+        }
+
+        // Stop propagation if requested
+        if (e.cancelBubble) {
+          break;
+        }
+
+        currentTarget = currentTarget.parentElement;
+      }
+    }
+
+    let hydrated = false;
+
+    let patches = [],
+      propsPatches = [];
+
+    function addPatches(_patches) {
+      patches.push(..._patches);
+      // log(patches);
+      s.schedule();
+      // forceUpdate();
+    }
+
+    function addPropsPatches(_patches) {
+      propsPatches.push(..._patches);
+      // log(propsPatches);
+      s.schedule();
+      // forceUpdate();
+    }
+
+    // all delta updates
+    function forceUpdate() {
+      // 2. calculate diff
+
+      if (!IS_PROD) logt("TET");
+
+      // callUnmountAll();
+
+      // 3. update dom
+      // console.log(patches);
+
+      if (propsPatches.length) applyPropsPatches(propsPatches);
+      if (patches.length) applyPatches(patches);
+
+      patches = [];
+      propsPatches = [];
+
+      // patches = propsPatches = null;
+      // 3. trigger lifecycle
+      // callLifeCycleHooks(callStack, oldStack);
+
+      // callMountAll();
+
+      if (!IS_PROD) logte("TET");
+    }
+
+    function isValid(v) {
+      return v !== undefined || v !== "";
+    }
+
+    // variation impl
+    // 1. https://www.youtube.com/watch?v=l2Tu0NqH0qU and https://github.com/Matt-Esch/virtual-dom
+    // 2. https://www.youtube.com/watch?v=85gJMUEcnkc
+
+    const navigate = {
+      routeChange: false,
+      set: (flag) => {
+        navigate.routeChange = flag;
+      },
+    };
+
+    ["popstate", "navigate"].forEach((e) =>
+      window.addEventListener(e, () => navigate.set(!0)),
+    );
+
+    function applyPropsPatches(_patches) {
+      for (let i = 0; i < _patches.length; i++) {
+        const patch = _patches[i];
+
+        updateProps(patch.$target, patch.newProps, patch.oldProps);
+
+        patch.$target = null;
+        patch.newProps = null;
+        patch.oldProps = null;
+        // patch = null;
+      }
+      _patches.length = 0;
+    }
+
+    function applyPatches(_patches) {
+      const disposalPromises = [];
+
+      for (let i = 0; i < _patches.length; i++) {
+        const patch = _patches[i];
+
+        switch (patch.op) {
+          case "ADD":
+            const refNode = patch.p.childNodes[patch.index] || null;
+            patch.p.insertBefore(createElement(patch.c), refNode);
+            break;
+
+          case "APPENDDF":
+            patch.p.appendChild(patch.c);
+            break;
+          case "APPEND": {
+            // If the vnode being appended matches the dragged element's key,
+            // reuse that exact DOM node instead of creating a new one.
+            // A fresh element wouldn't carry the browser's drag context.
+            const appendEl =
+              _draggingEl &&
+              patch.c?.key != null &&
+              patch.c.key === _draggingEl.getAttribute?.("key")
+                ? _draggingEl
+                : createElement(patch.c);
+            patch.p.appendChild(appendEl);
+            break;
+          }
+          case "APPEND_CHILDREN": {
+            const df = $d.createDocumentFragment();
+
+            for (let i = 0, len = patch.c.length; i < len; ++i) {
+              df.appendChild(createElement(patch.c[i]));
+            }
+
+            patch.p.appendChild(df);
+            break;
+          }
+
+          case "REMOVE":
+            // Skip disposal if this is the element being dragged — it is
+            // moving to another list, not being destroyed. Calling .remove()
+            // on it detaches it from the document and breaks the drag session.
+            if (patch.c && patch.c === _draggingEl) break;
+            disposalPromises.push(disposeNodes(patch.c));
+            break;
+
+          // case "REMOVEALL":
+          //   logt("REMOVEALL");
+          //   const childrenToDispose = Array.from(patch.p.childNodes);
+          //   disposalPromises.push(
+          //     Promise.all(childrenToDispose.map((c) => disposeNodes(c))),
+          //   );
+
+          //   if (patch.p.replaceChildren) {
+          //     patch.p.replaceChildren();
+          //   } else {
+          //     while (patch.p.firstChild) {
+          //       patch.p.removeChild(patch.p.firstChild);
+          //     }
+          //   }
+          //   logte("REMOVEALL");
+          //   break;
+
+          case "REMOVEALL":
+            // const childrenToDispose = Array.from(patch.p.childNodes);
+            const oldParent = patch.p;
+
+            // Create fresh parent element with same properties
+            const newParent = oldParent.cloneNode(false); // false = no children
+
+            // Swap immediately (instant, single DOM operation)
+            oldParent.parentNode.replaceChild(newParent, oldParent);
+
+            // Update patch.p reference for any subsequent operations
+            patch.p = newParent;
+            patch?.ref?.(newParent);
+
+            // Async disposal of old parent and all its children
+            disposalPromises.push(
+              Promise.resolve().then(() => disposeNodes(oldParent)),
+            );
+
+            break;
+
+          case "REPLACE":
+            patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
+            disposalPromises.push(disposeNodes(patch.c[1]));
+            break;
+
+          case "CONTENT":
+            patch.p.textContent = patch.c;
+            break;
+        }
+
+        patch.p = patch.c = null;
+      }
+
+      _patches.length = 0;
+
+      // Cleanup all references after all disposals complete
+      if (disposalPromises.length > 0) {
+        Promise.all(disposalPromises)
+          .catch((err) => log("Error during node disposal:", err))
+          .finally(() => {
+            disposalPromises.length = 0;
+          });
+      }
+    }
+
+    const disposeNodes = async (node) => {
+      // let domList = domListIterator(node);
+
+      // for (let i = domList.length - 1; i > -1; i--) {
+      //   eventListenerInst.unregisterEventListener(domList[i]);
+      //   // domList[i] = null;
+
+      //   if (i % 50 === 0) {
+      //     await yieldToMain();
+      //   }
+      // }
+
+      // domList = node = null;
+
+      // new
+
+      // Use iteration instead of recursion
+      const nodeStack = [node];
+
+      while (nodeStack.length > 0) {
+        let current = nodeStack.pop();
+
+        if (!current) continue;
+
+        // if (
+        //   current.getAttribute &&
+        //   current.getAttribute("ignorenode") === "true"
+        // ) {
+        //   continue;
+        // }
+
+        // Clean up event listeners
+        // eventListenerInst.unregisterEventListener(current);
+        if (current && current._events) {
+          for (const evt in current._events) {
+            if (evt === "unmount") {
+              current._events[evt]?.();
+            }
+            current.removeEventListener(evt, current._events[evt], false);
+            current._events[evt] = null;
+          }
+          current._events = null;
+        }
+        // Clean up all bubbling event handlers
+        for (const key in current) {
+          if (key.startsWith("__on")) {
+            current[key] = null;
+          }
+        }
+
+        // Add children to stack
+        if (current.childNodes) {
+          const _childNodes = current.childNodes;
+          for (let i = _childNodes.length - 1; i >= 0; i--) {
+            nodeStack.push(_childNodes[i]);
+          }
+        }
+
+        // Clear references
+
+        current?.remove?.();
+        current = null;
+
+        if (nodeStack.length % 50 === 0) {
+          await yieldToMain(); // yield between nodes, not mid-childNodes loop
+        }
+      }
+
+      // Clear final references
+
+      node?.remove?.();
+      node = null;
+      nodeStack.length = 0;
+
+      // end
+    };
+
+    function isWebComponent(element) {
+      // Check if the tag name includes a hyphen
+      return element.tagName.includes("-");
+    }
+
+    ///////////////
+    // alternate 1 (non recursive) for walkDom // tested and works
+    // inspired by: https://www.youtube.com/watch?v=3nwupG2Joaw
+    function domListIterator(_rootNode) {
+      // pass rootNode if its not global
+      // log(next);
+      let arr = [_rootNode];
+      let next = _rootNode;
+
+      function iterChild() {
+        while (next) {
+          // log(next);
+          // arr.push(next);
+          // const notToSkip = !next.getAttribute("ignorenode");
+          const notToSkip = !(
+            next?.getAttribute("ignorenode") != null ||
+            next.tagName === "IFRAME" ||
+            isWebComponent(next)
+          );
+
+          if (next.firstElementChild && notToSkip) {
+            next = next.firstElementChild;
+            // log(next);
+            arr.push(next);
+          } else {
+            iterSibling();
+          }
+        }
+      }
+
+      function iterSibling() {
+        while (next) {
+          if (next.nextElementSibling) {
+            next = next.nextElementSibling;
+
+            // log(next);
+            arr.push(next);
+            return;
+          }
+
+          next = next.parentElement;
+
+          if (next === _rootNode) {
+            next = null;
+          }
+        }
+      }
+
+      iterChild();
+      next = _rootNode = null;
+      return arr;
+    }
+
+    function yieldToMain() {
+      if (globalThis.scheduler?.yield) {
+        return scheduler.yield();
+      }
+
+      // Fall back to yielding with setTimeout.
+      return new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+    }
+
+    return {
+      forceUpdate,
+      addPatches,
+      addPropsPatches,
+      createElement,
+    };
+  };
+
+  // scheduler
+
+  class Scheduler {
+    constructor() {
+      this.dirty = false;
+
+      this.channel = new MessageChannel();
+      this.channel.port1.onmessage = () => this.flush();
+    }
+
+    schedule() {
+      if (this.dirty) return; // batches all calls until flush runs
+      this.dirty = true;
+      this.channel.port2.postMessage(null); // macrotask — yields to browser
+    }
+
+    flush() {
+      this.dirty = false; // only resets when macrotask fires
+      forceUpdate();
+    }
+  }
+
+  // smartRegisterCallback(forceUpdate);
+
+  const s = new Scheduler();
+  // smartRegisterCallback(() => {
+  // s.schedule();
+  // }, 0);
+  s.schedule();
+
+  dom = {
+    ..._dom(),
+  };
+}
+
+// export const mount = dom.mount || noop;
+export const forceUpdate = dom.forceUpdate || noop;
+// export const hydrate = dom.hydrate || noop;
+export const createElement = dom.createElement || noop;
+
+export const addPatches = dom.addPatches || noop;
+export const addPropsPatches = dom.addPropsPatches || noop;
