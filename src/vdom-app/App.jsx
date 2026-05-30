@@ -10,6 +10,7 @@ import {
   createEffect,
   Switch,
   VirtualList,
+  createRef,
 } from "@vdom-lib";
 // import HoleComponent from "../compos/web-compo";
 // import { dom, onMount, onCleanup } from "lib-jsx";
@@ -35,7 +36,7 @@ import {
   DynSans,
   DynTextArea,
 } from "../compos/DynamicExports";
-import { createRef } from "../utils/simple-state";
+import { DragDrop } from "./dnd/DragDrop";
 // import { } from "../utils/vdom/switch";
 // import { Sans } from "./sans/sans";
 
@@ -482,6 +483,7 @@ const links = [
   { to: "/sans", name: "Sanskrit" },
   { to: "/heavy", name: "Heavy" },
   { to: "/json-form", name: "Dynamic JSON" },
+  { to: "/dnd", name: "Drag Drop" },
 ];
 
 const Header = () => {
@@ -505,7 +507,8 @@ const MyRouteSwitch = ({ curPath }) => {
       return <ComplexRoute />;
     case "/embed":
       return <Embed />;
-    // return <Ctr v={10} />;
+    case "/dnd":
+      return <DragDrop />;
     case "/frag":
       console.log("frag");
       const t = Date.now();
@@ -551,6 +554,7 @@ const MyRouteSwitch = ({ curPath }) => {
 const routeObj = {
   "/": ComplexRoute,
   "/embed": Embed,
+  "/dnd": DragDrop,
   "/frag": {
     render: () => {
       const t = Date.now();
@@ -717,6 +721,7 @@ function BuiltInSwitch() {
       <RouterSwitch.Route path="/" component={ComplexRoute} />
       <RouterSwitch.Route path="/route2" component={SimpleRoute} />
       <RouterSwitch.Route path="/embed" component={Embed} />
+      <RouterSwitch.Route path="/dnd" component={DragDrop} />
       <RouterSwitch.Route
         path="/frag"
         render={() => {

@@ -17,6 +17,7 @@ import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
 import { PerfTest } from "../compos/PerfTest";
 import { SsrApp } from "../ssr/SsrApp";
 import { Sans } from "./sans/sans";
+import { DragDrop } from "./dnd/DragDrop";
 import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
 // =======================
@@ -40,5 +41,6 @@ mount(root, () => <App type="dyn" />);
 //   </df>
 // ));
 // mount(root, () => <PerfTest />);
+// mount(root, () => <DragDrop />);
 
 // Usage

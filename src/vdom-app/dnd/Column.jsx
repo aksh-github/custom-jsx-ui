@@ -35,6 +35,8 @@ export const Column = ({
         <ul className="list-parent">
           {columns[column].map((item, index) => (
             <li
+              onClick={() => console.log("item clicked", item)}
+              key={item}
               draggable
               onDragStart={(event) => onDragStart(event, item, column, index)}
               className="item"
