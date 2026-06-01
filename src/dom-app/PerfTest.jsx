@@ -1,6 +1,14 @@
 // https://github.com/krausest/js-framework-benchmark
 
-import { h, signal, addPatches, effect } from "@dom-lib";
+import {
+  h,
+  signal,
+  addPatches,
+  effect,
+  diffKeyedChildren,
+  batch,
+  For,
+} from "@dom-lib";
 
 const SIZE = 1000;
 
@@ -63,6 +71,7 @@ const N = [
 ];
 
 const [dataCtx, setDataCtx] = signal([]);
+const [op, setOp] = signal(null);
 // const [$tbody, setTbody] = signal(null);
 let $tbody = null;
 
@@ -81,6 +90,7 @@ const buildData = (count) => {
         N[random(N.length)]
       }`,
     };
+    data[i].key = data[i].id;
   }
 
   return data;
@@ -100,46 +110,38 @@ const listReducer = (state, action) => {
 
   switch (action.type) {
     case "RUN":
-      data = buildData(SIZE);
-      setDataCtx(data);
+      // 1. Clear existing
+      // batch(() => {
+      //   setDataCtx([]);
+      //   addPatches([
+      //     {
+      //       op: "REMOVEALL",
+      //       p: $tbody,
+      //     },
+      //   ]);
 
-      patches = [];
+      //   // 2. Add fresh data
+      // setDataCtx((prev) => {
+      //   data = buildData(SIZE);
+      // patches = diffKeyedChildren($tbody, [], data);
+      // patches.forEach((p, idx) => {
+      //   ((p.p = $tbody), (p.c = <Row selected={false} item={data[idx]} />));
+      // });
 
-      data.forEach((it, idx) => {
-        patches.push({
-          op: "ADD",
-          index: idx,
-          p: $tbody,
-          c: <Row selected={false} item={it} />,
-        });
-      });
+      // addPatches(patches);
+      //   return data;
+      // });
+      // });
 
-      addPatches(patches);
+      setDataCtx(buildData(SIZE));
 
       return { data: data, selected: 0 };
+      break;
     case "RUN_LOTS":
-      data = buildData(SIZE * 10);
-      setDataCtx(data);
+      setDataCtx(buildData(SIZE * 10));
 
-      patches = [];
-
-      data.forEach((it, idx) => {
-        patches.push({
-          op: "ADD",
-          index: idx,
-          p: $tbody,
-          c: <Row selected={false} item={it} />,
-        });
-      });
-
-      addPatches(patches);
-
-      return { data: data, selected: 0 };
-
-      const newData = dataCtx().slice(0);
-      data = newData.concat(buildData(SIZE));
-      setDataCtx(data);
       return { data: data, selected };
+      break;
     case "UPDATE": {
       const _d = dataCtx();
 
@@ -147,21 +149,18 @@ const listReducer = (state, action) => {
 
       const newData = _d.slice(0);
 
-      const trOf10 = $tbody.querySelectorAll("tr:nth-child(10n)");
+      const trOf10 = $tbody.querySelectorAll("tr:nth-child(2n)");
       patches = [];
-      console.log(trOf10.length, newData.length);
 
       for (let i = 1; i < newData.length; ++i) {
-        const r = newData[i];
+        if (i % 2 === 0) {
+          newData[i].label += " !!!";
 
-        if (i % 10 === 0 && trOf10[i]) {
-          newData[i] = { id: r.id, label: r.label + " !!!" };
-
-          console.log(i, trOf10[i]);
+          let p = $tbody?.querySelector(`#${newData[i].id}`)?.childNodes[1];
 
           patches.push({
             op: "CONTENT",
-            p: trOf10[i].childNodes[1],
+            p: p,
             c: newData[i].label,
           });
         }
@@ -172,68 +171,78 @@ const listReducer = (state, action) => {
       return { data: newData, selected };
     }
     case "CLEAR":
-      setDataCtx([]);
+      // setDataCtx((prev) => {
+      //   patches = diffKeyedChildren($tbody, dataCtx(), []);
 
-      addPatches([
-        {
-          op: "REMOVEALL-FAST",
-          p: $tbody,
-          ref: (el) => {
-            $tbody = el;
-            // setTbody(el);
-          },
-        },
-      ]);
+      //   // console.log(patches);
+
+      //   patches.forEach((p, idx) => {
+      //     p.c = $tbody.querySelector(`#${p.key}`);
+      //   });
+
+      //   addPatches(patches);
+      //   return [];
+      // });
+      setDataCtx([]);
 
       return { data: [], selected: 0 };
     case "SWAP_ROWS":
-      const newdata = [...dataCtx()];
-      if (newdata.length > 998) {
-        const d1 = newdata[1];
-        const d998 = newdata[998];
-        newdata[1] = d998;
-        newdata[998] = d1;
-        setDataCtx(newdata);
+      data = [...dataCtx()];
+      if (data.length > 998) {
+        const d1 = data[1];
+        const d998 = data[998];
+        data[1] = d998;
+        data[998] = d1;
 
-        addPatches([
-          {
-            op: "MOVE",
-            p: $tbody,
-            fromIndex: 998,
-            toIndex: 1,
-          },
-          {
-            op: "MOVE",
-            p: $tbody,
-            fromIndex: 1,
-            toIndex: 998,
-          },
-        ]);
+        // patches = diffKeyedChildren($tbody, dataCtx(), data);
+        // // console.log(patches);
+        // patches.forEach((p, idx) => {
+        //   ((p.p = $tbody), (p.c = $tbody.querySelector(`#${p.key}`)));
+        // });
+
+        // addPatches(patches);
+
+        setDataCtx(data);
+
+        // addPatches([
+        //   {
+        //     op: "MOVE",
+        //     p: $tbody,
+        //     fromIndex: 998,
+        //     toIndex: 1,
+        //   },
+        //   {
+        //     op: "MOVE",
+        //     p: $tbody,
+        //     fromIndex: 1,
+        //     toIndex: 998,
+        //   },
+        // ]);
       }
 
-      return { data: newdata, selected };
-    case "REMOVE": {
-      data = dataCtx();
+      return { data: data, selected };
+    case "REMOVE":
+      const old = (data = dataCtx());
       // const idx = data.findIndex((d) => d.id === action.id);
       // data = [...data.slice(0, idx), ...data.slice(idx + 1)];
       data = data.filter((v) => {
         return v.id !== action.id;
       });
+
       setDataCtx(data);
 
-      addPatches([
-        {
-          op: "REMOVE",
-          p: $tbody,
-          c: $tbody.querySelector(`#${action.id}`),
-        },
-      ]);
+      patches = diffKeyedChildren($tbody, old, data);
+      patches.forEach((p, idx) => {
+        ((p.p = $tbody), (p.c = $tbody.querySelector(`#${p.key}`)));
+      });
+      // console.log(patches);
+      addPatches(patches);
 
       return {
         data: data,
         selected,
       };
-    }
+      break;
     case "SELECT":
       return { data, selected: action.id };
     default:
@@ -257,6 +266,7 @@ const Button = ({ id, cb, title }) => (
 const Jumbotron = ({ dispatch }) => {
   const handler = (e) => {
     const { id } = e.target;
+    setOp(id);
 
     switch (id) {
       case "RUN":
@@ -339,12 +349,16 @@ const TBody = () => {
         type: td?.dataset.tag,
         id: tr.getAttribute("key"),
       });
+      setOp(td?.dataset.tag);
     }
     e.stopPropagation();
   };
 
   const stopEff = effect(() => {
-    console.log(dataCtx());
+    // console.log(diffKeyedChildren($tbody, [], dataCtx()));
+    // console.log(dataCtx());
+    dataCtx();
+    console.log("Data changed");
   });
 
   return (
@@ -359,14 +373,20 @@ const TBody = () => {
         // setTbody(null);
       }}
     >
-      {data.map((item) => (
+      {/* {data.map((item) => (
         <Row
           key={item.id}
           item={item}
           selected={selected === item.id}
           // dispatch={listReducer}
         />
-      ))}
+      ))} */}
+      <For
+        parent={$tbody}
+        each={dataCtx}
+        keyBy={(item) => item.id}
+        render={(item) => <Row key={item.id} item={item} />}
+      />
     </tbody>
   );
 };
@@ -387,12 +407,28 @@ export const PerfTest = () => {
     e.stopPropagation();
   };
 
+  let $op = null;
+
+  effect(() => {
+    const _op = op();
+    if ($op) $op.textContent = `Current op: ${_op}`;
+  });
+
   return (
     <div className="container">
       <span className="typing"></span>
       <span className="typing"></span>
       <span className="typing"></span>
       <Jumbotron dispatch={listReducer} />
+      <p
+        ref={(el) => ($op = el)}
+        id="current-op"
+        onUnmount={() => {
+          $op = null;
+        }}
+      >
+        {op()}
+      </p>
       <table
         className="table table-hover table-striped test-data"
         onClick={tableClickHandler}
@@ -408,3 +444,36 @@ export const PerfTest = () => {
     </div>
   );
 };
+
+// unrelated
+
+const v1 = h("ul", {}, [
+  h("li", { key: "a", textContent: "Item A" }),
+  h("li", { key: "b", textContent: "Item B" }),
+  h("li", { key: "c", textContent: "Item C" }),
+  h("li", { key: "d", textContent: "Item C (updated)" }),
+  h("li", { key: "e", textContent: "Item E" }),
+  h("li", { key: "f", textContent: "Item F" }),
+  h("li", { key: "G", textContent: "Item G" }),
+]);
+
+const v2 = h("ul", {}, [
+  h("li", { key: "a", textContent: "Item A" }),
+  h("li", { key: "f", textContent: "Item F" }),
+  h("li", { key: "c", textContent: "Item C (updated)" }),
+  h("li", { key: "d", textContent: "Item D" }),
+  h("li", { key: "e", textContent: "Item E" }),
+  h("li", { key: "b", textContent: "Item B" }),
+  h("li", { key: "G", textContent: "Item G" }),
+  // h("li", { key: "c", textContent: "Item C" }),
+  // h("li", { key: "a", textContent: "Item A" }),
+  // h("li", { key: "b", textContent: "Item B" }),
+]);
+
+// console.log(v1, v2);
+// console.log(diffKeyedChildren(undefined, v1.children, v2.children));
+
+// unrelated end
+// 2 > 0
+// 1 > 2
+// 0 > 1

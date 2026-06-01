@@ -1,7 +1,10 @@
 // orig is from no-framework-js -> no-framework-with-jsx project
+import { updateScheduler } from "@dom-lib";
 
 let activeObserver = null;
 let forceUpdate = () => {};
+let isBatching = false;
+let pendingNotifications = new Set();
 
 export const registerRenderCallbackV2 = (cb) => {
   forceUpdate = cb;
@@ -31,13 +34,39 @@ export const signal = (value) => {
     _value = newValue;
 
     for (const subscriber of [..._subscribers]) {
-      subscriber.notify();
+      if (isBatching) {
+        pendingNotifications.add(subscriber);
+      } else {
+        subscriber.notify();
+      }
     }
 
-    forceUpdate();
+    if (!isBatching) {
+      updateScheduler.schedule();
+    }
   }
 
   return [read, write];
+};
+
+export const batch = (fn) => {
+  const wasBatching = isBatching;
+  isBatching = true;
+
+  try {
+    fn();
+  } finally {
+    isBatching = wasBatching;
+
+    if (!wasBatching && pendingNotifications.size > 0) {
+      // Notify all pending effects
+      for (const subscriber of pendingNotifications) {
+        subscriber.notify();
+      }
+      pendingNotifications.clear();
+      updateScheduler.schedule();
+    }
+  }
 };
 
 export const effect = (cb) => {

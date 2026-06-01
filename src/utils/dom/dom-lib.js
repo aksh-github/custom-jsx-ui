@@ -30,8 +30,303 @@ export const h = (type, props, ...children) => {
   if (typeof type === "function") {
     return type(props || {}, normalizedChildren);
   }
-  return { type, props: props || {}, children: normalizedChildren };
+
+  return {
+    type,
+    props: props || {},
+    key: props?.key,
+    children: normalizedChildren,
+  };
 };
+
+const COMMENT_NODE_TYPE = "__comment__";
+
+function withKey(vnode, key) {
+  if (vnode == null || typeof vnode !== "object") return vnode;
+  if (vnode.key === key) return vnode;
+
+  const props = vnode.props ? { ...vnode.props } : {};
+  props.key = key;
+
+  return {
+    ...vnode,
+    key,
+    props,
+  };
+}
+
+function getListRefNode(parent, startAnchor, endAnchor, index) {
+  let current = startAnchor?.nextSibling || null;
+  let i = 0;
+
+  while (current && current !== endAnchor && i < index) {
+    current = current.nextSibling;
+    i++;
+  }
+
+  return current === endAnchor ? endAnchor : current;
+}
+
+export function For(props, children) {
+  const renderItem =
+    props.render || (typeof children?.[0] === "function" ? children[0] : null);
+
+  const getItems =
+    typeof props.each === "function" ? props.each : () => props.each || [];
+
+  const getKey =
+    typeof props.keyBy === "function"
+      ? props.keyBy
+      : (item, index) => item?.key ?? item?.id ?? index;
+
+  const resolveParent = () =>
+    typeof props.parent === "function" ? props.parent() : props.parent;
+
+  let startAnchor = null;
+  let endAnchor = null;
+  let prevChildren = [];
+  let disposed = false;
+
+  const sync = () => {
+    if (disposed || !startAnchor || !endAnchor) return;
+
+    const parent =
+      resolveParent() || startAnchor.parentNode || endAnchor.parentNode;
+    if (!parent) return;
+
+    const items = getItems() || [];
+    const nextChildren = items.map((item, index) => {
+      const rendered = renderItem ? renderItem(item, index) : item;
+      const vnode =
+        rendered == null || typeof rendered !== "object"
+          ? {
+              $c: true,
+              value: rendered,
+              props: { value: rendered },
+              children: [],
+            }
+          : rendered;
+
+      return withKey(vnode, getKey(item, index));
+    });
+
+    const patches = diffKeyedChildren(parent, prevChildren, nextChildren);
+
+    for (const patch of patches) {
+      patch.p = parent;
+
+      if (patch.op === "ADD") {
+        patch.refNode = getListRefNode(
+          parent,
+          startAnchor,
+          endAnchor,
+          patch.index,
+        );
+      } else if (patch.op === "MOVE") {
+        patch.refNode = patch.refKey
+          ? parent.querySelector(`:scope > [key="${patch.refKey}"]`)
+          : endAnchor;
+      } else if (patch.op === "REMOVE" || patch.op === "PATCH") {
+        patch.c = parent.querySelector(`:scope > [key="${patch.key}"]`);
+      }
+    }
+
+    prevChildren = nextChildren;
+    addPatches(patches);
+  };
+
+  const stop = effect(() => {
+    getItems();
+    sync();
+  });
+
+  const cleanup = () => {
+    if (disposed) return;
+    disposed = true;
+    stop?.();
+    startAnchor = null;
+    endAnchor = null;
+    prevChildren = [];
+  };
+
+  return h(
+    "df",
+    {},
+    h(COMMENT_NODE_TYPE, {
+      ref: (el) => {
+        startAnchor = el;
+      },
+      onUnmount: cleanup,
+    }),
+    h(COMMENT_NODE_TYPE, {
+      ref: (el) => {
+        endAnchor = el;
+        sync();
+      },
+      onUnmount: cleanup,
+    }),
+  );
+}
+
+export function diffKeyedChildren(container, oldChildren, newChildren) {
+  const patches = [];
+
+  // optimization
+  // if all new
+  if (oldChildren.length === 0) {
+    newChildren.forEach((node, index) =>
+      patches.push({ op: "ADD", c: node, index }),
+    );
+    return patches;
+  }
+
+  // all gone
+  if (newChildren.length === 0) {
+    oldChildren.forEach((node) =>
+      patches.push({ op: "REMOVE", key: node.key ?? getUnkeyedId(node) }),
+    );
+    return patches;
+  }
+
+  // Index old children
+  const oldKeyedMap = new Map();
+  const oldUnkeyed = [];
+  for (const [i, node] of oldChildren.entries()) {
+    node.key != null
+      ? oldKeyedMap.set(node.key, { node, originalPos: i })
+      : oldUnkeyed.push({ node, originalPos: i });
+  }
+
+  // ── Pass 1: resolve each new child to its old position ───────────────────
+  // newMapped[i] = { newChild, oldPos } or null if it's a fresh ADD
+  let unkeyedCursor = 0;
+  const newMapped = newChildren.map((newChild) => {
+    if (newChild.key != null) {
+      const old = oldKeyedMap.get(newChild.key);
+      if (old) {
+        oldKeyedMap.delete(newChild.key);
+        if (!shallowEqual(old.node, newChild))
+          patches.push({
+            op: "PATCH",
+            key: newChild.key,
+            prev: old.node,
+            next: newChild,
+          });
+        return { newChild, oldPos: old.originalPos };
+      }
+    } else {
+      const oldEntry = oldUnkeyed[unkeyedCursor];
+      if (oldEntry) {
+        unkeyedCursor++;
+        if (!shallowEqual(oldEntry.node, newChild))
+          patches.push({
+            op: "PATCH",
+            key: getUnkeyedId(oldEntry.node),
+            prev: oldEntry.node,
+            next: newChild,
+          });
+        return { newChild, oldPos: oldEntry.originalPos };
+      }
+    }
+    // No match — will be ADDed
+    patches.push({
+      op: "ADD",
+      c: newChild,
+      index: newChildren.indexOf(newChild),
+    });
+    return null;
+  });
+
+  // ── Pass 2: LIS over oldPos values of matched nodes ──────────────────────
+  // Nodes in the LIS are already in the right relative order → don't move them.
+  // Every other matched node needs a MOVE.
+
+  const matched = newMapped
+    .map((m, newIdx) => (m ? { ...m, newIdx } : null))
+    .filter(Boolean);
+
+  if (matched.length) {
+    const lisIndices = new Set(computeLIS(matched.map((m) => m.oldPos)));
+
+    for (let i = 0; i < matched.length; i++) {
+      if (!lisIndices.has(i)) {
+        const { newChild, newIdx } = matched[i];
+        const key = newChild.key ?? getUnkeyedId(newChild);
+        const refKey = newChildren[newIdx + 1]?.key ?? null; // null = move to end
+        patches.push({ op: "MOVE", key, refKey });
+      }
+    }
+  }
+
+  // ── Pass 3: removals ─────────────────────────────────────────────────────
+  for (const [key] of oldKeyedMap) patches.push({ op: "REMOVE", key });
+  for (let i = unkeyedCursor; i < oldUnkeyed.length; i++)
+    patches.push({ op: "REMOVE", key: getUnkeyedId(oldUnkeyed[i].node) });
+
+  return patches;
+}
+
+// patience-sort LIS — O(n log n), returns indices into `seq` that form the LIS
+function computeLIS(seq) {
+  const tails = []; // tails[i] = smallest tail value of IS of length i+1
+  const tailIdx = []; // index in seq of each tail
+  const prev = new Array(seq.length).fill(-1);
+  const posMap = []; // posMap[i] = index in tails where seq[i] was placed
+
+  for (let i = 0; i < seq.length; i++) {
+    const val = seq[i];
+    let lo = 0,
+      hi = tails.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      tails[mid] < val ? (lo = mid + 1) : (hi = mid);
+    }
+    tails[lo] = val;
+    tailIdx[lo] = i;
+    posMap[i] = lo;
+    if (lo > 0) prev[i] = tailIdx[lo - 1];
+  }
+
+  // Backtrack to recover the actual indices
+  const result = new Set();
+  let idx = tailIdx[tails.length - 1];
+  while (idx !== -1) {
+    result.add(idx);
+    idx = prev[idx];
+  }
+  return result;
+}
+
+// // ── helpers ──────────────────────────────────────────────────────────────────
+
+// /**
+//  * Cheap structural comparison of two VNodes.
+//  * Returns true when type and all top-level props are equal (no deep diff).
+//  */
+function shallowEqual(a, b) {
+  if (a === b) return true;
+  if (a.type !== b.type) return false;
+  const ap = a.props ?? {};
+  const bp = b.props ?? {};
+  const aKeys = Object.keys(ap);
+  const bKeys = Object.keys(bp);
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every((k) => ap[k] === bp[k]);
+}
+
+/**
+ * Stable synthetic identifier for an unkeyed VNode.
+ * Uses an WeakMap so the same object always gets the same id,
+ * and the mapping is GC-friendly.
+ */
+const unkeyedIds = new WeakMap();
+let unkeyedCounter = 0;
+function getUnkeyedId(node) {
+  if (!unkeyedIds.has(node)) {
+    unkeyedIds.set(node, `__unkeyed_${unkeyedCounter++}`);
+  }
+  return unkeyedIds.get(node);
+}
 
 // all dom related functions
 let dom = {};
@@ -330,6 +625,90 @@ if (typeof window !== "undefined") {
       }
     }
 
+    function patchChildren($parent, prevChildren = [], nextChildren = []) {
+      const prevLen = prevChildren.length;
+      const nextLen = nextChildren.length;
+      const maxLen = Math.max(prevLen, nextLen);
+
+      for (let i = 0; i < maxLen; i++) {
+        const prevChild = prevChildren[i];
+        const nextChild = nextChildren[i];
+        const domChild = $parent.childNodes[i];
+
+        if (nextChild == null) {
+          if (domChild) {
+            void disposeNodes(domChild);
+          }
+          continue;
+        }
+
+        if (prevChild == null) {
+          $parent.insertBefore(createElement(nextChild), domChild || null);
+          continue;
+        }
+
+        const prevIsNode = prevChild && typeof prevChild === "object";
+        const nextIsNode = nextChild && typeof nextChild === "object";
+
+        if (!prevIsNode || !nextIsNode) {
+          if (prevChild !== nextChild) {
+            if (domChild?.nodeType === 3) {
+              domChild.textContent = nextChild ?? "";
+            } else {
+              const replacement = createElement(nextChild);
+              if (domChild) {
+                $parent.replaceChild(replacement, domChild);
+                void disposeNodes(domChild);
+              } else {
+                $parent.appendChild(replacement);
+              }
+            }
+          }
+          continue;
+        }
+
+        patchNode(domChild, prevChild, nextChild);
+      }
+    }
+
+    function patchNode($target, prevVNode, nextVNode) {
+      if (!$target || !prevVNode || !nextVNode) return $target;
+
+      if (prevVNode.type !== nextVNode.type) {
+        const replacement = createElement(nextVNode);
+        $target.replaceWith(replacement);
+        void disposeNodes($target);
+        return replacement;
+      }
+
+      if (!nextVNode.type) {
+        const nextValue =
+          nextVNode?.value ?? nextVNode?.children?.[0] ?? nextVNode ?? "";
+        if ($target.textContent !== `${nextValue ?? ""}`) {
+          $target.textContent = nextValue ?? "";
+        }
+        return $target;
+      }
+
+      if (nextVNode.type === "df") {
+        patchChildren(
+          $target,
+          prevVNode.children || [],
+          nextVNode.children || [],
+        );
+        return $target;
+      }
+
+      updateProps($target, nextVNode.props, prevVNode.props);
+      patchChildren(
+        $target,
+        prevVNode.children || [],
+        nextVNode.children || [],
+      );
+
+      return $target;
+    }
+
     function addEventListeners($target, props) {
       for (const name in props) {
         if (name === "onMount") {
@@ -450,6 +829,16 @@ if (typeof window !== "undefined") {
             : $d.createTextNode(node);
       }
 
+      if (node.type === COMMENT_NODE_TYPE) {
+        const comment = $d.createComment("");
+
+        if (node.props?.ref) node.props.ref(comment);
+        if (node.props?.onMount) node.props.onMount(comment);
+        if (node.props?.onUnmount) comment.__onUnmount = node.props.onUnmount;
+
+        return comment;
+      }
+
       //special case Compo with Array return and no type (parent)
       // doc fragement case
       if (node?.type === "df") {
@@ -544,14 +933,15 @@ if (typeof window !== "undefined") {
     function addPatches(_patches) {
       patches.push(..._patches);
       // log(patches);
-      s.schedule();
+
+      updateScheduler.schedule();
       // forceUpdate();
     }
 
     function addPropsPatches(_patches) {
       propsPatches.push(..._patches);
       // log(propsPatches);
-      s.schedule();
+      updateScheduler.schedule();
       // forceUpdate();
     }
 
@@ -622,7 +1012,8 @@ if (typeof window !== "undefined") {
 
         switch (patch.op) {
           case "ADD":
-            const refNode = patch.p.childNodes[patch.index] || null;
+            const refNode =
+              patch.refNode ?? patch.p.childNodes[patch.index] ?? null;
             patch.p.insertBefore(createElement(patch.c), refNode);
             break;
 
@@ -703,16 +1094,37 @@ if (typeof window !== "undefined") {
             patch.p.replaceChild(createElement(patch.c[0]), patch.c[1]);
             disposalPromises.push(disposeNodes(patch.c[1]));
             break;
-          case "MOVE":
-            // Implementation for move operation
-            patch.p.insertBefore(
-              patch.p.childNodes[patch.toIndex],
-              patch.p.childNodes[patch.fromIndex],
-            );
+          case "MOVE": {
+            // keyed move
+            if (patch.key) {
+              const nodeToMove = patch.p.querySelector(
+                `:scope > [key="${patch.key}"]`,
+              );
+              const refNode =
+                patch.refNode ??
+                (patch.refKey
+                  ? patch.p.querySelector(`:scope > [key="${patch.refKey}"]`)
+                  : null);
+              patch.p.insertBefore(nodeToMove, refNode);
+            } else {
+              log("op: MOVE, issue: UNHANDLED");
+            }
             break;
+          }
           case "CONTENT":
             patch.p.textContent = patch.c;
             break;
+          case "PATCH": {
+            const target =
+              patch.c?.nodeType === 1 || patch.c?.nodeType === 3
+                ? patch.c
+                : patch.p.querySelector(`:scope > [key="${patch.key}"]`);
+
+            if (target) {
+              patchNode(target, patch.prev, patch.next);
+            }
+            break;
+          }
         }
 
         patch.p = patch.c = null;
@@ -773,6 +1185,12 @@ if (typeof window !== "undefined") {
           }
           current._events = null;
         }
+
+        if (current?.__onUnmount) {
+          current.__onUnmount?.();
+          current.__onUnmount = null;
+        }
+
         // Clean up all bubbling event handlers
         for (const key in current) {
           if (key.startsWith("__on")) {
@@ -867,7 +1285,7 @@ if (typeof window !== "undefined") {
 
     function yieldToMain() {
       if (globalThis.scheduler?.yield) {
-        return scheduler.yield();
+        return globalThis.scheduler.yield();
       }
 
       // Fall back to yielding with setTimeout.
@@ -884,38 +1302,43 @@ if (typeof window !== "undefined") {
     };
   };
 
-  // scheduler
+  // Set up the shared scheduler callback
+  const _domInstance = _dom();
 
+  // MessageChannel-based scheduler — shared by dom and signals
   class Scheduler {
     constructor() {
       this.dirty = false;
-
       this.channel = new MessageChannel();
       this.channel.port1.onmessage = () => this.flush();
     }
 
     schedule() {
-      if (this.dirty) return; // batches all calls until flush runs
+      if (this.dirty) return; // already scheduled, batch all calls until flush runs
       this.dirty = true;
       this.channel.port2.postMessage(null); // macrotask — yields to browser
     }
 
     flush() {
-      this.dirty = false; // only resets when macrotask fires
-      forceUpdate();
+      this.dirty = false;
+      this.callback?.();
+    }
+
+    setCallback(cb) {
+      this.callback = cb;
     }
   }
 
-  // smartRegisterCallback(forceUpdate);
+  // Global scheduler instance
+  const updateScheduler = new Scheduler();
 
-  const s = new Scheduler();
-  // smartRegisterCallback(() => {
-  // s.schedule();
-  // }, 0);
-  s.schedule();
+  updateScheduler.setCallback(() => {
+    _domInstance.forceUpdate();
+  });
 
   dom = {
-    ..._dom(),
+    ..._domInstance,
+    updateScheduler,
   };
 }
 
@@ -926,5 +1349,6 @@ export const createElement = dom.createElement || noop;
 
 export const addPatches = dom.addPatches || noop;
 export const addPropsPatches = dom.addPropsPatches || noop;
+export const updateScheduler = dom.updateScheduler;
 
-export { signal, effect } from "@simple-signal";
+export { signal, effect, batch } from "@simple-signal";
