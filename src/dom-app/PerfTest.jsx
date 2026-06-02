@@ -3,11 +3,13 @@
 import {
   h,
   signal,
+  computed,
   addPatches,
   effect,
   diffKeyedChildren,
   batch,
   For,
+  ReactiveText,
 } from "@dom-lib";
 
 const SIZE = 1000;
@@ -310,7 +312,7 @@ const Jumbotron = ({ dispatch }) => {
 
 const style = { background: "beige" };
 const [dataCtx, setDataCtx] = signal(buildData(4));
-const [op, setOp] = signal(null);
+const [op, setOp] = signal("");
 // const [$tbody, setTbody] = signal(null);
 let $tbody = null;
 
@@ -410,11 +412,12 @@ export const PerfTest = () => {
   };
 
   let $op = null;
+  let txtContent = computed();
 
-  effect(() => {
-    const _op = op();
-    if ($op) $op.textContent = `Current op: ${_op}`;
-  });
+  // effect(() => {
+  //   const _op = op();
+  //   if ($op) $op.textContent = `Current op: ${_op}`;
+  // });
 
   return (
     <div className="container">
@@ -422,7 +425,7 @@ export const PerfTest = () => {
       <span className="typing"></span>
       <span className="typing"></span>
       <Jumbotron dispatch={listReducer} />
-      <p
+      {/* <p
         ref={(el) => ($op = el)}
         id="current-op"
         onUnmount={() => {
@@ -430,7 +433,18 @@ export const PerfTest = () => {
         }}
       >
         {op()}
-      </p>
+      </p> */}
+      <ReactiveText
+        type="p"
+        elementProps={{
+          id: "current-op",
+          onMount: () => {
+            console.log("ReactiveText mounted");
+          },
+        }}
+        value={op}
+        textContent={(val) => `Current op: ${val}`}
+      />
       <table
         className="table table-hover table-striped test-data"
         onClick={tableClickHandler}

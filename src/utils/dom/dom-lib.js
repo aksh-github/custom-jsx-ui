@@ -39,6 +39,41 @@ export const h = (type, props, ...children) => {
   };
 };
 
+export const ReactiveText = (props) => {
+  let element = null;
+
+  // Set up the effect to update the text content directly
+  const clean = effect(() => {
+    // Read the reactive signal value first to register the dependency
+    const rawValue = props.value();
+
+    // Safely mutate the DOM node if it is currently mounted
+    if (element) {
+      element.textContent = props.textContent
+        ? props.textContent(rawValue)
+        : rawValue;
+    }
+  });
+
+  return h(
+    props.type,
+    {
+      ...props.elementProps,
+      ref: (el) => {
+        element = el;
+        if (props.elementProps?.ref) props.elementProps.ref(el);
+      },
+      onUnmount: () => {
+        clean();
+        element = null;
+
+        if (props.elementProps?.onUnmount) props.elementProps.onUnmount();
+      },
+    },
+    [`${props.textContent ? props.textContent(props.value()) : props.value()}`],
+  );
+};
+
 const COMMENT_NODE_TYPE = "__comment__";
 
 function withKey(vnode, key) {
@@ -1425,4 +1460,4 @@ export const addPatches = dom.addPatches || noop;
 export const addPropsPatches = dom.addPropsPatches || noop;
 export const updateScheduler = dom.updateScheduler;
 
-export { signal, effect, batch } from "@simple-signal";
+export { signal, effect, batch, computed } from "@simple-signal";
