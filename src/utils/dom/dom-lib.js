@@ -82,6 +82,7 @@ export function For(props, children) {
   const resolveParent = () =>
     typeof props.parent === "function" ? props.parent() : props.parent;
 
+  let currParent = null; // mainly used for remove alll opti
   let startAnchor = null;
   let endAnchor = null;
   let prevChildren = [];
@@ -110,7 +111,69 @@ export function For(props, children) {
       return withKey(vnode, getKey(item, index));
     });
 
-    const patches = diffKeyedChildren(parent, prevChildren, nextChildren);
+    // optimization
+    const { patches, splOp } = diffKeyedChildren(
+      parent,
+      prevChildren,
+      nextChildren,
+    );
+
+    // 1. all new
+    // if (splOp === "ADD-ALL") {
+    //   if (nextChildren.length > 0) {
+    //     patches.push({
+    //       op: "ADD",
+    //       p: parent,
+    //       c: { type: "df", props: {}, children: nextChildren },
+    //       index: 0,
+    //     });
+    //     // prevChildren = nextChildren;
+
+    //     // parent.appendChild(
+    //     //   createElement(
+    //     //     For(
+    //     //       {
+    //     //         ...props,
+    //     //         parent: currParent,
+    //     //       },
+    //     //       children,
+    //     //     ),
+    //     //   ),
+    //     // );
+
+    //     // return;
+    //   }
+    // }
+    // 2. Remove all
+    if (splOp === "REMOVEALL-FAST") {
+      addPatches([
+        {
+          op: splOp,
+          p: parent,
+          ref: (el) => {
+            props?.updateParentRef?.(el);
+            currParent = el;
+          },
+        },
+      ]);
+      prevChildren = nextChildren;
+
+      setTimeout(() => {
+        currParent.appendChild(
+          createElement(
+            For(
+              {
+                ...props,
+                parent: currParent,
+              },
+              children,
+            ),
+          ),
+        );
+      }, 0);
+
+      return;
+    }
 
     for (const patch of patches) {
       patch.p = parent;
@@ -177,15 +240,17 @@ export function diffKeyedChildren(container, oldChildren, newChildren) {
     newChildren.forEach((node, index) =>
       patches.push({ op: "ADD", c: node, index }),
     );
-    return patches;
+    // return patches;
+    return { splOp: "ADD-ALL2", patches };
   }
 
   // all gone
   if (newChildren.length === 0) {
-    oldChildren.forEach((node) =>
-      patches.push({ op: "REMOVE", key: node.key ?? getUnkeyedId(node) }),
-    );
-    return patches;
+    // oldChildren.forEach((node) =>
+    //   patches.push({ op: "REMOVE", key: node.key ?? getUnkeyedId(node) }),
+    // );
+    // return patches;
+    return { splOp: "REMOVEALL-FAST", patches };
   }
 
   // Index old children
@@ -263,7 +328,7 @@ export function diffKeyedChildren(container, oldChildren, newChildren) {
   for (let i = unkeyedCursor; i < oldUnkeyed.length; i++)
     patches.push({ op: "REMOVE", key: getUnkeyedId(oldUnkeyed[i].node) });
 
-  return patches;
+  return { patches, splOp: null };
 }
 
 // patience-sort LIS — O(n log n), returns indices into `seq` that form the LIS
@@ -1075,6 +1140,9 @@ if (typeof window !== "undefined") {
 
             // Create fresh parent element with same properties
             const newParent = oldParent.cloneNode(false); // false = no children
+
+            // copy other things
+            newParent._events = { ...oldParent._events };
 
             // Swap immediately (instant, single DOM operation)
             oldParent.parentNode.replaceChild(newParent, oldParent);
