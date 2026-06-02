@@ -70,11 +70,6 @@ const N = [
   "keyboard",
 ];
 
-const [dataCtx, setDataCtx] = signal([]);
-const [op, setOp] = signal(null);
-// const [$tbody, setTbody] = signal(null);
-let $tbody = null;
-
 const generateAlphaID = () => {
   // Convert random number to base-36 string and extract 6 characters
   return `t-${Math.random().toString(36).substring(2, 8)}`;
@@ -231,12 +226,12 @@ const listReducer = (state, action) => {
 
       setDataCtx(data);
 
-      patches = diffKeyedChildren($tbody, old, data);
-      patches.forEach((p, idx) => {
-        ((p.p = $tbody), (p.c = $tbody.querySelector(`#${p.key}`)));
-      });
-      // console.log(patches);
-      addPatches(patches);
+      // patches = diffKeyedChildren($tbody, old, data);
+      // patches.forEach((p, idx) => {
+      //   ((p.p = $tbody), (p.c = $tbody.querySelector(`#${p.key}`)));
+      // });
+      // // console.log(patches);
+      // addPatches(patches);
 
       return {
         data: data,
@@ -265,6 +260,7 @@ const Button = ({ id, cb, title }) => (
 
 const Jumbotron = ({ dispatch }) => {
   const handler = (e) => {
+    e.stopPropagation();
     const { id } = e.target;
     setOp(id);
 
@@ -289,8 +285,6 @@ const Jumbotron = ({ dispatch }) => {
         dispatch(null, { type: "SWAP_ROWS" });
         break;
     }
-
-    e.stopPropagation();
   };
 
   return (
@@ -315,6 +309,10 @@ const Jumbotron = ({ dispatch }) => {
 };
 
 const style = { background: "beige" };
+const [dataCtx, setDataCtx] = signal([]);
+const [op, setOp] = signal(null);
+// const [$tbody, setTbody] = signal(null);
+let $tbody = null;
 
 const Row = ({ selected, item }) => (
   <tr key={item.id} id={item.id} className={selected ? "danger" : ""}>
@@ -340,6 +338,7 @@ const TBody = () => {
 
   const tableClickHandler = (e) => {
     // const target = e.target;
+    e.stopPropagation();
 
     const tr = e.target.closest("tr");
     const td = e.target.closest("td");
@@ -351,7 +350,6 @@ const TBody = () => {
       });
       setOp(td?.dataset.tag);
     }
-    e.stopPropagation();
   };
 
   const stopEff = effect(() => {
@@ -367,6 +365,9 @@ const TBody = () => {
       style={style}
       ref={(el) => ($tbody = el)}
       // onClick={tableClickHandler}
+      onMount={() => {
+        setDataCtx(buildData(4));
+      }}
       onUnmount={() => {
         stopEff();
         // $tbody = null;
@@ -386,6 +387,7 @@ const TBody = () => {
         each={dataCtx}
         keyBy={(item) => item.id}
         render={(item) => <Row key={item.id} item={item} />}
+        updateParentRef={(el) => ($tbody = el)}
       />
     </tbody>
   );
@@ -394,6 +396,7 @@ const TBody = () => {
 export const PerfTest = () => {
   const tableClickHandler = (e) => {
     // const target = e.target;
+    e.stopPropagation();
 
     const tr = e.target.closest("tr");
     const td = e.target.closest("td");
@@ -404,7 +407,6 @@ export const PerfTest = () => {
         id: tr.getAttribute("key"),
       });
     }
-    e.stopPropagation();
   };
 
   let $op = null;
