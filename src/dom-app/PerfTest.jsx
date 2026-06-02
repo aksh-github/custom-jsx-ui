@@ -309,7 +309,7 @@ const Jumbotron = ({ dispatch }) => {
 };
 
 const style = { background: "beige" };
-const [dataCtx, setDataCtx] = signal([]);
+const [dataCtx, setDataCtx] = signal(buildData(4));
 const [op, setOp] = signal(null);
 // const [$tbody, setTbody] = signal(null);
 let $tbody = null;
@@ -366,7 +366,7 @@ const TBody = () => {
       ref={(el) => ($tbody = el)}
       // onClick={tableClickHandler}
       onMount={() => {
-        setDataCtx(buildData(4));
+        // setDataCtx(buildData(4));
       }}
       onUnmount={() => {
         stopEff();

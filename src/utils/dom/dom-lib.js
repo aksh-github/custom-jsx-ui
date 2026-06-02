@@ -87,6 +87,23 @@ export function For(props, children) {
   let endAnchor = null;
   let prevChildren = [];
   let disposed = false;
+  let initialSyncQueued = false;
+
+  const scheduleInitialSync = () => {
+    if (disposed || initialSyncQueued) return;
+    initialSyncQueued = true;
+
+    const run = () => {
+      initialSyncQueued = false;
+      sync();
+    };
+
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(run);
+    } else {
+      Promise.resolve().then(run);
+    }
+  };
 
   const sync = () => {
     if (disposed || !startAnchor || !endAnchor) return;
@@ -119,31 +136,20 @@ export function For(props, children) {
     );
 
     // 1. all new
-    // if (splOp === "ADD-ALL") {
-    //   if (nextChildren.length > 0) {
-    //     patches.push({
-    //       op: "ADD",
-    //       p: parent,
-    //       c: { type: "df", props: {}, children: nextChildren },
-    //       index: 0,
-    //     });
-    //     // prevChildren = nextChildren;
+    if (splOp === "ADDALL" && nextChildren.length > 0) {
+      const fragment = document.createDocumentFragment();
 
-    //     // parent.appendChild(
-    //     //   createElement(
-    //     //     For(
-    //     //       {
-    //     //         ...props,
-    //     //         parent: currParent,
-    //     //       },
-    //     //       children,
-    //     //     ),
-    //     //   ),
-    //     // );
+      for (const child of nextChildren) {
+        fragment.appendChild(createElement(child));
+      }
 
-    //     // return;
-    //   }
-    // }
+      parent.insertBefore(fragment, endAnchor);
+      prevChildren = nextChildren;
+      // props?.updateParentRef?.(parent);
+      currParent = parent;
+      return;
+    }
+
     // 2. Remove all
     if (splOp === "REMOVEALL-FAST") {
       addPatches([
@@ -224,7 +230,7 @@ export function For(props, children) {
     h(COMMENT_NODE_TYPE, {
       ref: (el) => {
         endAnchor = el;
-        sync();
+        scheduleInitialSync();
       },
       onUnmount: cleanup,
     }),
@@ -241,7 +247,7 @@ export function diffKeyedChildren(container, oldChildren, newChildren) {
       patches.push({ op: "ADD", c: node, index }),
     );
     // return patches;
-    return { splOp: "ADD-ALL2", patches };
+    return { splOp: "ADDALL", patches };
   }
 
   // all gone
