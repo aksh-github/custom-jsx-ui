@@ -9,6 +9,15 @@ function getActiveObserver() {
   return observerStack[observerStack.length - 1] || null;
 }
 
+export const untracked = (fn) => {
+  observerStack.push(null);
+  try {
+    return fn();
+  } finally {
+    observerStack.pop();
+  }
+};
+
 export const signal = (value) => {
   let _value = value;
   const _subscribers = new Set();

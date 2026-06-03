@@ -28,7 +28,7 @@ export const h = (type, props, ...children) => {
   const normalizedChildren = normalizeChildren(children);
 
   if (typeof type === "function") {
-    return type(props || {}, normalizedChildren);
+    return untracked(() => type(props || {}, normalizedChildren));
   }
 
   return {
@@ -437,7 +437,7 @@ function getUnkeyedId(node) {
 
 // all dom related functions
 let dom = {};
-import { signal, effect } from "@simple-signal";
+import { signal, effect, untracked } from "@simple-signal";
 if (typeof window !== "undefined") {
   const _dom = () => {
     const _bubblesCache = new Map();

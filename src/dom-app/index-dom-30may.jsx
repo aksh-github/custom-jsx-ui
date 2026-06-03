@@ -9,5 +9,6 @@ import {
 
 import { App } from "./Simple";
 import { PerfTest } from "./PerfTest";
+import { Sans } from "./sans/sans";
 
-document.getElementById("root").appendChild(createElement(<PerfTest />));
+document.getElementById("root").appendChild(createElement(<Sans />));

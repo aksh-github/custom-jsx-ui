@@ -1,0 +1,146 @@
+#chat-widget {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 110;
+}
+
+#chat-icon {
+  width: 4em;
+  height: 4em;
+  z-index: 120;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: brown;
+  color: white;
+  text-align: center;
+  border-radius: 50%;
+  /* display: flex;
+  justify-content: center;
+  align-items: center; */
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+  cursor: pointer;
+  animation: bounce 1.5s infinite;
+  animation-delay: 2s; /* Delay the animation by 2 seconds */
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+#chat-icon img {
+  width: 30px;
+  height: 30px;
+}
+
+#chat-box {
+  /* display: none; */
+  display: flex;
+  width: 350px;
+  height: 80vh;
+  background-color: #f0f0f0;
+  position: absolute;
+  bottom: 0;
+  right: 20px;
+  flex-direction: column;
+}
+
+#chat-box.show {
+  animation: slide-up 0.5s;
+}
+
+.chat-header {
+  background-color: brown;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header button {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.chat-footer {
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  display: flex;
+  .chat-input {
+    width: calc(100% - 60px);
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+
+  .send-btn {
+    width: 50px;
+    padding: 10px;
+    border: none;
+    background-color: brown;
+    color: white;
+    cursor: pointer;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100vh);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  #chat-box {
+    width: 100vw;
+    height: 60vh;
+    right: 0;
+    bottom: 0;
+    border-radius: 10px 10px 0 0;
+  }
+
+  #chat-icon {
+    width: 3em;
+    height: 3em;
+    bottom: 0.5em;
+    right: 0.5em;
+  }
+
+  .chat-header,
+  .chat-footer,
+  .chat-body {
+    padding: 8px;
+  }
+
+  .chat-footer .chat-input {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .chat-footer .send-btn {
+    padding: 8px;
+    font-size: 14px;
+  }
+}
