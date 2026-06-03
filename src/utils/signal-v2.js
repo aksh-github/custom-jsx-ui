@@ -72,30 +72,20 @@ export const batch = (fn) => {
 export const effect = (cb) => {
   let _externalCleanup; // defined explicitly by user
   let _unlinkSubscriptions = new Set(); // track active signals (to unlink on re-run)
+  let stopped = false;
 
-  const effectInstance = { notify: execute, link };
+  const effectInstance = { notify, link };
+
+  function notify() {
+    if (!stopped) execute();
+  }
 
   function link(unlink) {
+    if (stopped) return;
     _unlinkSubscriptions.add(unlink);
   }
 
-  function execute() {
-    observerStack.push(null);
-    try {
-      dispose();
-    } finally {
-      observerStack.pop();
-    }
-
-    observerStack.push(effectInstance);
-    try {
-      _externalCleanup = cb();
-    } finally {
-      observerStack.pop();
-    }
-  }
-
-  function dispose() {
+  function cleanup() {
     const externalCleanup = _externalCleanup;
     _externalCleanup = undefined;
 
@@ -109,6 +99,31 @@ export const effect = (cb) => {
     }
   }
 
+  function execute() {
+    if (stopped) return;
+
+    observerStack.push(null);
+    try {
+      cleanup();
+    } finally {
+      observerStack.pop();
+    }
+
+    observerStack.push(effectInstance);
+    try {
+      _externalCleanup = cb();
+    } finally {
+      observerStack.pop();
+    }
+  }
+
+  function dispose() {
+    if (stopped) return;
+    stopped = true;
+    pendingNotifications.delete(effectInstance);
+    cleanup();
+  }
+
   execute();
 
   return dispose;
@@ -116,59 +131,19 @@ export const effect = (cb) => {
 
 export function memo(fn) {
   const [sig, setSig] = signal();
-  effect(() => setSig(fn()));
+  const stop = effect(() => setSig(fn()));
+  sig.dispose = stop;
+  sig.stop = stop;
   return sig;
 }
 
-// Global stack to track the currently running computed function
-const contextStack = [];
-
 export function computed(fn) {
-  let value;
-  let isDirty = true;
-  const subscribers = new Set();
+  if (typeof fn !== "function") {
+    const [sig] = signal();
+    sig.dispose = () => {};
+    sig.stop = sig.dispose;
+    return sig;
+  }
 
-  const computation = {
-    // 2. Track all signal subscriber-sets this computation currently belongs to
-    dependencies: new Set(),
-
-    cleanup() {
-      // 3. Remove this computation from all signal subscriber lists
-      this.dependencies.forEach((subSet) => subSet.delete(this));
-      this.dependencies.clear();
-    },
-
-    run() {
-      if (!isDirty) {
-        isDirty = true;
-        // Do not clean up immediately here; wait until the value is actually read
-        subscribers.forEach((sub) => sub.run());
-      }
-    },
-  };
-
-  return {
-    get() {
-      const currentComputation = contextStack[contextStack.length - 1];
-      if (currentComputation) {
-        subscribers.add(currentComputation);
-        currentComputation.dependencies.add(subscribers);
-      }
-
-      if (isDirty) {
-        // 4. Clear stale dependencies right before running the function again
-        computation.cleanup();
-
-        contextStack.push(computation);
-        try {
-          value = fn();
-        } finally {
-          contextStack.pop();
-          isDirty = false;
-        }
-      }
-
-      return value;
-    },
-  };
+  return memo(fn);
 }

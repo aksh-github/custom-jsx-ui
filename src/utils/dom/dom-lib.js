@@ -24,6 +24,20 @@ const normalizeChildren = (children) => {
   return flatChildren;
 };
 
+// function applyStyleObject($target, nextStyle, prevStyle = {}) {
+//   const resolvedStyle = nextStyle || {};
+
+//   for (const sk in prevStyle) {
+//     if (!(sk in resolvedStyle)) {
+//       $target.style[sk] = "";
+//     }
+//   }
+
+//   for (const sk in resolvedStyle) {
+//     $target.style[sk] = resolvedStyle[sk];
+//   }
+// }
+
 export const h = (type, props, ...children) => {
   const normalizedChildren = normalizeChildren(children);
 
@@ -74,7 +88,7 @@ export const ReactiveText = (props) => {
   );
 };
 
-const COMMENT_NODE_TYPE = "__comment__";
+const COMMENT_NODE_TYPE = "_ForMark_";
 
 function withKey(vnode, key) {
   if (vnode == null || typeof vnode !== "object") return vnode;
@@ -600,8 +614,22 @@ if (typeof window !== "undefined") {
           $target.setAttribute("class", value);
         }
       } else if (name === "style") {
-        for (const sk in value) {
-          $target.style[sk] = value[sk];
+        // for (const sk in value) {
+        //   $target.style[sk] = value[sk];
+        // }
+
+        if (typeof value === "function") {
+          effect(() => {
+            const v = value();
+            // applyStyleObject($target, v);
+            for (const sk in v) {
+              $target.style[sk] = v[sk];
+            }
+          });
+        } else {
+          for (const sk in v) {
+            $target.style[sk] = v[sk];
+          }
         }
       } else if (name === "ref") {
         value?.($target);
@@ -662,6 +690,9 @@ if (typeof window !== "undefined") {
         return;
       } else if (name === "className") {
         $target.removeAttribute("class");
+      } else if (name === "style") {
+        $target.removeAttribute("style");
+        $target.style.cssText = "";
       } else if (typeof value === "boolean") {
         removeBooleanProp($target, name);
       } else {
@@ -935,6 +966,7 @@ if (typeof window !== "undefined") {
             : $d.createTextNode(node);
       }
 
+      // only for For compo
       if (node.type === COMMENT_NODE_TYPE) {
         const comment = $d.createComment("");
 
@@ -944,6 +976,7 @@ if (typeof window !== "undefined") {
 
         return comment;
       }
+      // end only for For compo
 
       //special case Compo with Array return and no type (parent)
       // doc fragement case
