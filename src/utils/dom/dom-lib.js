@@ -24,20 +24,6 @@ const normalizeChildren = (children) => {
   return flatChildren;
 };
 
-// function applyStyleObject($target, nextStyle, prevStyle = {}) {
-//   const resolvedStyle = nextStyle || {};
-
-//   for (const sk in prevStyle) {
-//     if (!(sk in resolvedStyle)) {
-//       $target.style[sk] = "";
-//     }
-//   }
-
-//   for (const sk in resolvedStyle) {
-//     $target.style[sk] = resolvedStyle[sk];
-//   }
-// }
-
 export const h = (type, props, ...children) => {
   const normalizedChildren = normalizeChildren(children);
 
@@ -79,6 +65,7 @@ export const ReactiveText = (props) => {
       },
       onUnmount: () => {
         clean();
+        props.value?.dispose?.();
         element = null;
 
         if (props.elementProps?.onUnmount) props.elementProps.onUnmount();
@@ -560,6 +547,42 @@ if (typeof window !== "undefined") {
       rootNode.addEventListener("pointercancel", clearIfNotDragging, true);
     }
 
+    function registerElementEffect($target, dispose) {
+      if (!$target || typeof dispose !== "function") return dispose;
+
+      if (!$target.__effects) {
+        $target.__effects = [];
+      }
+
+      $target.__effects.push(dispose);
+      return dispose;
+    }
+
+    function cleanupElementEffects($target) {
+      const effects = $target?.__effects;
+      if (!effects || effects.length === 0) return;
+
+      for (const dispose of effects) {
+        dispose?.();
+      }
+
+      $target.__effects = null;
+    }
+
+    function applyStyleObject($target, nextStyle, prevStyle = {}) {
+      const resolvedStyle = nextStyle || {};
+
+      for (const sk in prevStyle) {
+        if (!(sk in resolvedStyle)) {
+          $target.style[sk] = "";
+        }
+      }
+
+      for (const sk in resolvedStyle) {
+        $target.style[sk] = resolvedStyle[sk];
+      }
+    }
+
     function setBooleanProp($target, name, value) {
       if (value) {
         $target.setAttribute(name, value);
@@ -595,6 +618,12 @@ if (typeof window !== "undefined") {
 
     function setProp($target, name, value) {
       // log(name, value);
+      const registerSourceDisposal = () => {
+        if (typeof value?.dispose === "function") {
+          registerElementEffect($target, value.dispose);
+        }
+      };
+
       if (isCustomProp(name)) {
         if (isEventProp(name)) {
           const extratedName = extractEventName(name);
@@ -606,30 +635,32 @@ if (typeof window !== "undefined") {
         }
       } else if (name === "className") {
         if (typeof value === "function") {
-          effect(() => {
-            const v = value();
-            $target.setAttribute("class", v);
-          });
+          registerElementEffect(
+            $target,
+            effect(() => {
+              const v = value();
+              $target.setAttribute("class", v);
+            }),
+          );
+          registerSourceDisposal();
         } else {
           $target.setAttribute("class", value);
         }
       } else if (name === "style") {
-        // for (const sk in value) {
-        //   $target.style[sk] = value[sk];
-        // }
-
         if (typeof value === "function") {
-          effect(() => {
-            const v = value();
-            // applyStyleObject($target, v);
-            for (const sk in v) {
-              $target.style[sk] = v[sk];
-            }
-          });
+          let prevStyle = {};
+
+          registerElementEffect(
+            $target,
+            effect(() => {
+              const nextStyle = value() || {};
+              applyStyleObject($target, nextStyle, prevStyle);
+              prevStyle = nextStyle;
+            }),
+          );
+          registerSourceDisposal();
         } else {
-          for (const sk in v) {
-            $target.style[sk] = v[sk];
-          }
+          applyStyleObject($target, value);
         }
       } else if (name === "ref") {
         value?.($target);
@@ -639,10 +670,14 @@ if (typeof window !== "undefined") {
         $target.removeAttribute(name.toLowerCase());
       } else if (typeof value === "boolean") {
         if (typeof value === "function") {
-          effect(() => {
-            const v = value();
-            setBooleanProp($target, name, v);
-          });
+          registerElementEffect(
+            $target,
+            effect(() => {
+              const v = value();
+              setBooleanProp($target, name, v);
+            }),
+          );
+          registerSourceDisposal();
         } else {
           setBooleanProp($target, name, value);
         }
@@ -650,10 +685,14 @@ if (typeof window !== "undefined") {
         if (name === "value" || name === "htmlFor") {
           // special case
           if (typeof value === "function") {
-            effect(() => {
-              const v = value();
-              $target[name] = v;
-            });
+            registerElementEffect(
+              $target,
+              effect(() => {
+                const v = value();
+                $target[name] = v;
+              }),
+            );
+            registerSourceDisposal();
             return;
           } else {
             $target[name] = value;
@@ -674,10 +713,14 @@ if (typeof window !== "undefined") {
           }, 0);
         } else {
           if (typeof value === "function") {
-            effect(() => {
-              const v = value();
-              $target.setAttribute(name, v);
-            });
+            registerElementEffect(
+              $target,
+              effect(() => {
+                const v = value();
+                $target.setAttribute(name, v);
+              }),
+            );
+            registerSourceDisposal();
           } else {
             $target.setAttribute(name, value);
           }
@@ -762,89 +805,89 @@ if (typeof window !== "undefined") {
       }
     }
 
-    function patchChildren($parent, prevChildren = [], nextChildren = []) {
-      const prevLen = prevChildren.length;
-      const nextLen = nextChildren.length;
-      const maxLen = Math.max(prevLen, nextLen);
+    // function patchChildren($parent, prevChildren = [], nextChildren = []) {
+    //   const prevLen = prevChildren.length;
+    //   const nextLen = nextChildren.length;
+    //   const maxLen = Math.max(prevLen, nextLen);
 
-      for (let i = 0; i < maxLen; i++) {
-        const prevChild = prevChildren[i];
-        const nextChild = nextChildren[i];
-        const domChild = $parent.childNodes[i];
+    //   for (let i = 0; i < maxLen; i++) {
+    //     const prevChild = prevChildren[i];
+    //     const nextChild = nextChildren[i];
+    //     const domChild = $parent.childNodes[i];
 
-        if (nextChild == null) {
-          if (domChild) {
-            void disposeNodes(domChild);
-          }
-          continue;
-        }
+    //     if (nextChild == null) {
+    //       if (domChild) {
+    //         void disposeNodes(domChild);
+    //       }
+    //       continue;
+    //     }
 
-        if (prevChild == null) {
-          $parent.insertBefore(createElement(nextChild), domChild || null);
-          continue;
-        }
+    //     if (prevChild == null) {
+    //       $parent.insertBefore(createElement(nextChild), domChild || null);
+    //       continue;
+    //     }
 
-        const prevIsNode = prevChild && typeof prevChild === "object";
-        const nextIsNode = nextChild && typeof nextChild === "object";
+    //     const prevIsNode = prevChild && typeof prevChild === "object";
+    //     const nextIsNode = nextChild && typeof nextChild === "object";
 
-        if (!prevIsNode || !nextIsNode) {
-          if (prevChild !== nextChild) {
-            if (domChild?.nodeType === 3) {
-              domChild.textContent = nextChild ?? "";
-            } else {
-              const replacement = createElement(nextChild);
-              if (domChild) {
-                $parent.replaceChild(replacement, domChild);
-                void disposeNodes(domChild);
-              } else {
-                $parent.appendChild(replacement);
-              }
-            }
-          }
-          continue;
-        }
+    //     if (!prevIsNode || !nextIsNode) {
+    //       if (prevChild !== nextChild) {
+    //         if (domChild?.nodeType === 3) {
+    //           domChild.textContent = nextChild ?? "";
+    //         } else {
+    //           const replacement = createElement(nextChild);
+    //           if (domChild) {
+    //             $parent.replaceChild(replacement, domChild);
+    //             void disposeNodes(domChild);
+    //           } else {
+    //             $parent.appendChild(replacement);
+    //           }
+    //         }
+    //       }
+    //       continue;
+    //     }
 
-        patchNode(domChild, prevChild, nextChild);
-      }
-    }
+    //     patchNode(domChild, prevChild, nextChild);
+    //   }
+    // }
 
-    function patchNode($target, prevVNode, nextVNode) {
-      if (!$target || !prevVNode || !nextVNode) return $target;
+    // function patchNode($target, prevVNode, nextVNode) {
+    //   if (!$target || !prevVNode || !nextVNode) return $target;
 
-      if (prevVNode.type !== nextVNode.type) {
-        const replacement = createElement(nextVNode);
-        $target.replaceWith(replacement);
-        void disposeNodes($target);
-        return replacement;
-      }
+    //   if (prevVNode.type !== nextVNode.type) {
+    //     const replacement = createElement(nextVNode);
+    //     $target.replaceWith(replacement);
+    //     void disposeNodes($target);
+    //     return replacement;
+    //   }
 
-      if (!nextVNode.type) {
-        const nextValue =
-          nextVNode?.value ?? nextVNode?.children?.[0] ?? nextVNode ?? "";
-        if ($target.textContent !== `${nextValue ?? ""}`) {
-          $target.textContent = nextValue ?? "";
-        }
-        return $target;
-      }
+    //   if (!nextVNode.type) {
+    //     const nextValue =
+    //       nextVNode?.value ?? nextVNode?.children?.[0] ?? nextVNode ?? "";
+    //     if ($target.textContent !== `${nextValue ?? ""}`) {
+    //       $target.textContent = nextValue ?? "";
+    //     }
+    //     return $target;
+    //   }
 
-      if (nextVNode.type === "df") {
-        patchChildren(
-          $target,
-          prevVNode.children || [],
-          nextVNode.children || [],
-        );
-        return $target;
-      }
+    //   if (nextVNode.type === "df") {
+    //     patchChildren(
+    //       $target,
+    //       prevVNode.children || [],
+    //       nextVNode.children || [],
+    //     );
+    //     return $target;
+    //   }
 
-      updateProps($target, nextVNode.props, prevVNode.props);
-      patchChildren(
-        $target,
-        prevVNode.children || [],
-        nextVNode.children || [],
-      );
+    //   updateProps($target, nextVNode.props, prevVNode.props);
+    //   patchChildren(
+    //     $target,
+    //     prevVNode.children || [],
+    //     nextVNode.children || [],
+    //   );
 
-      return $target;
-    }
+    //   return $target;
+    // }
 
     function addEventListeners($target, props) {
       for (const name in props) {
@@ -1332,6 +1375,8 @@ if (typeof window !== "undefined") {
           current.__onUnmount?.();
           current.__onUnmount = null;
         }
+
+        cleanupElementEffects(current);
 
         // Clean up all bubbling event handlers
         for (const key in current) {
