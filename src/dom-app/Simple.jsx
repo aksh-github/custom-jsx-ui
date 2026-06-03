@@ -1,40 +1,24 @@
-import { h, createElement, addPatches, addPropsPatches } from "@dom-lib";
-import { signal, effect } from "@simple-signal";
+import {
+  h,
+  createElement,
+  addPatches,
+  addPropsPatches,
+  computed,
+  ReactiveText,
+  signal,
+  effect,
+} from "@dom-lib";
 
 const [toDelete, setToDelete] = signal(null);
 
 const Counter = (props) => {
-  let [count, setCount] = signal(0);
-  let [style, setStyle] = signal({ backgroundColor: "lightblue" });
-  let $p = null,
-    $div = null;
-
-  effect(() => {
-    console.log("Effect ran for", props.id);
-    const v = count();
-    if ($p) {
-      $p.textContent = `Counter: ${v}`;
-    }
-
-    setStyle({
-      backgroundColor: v % 2 === 0 ? "lightblue" : "lightcoral",
-    });
-
-    if ($div) {
-      // $div.style.backgroundColor = v % 2 === 0 ? "lightblue" : "lightcoral";
-      addPropsPatches([
-        {
-          $target: $div,
-          newProps: {
-            style:
-              v % 2 === 0
-                ? { backgroundColor: "lightblue" }
-                : { backgroundColor: "lightcoral" },
-          },
-          oldProps: $div.style,
-        },
-      ]);
-    }
+  const [count, setCount] = signal(0);
+  const style = computed(() => {
+    return count() % 2 === 0
+      ? {
+          backgroundColor: "lightblue",
+        }
+      : { backgroundColor: "lightcoral" };
   });
 
   const stopEffect = effect(() => {
@@ -48,16 +32,20 @@ const Counter = (props) => {
       id={props.id}
       onMount={(el) => {
         console.log("Mounted", props.id);
-        $div = el;
       }}
-      style={style()}
+      style={style}
       onUnmount={() => {
-        stopEffect();
-        $div = $p = null;
+        stopEffect?.();
         console.log("Unmounted", props.id);
       }}
     >
-      <p ref={(el) => ($p = el)}>Counter: {count()}</p>
+      <h3>{props.key}</h3>
+      <ReactiveText
+        type="p"
+        elementProps={{}}
+        value={count}
+        textContent={(v) => `Counter: ${v}`}
+      />
       <button
         onClick={() => {
           // Increment counter logic here
@@ -79,11 +67,11 @@ export const App = () => {
   const list = ["Counter 1", "Counter 2", "Counter 3"];
   setToDelete(`#${list[0].toLowerCase().replace(" ", "-")}`);
 
-  let $h1 = null;
-  effect(() => {
-    const v = ctr();
-    if ($h1) $h1.textContent = `My Counter App ${v}`;
-  });
+  // let $h1 = null;
+  // effect(() => {
+  //   const v = ctr();
+  //   if ($h1) $h1.textContent = `My Counter App ${v}`;
+  // });
 
   return (
     <div
@@ -91,7 +79,18 @@ export const App = () => {
       onMount={OnMount}
       onUnmount={() => console.log("App Unmounted")}
     >
-      <h1 ref={(el) => ($h1 = el)}>My Counter App {ctr()}</h1>
+      {/* <h1 ref={(el) => ($h1 = el)}>My Counter App {ctr()}</h1> */}
+      <ReactiveText
+        type="h1"
+        elementProps={{
+          onMount: () => {
+            console.log("ReactiveText mounted");
+          },
+        }}
+        value={ctr}
+        textContent={(val) => `My Counter App ${val}`}
+      />
+
       <button
         onClick={() => {
           setCtr((prev) => prev + 1);
@@ -114,7 +113,7 @@ export const App = () => {
               ]);
           }}
         >
-          Some
+          Remove
         </button>
       </p>
       {list.map((item) => (
