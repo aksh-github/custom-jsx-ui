@@ -41,6 +41,7 @@ export const h = (type, props, ...children) => {
 
 export const ReactiveText = (props) => {
   let element = null;
+  let mounted = false;
 
   // Set up the effect to update the text content directly
   const clean = effect(() => {
@@ -48,7 +49,7 @@ export const ReactiveText = (props) => {
     const rawValue = props.value();
 
     // Safely mutate the DOM node if it is currently mounted
-    if (element) {
+    if (element && mounted) {
       element.textContent = props.textContent
         ? props.textContent(rawValue)
         : rawValue;
@@ -61,17 +62,26 @@ export const ReactiveText = (props) => {
       ...props.elementProps,
       ref: (el) => {
         element = el;
+        mounted = true;
+        // Trigger initial update once element is mounted
+        if (element) {
+          const rawValue = props.value();
+          element.textContent = props.textContent
+            ? props.textContent(rawValue)
+            : rawValue;
+        }
         if (props.elementProps?.ref) props.elementProps.ref(el);
       },
       onUnmount: () => {
         clean();
         props.value?.dispose?.();
         element = null;
+        mounted = false;
 
         if (props.elementProps?.onUnmount) props.elementProps.onUnmount();
       },
     },
-    [`${props.textContent ? props.textContent(props.value()) : props.value()}`],
+    [],
   );
 };
 
@@ -569,6 +579,27 @@ if (typeof window !== "undefined") {
       $target.__effects = null;
     }
 
+    function collectNodesBetween(startAnchor, endAnchor) {
+      const nodes = [];
+      let current = startAnchor?.nextSibling || null;
+
+      while (current && current !== endAnchor) {
+        nodes.push(current);
+        current = current.nextSibling;
+      }
+
+      return nodes;
+    }
+
+    function disposeNodesBetween(startAnchor, endAnchor) {
+      const nodes = collectNodesBetween(startAnchor, endAnchor);
+      if (nodes.length === 0) return;
+
+      for (const node of nodes) {
+        void disposeNodes(node);
+      }
+    }
+
     function applyStyleObject($target, nextStyle, prevStyle = {}) {
       const resolvedStyle = nextStyle || {};
 
@@ -918,6 +949,105 @@ if (typeof window !== "undefined") {
           }
         }
       }
+    }
+
+    function resolveConditionalBranch(props, children, showTrue) {
+      const branch = showTrue
+        ? (props?.then ?? children?.[0])
+        : (props?.else ?? props?.fallback ?? children?.[1]);
+
+      if (typeof branch === "function") {
+        return untracked(() => branch(props, children));
+      }
+
+      return branch;
+    }
+
+    function If(props, children) {
+      const getCondition = () => {
+        const source = props?.when ?? props?.condition ?? props?.if;
+        return typeof source === "function" ? source() : source;
+      };
+
+      let startAnchor = null;
+      let endAnchor = null;
+      let disposed = false;
+      let initialSyncQueued = false;
+      let activeBranch = null;
+
+      const scheduleInitialSync = () => {
+        if (disposed || initialSyncQueued) return;
+        initialSyncQueued = true;
+
+        const run = () => {
+          initialSyncQueued = false;
+          sync();
+        };
+
+        if (typeof queueMicrotask === "function") {
+          queueMicrotask(run);
+        } else {
+          Promise.resolve().then(run);
+        }
+      };
+
+      const sync = () => {
+        if (disposed || !startAnchor || !endAnchor) return;
+
+        const parent = startAnchor.parentNode || endAnchor.parentNode;
+        if (!parent) return;
+
+        const showTrue = !!getCondition();
+        const nextBranch = showTrue ? "then" : "else";
+        const existingNodes = collectNodesBetween(startAnchor, endAnchor);
+
+        if (activeBranch === nextBranch && existingNodes.length > 0) {
+          return;
+        }
+
+        disposeNodesBetween(startAnchor, endAnchor);
+        activeBranch = nextBranch;
+
+        const branchVNode = resolveConditionalBranch(props, children, showTrue);
+        if (branchVNode == null || branchVNode === false) {
+          return;
+        }
+
+        parent.insertBefore(createElement(branchVNode), endAnchor);
+      };
+
+      const stop = effect(() => {
+        getCondition();
+        sync();
+      });
+
+      const cleanup = () => {
+        if (disposed) return;
+        disposed = true;
+        stop?.();
+        disposeNodesBetween(startAnchor, endAnchor);
+        startAnchor = null;
+        endAnchor = null;
+        activeBranch = null;
+      };
+
+      return h(
+        "df",
+        {},
+        h(COMMENT_NODE_TYPE, {
+          ref: (el) => {
+            startAnchor = el;
+          },
+          onUnmount: cleanup,
+        }),
+        h(COMMENT_NODE_TYPE, {
+          ref: (el) => {
+            endAnchor = el;
+            scheduleInitialSync();
+          },
+          onUnmount: cleanup,
+        }),
+      );
     }
 
     // vdom to dom
@@ -1486,6 +1616,7 @@ if (typeof window !== "undefined") {
       addPatches,
       addPropsPatches,
       createElement,
+      If,
     };
   };
 
@@ -1533,6 +1664,7 @@ if (typeof window !== "undefined") {
 export const forceUpdate = dom.forceUpdate || noop;
 // export const hydrate = dom.hydrate || noop;
 export const createElement = dom.createElement || noop;
+export const If = dom.If || noop;
 
 export const addPatches = dom.addPatches || noop;
 export const addPropsPatches = dom.addPropsPatches || noop;
