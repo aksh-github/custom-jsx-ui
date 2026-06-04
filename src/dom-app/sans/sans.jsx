@@ -7,6 +7,7 @@ import {
   For,
   computed,
   ReactiveText,
+  If,
 } from "@dom-lib"; // or from "../../utils/vdom/vdom-lib";
 
 import "./sans-style.css";
@@ -333,16 +334,37 @@ function GenericTab({ prop, dkey }) {
       ? dictionaryData[`${dkey}`].d.filter(filterFunc)
       : dictionaryData[`${dkey}`].d?.slice(0, TOP),
   );
-  currentLazyResultCount = filtered().length;
+  const filteredCount = computed(() => filtered().length);
+  currentLazyResultCount = filteredCount();
   const visibleResults = computed(() => filtered().slice(0, visibleLimit()));
-  const hasMoreResults = visibleLimit() < filtered().length;
+  // const filteredCount = computed(() => visibleResults().length);
+  const hasMoreResults = visibleLimit() < filteredCount();
 
   let $searchListParent,
-    $genericTabNode = null;
+    $searchMsg = null;
 
-  const stopEff = effect(() => {
-    console.log(`filter len`, filtered().length);
-  });
+  const updateSearchMessage = () => {
+    // console.log(`filter len`, filteredCount());
+    currentSearch = search();
+    const searchCount = filteredCount();
+    const klass = "info";
+
+    if ($searchMsg) {
+      if (currentSearch) {
+        $searchMsg.classList.add(klass);
+        if (searchCount === 0) {
+          $searchMsg.textContent = `No results found for ${currentSearch}`;
+        } else {
+          $searchMsg.textContent = `Matching results ${searchCount}`;
+        }
+      } else {
+        $searchMsg.textContent = ``;
+        $searchMsg.classList.remove(klass);
+      }
+    }
+  };
+
+  const stopEff = effect(updateSearchMessage);
 
   // effect(() => {
   //   setVisibleLimit(INITIAL_RESULTS_LIMIT);
@@ -353,25 +375,6 @@ function GenericTab({ prop, dkey }) {
   //     Math.min(prev + RESULTS_BATCH_SIZE, currentLazyResultCount),
   //   );
   // };
-
-  const toggleSearchInfo = () => {
-    let curSearch = search();
-    let searchCount = filtered().length;
-
-    if ($genericTabNode) {
-      const $noResults = $genericTabNode.querySelector("[data-for=noResults]");
-      const $resultsLen = $genericTabNode.querySelector(
-        "[data-for=resultsLen]",
-      );
-
-      if ($noResults)
-        $noResults.style.display = searchCount === 0 && curSearch ? "" : none;
-    }
-  };
-
-  const resultEff = effect(() => {
-    toggleSearchInfo();
-  });
 
   const loadMoreIfNearBottom = () => {
     if (lazyLoadFrame) return;
@@ -411,33 +414,23 @@ function GenericTab({ prop, dkey }) {
 
   return (
     <div
-      ref={(el) => {
-        $genericTabNode = el;
-        toggleSearchInfo();
-      }}
       onUnmount={() => {
-        // stopEff();
-        resultEff();
-        $searchListParent = $genericTabNode = null;
+        stopEff();
+
+        $searchListParent = $searchMsg = null;
       }}
     >
       <h2 className="title">{title}</h2>
       <p className="data-ver">Data ver.: {dictionaryData[`${dkey}`]?.hash}</p>
-      {/* {filtered().length === 0 && search() ? (
-        <p data-for="noResults" className="info">
-          No results for your search: "{search()}"
-        </p>
-      ) : null} */}
-      <p data-for="noResults" className="info">
-        No results for your search: "{search()}"
-      </p>
 
-      {/* Ctxt Value: {searchCtx.get()} */}
-      {filtered().length > 0 && search() ? (
-        <p data-for="resultsLen" className="info">
-          Matching results: {filtered().length}
-        </p>
-      ) : null}
+      <p
+        ref={(el) => {
+          $searchMsg = el;
+          updateSearchMessage();
+        }}
+        // className="info"
+      ></p>
+
       {/* {asList ? (
         <ul className="list">{RR}</ul>
       ) : (
@@ -448,7 +441,7 @@ function GenericTab({ prop, dkey }) {
           <For
             parent={$searchListParent}
             each={visibleResults}
-            keyBy={(item) => item.ew}
+            keyBy={(item) => item.ew || "undef"}
             render={(item) => (
               <RowComponent row={item} key={item.ew || "undef"} />
             )}
@@ -460,17 +453,17 @@ function GenericTab({ prop, dkey }) {
           <For
             parent={$searchListParent}
             each={visibleResults}
-            keyBy={(item) => item.ev}
+            keyBy={(item) => item.ev || "undef"}
             render={(item) => (
-              <RowComponent row={item} key={item.ev || item.ew || "undef"} />
+              <RowComponent row={item} key={item.ev || "undef"} />
             )}
             updateParentRef={(el) => ($searchListParent = el)}
           />
         </div>
       )}
-      {hasMoreResults ? (
+      {/* {hasMoreResults ? (
         <div className="load-more-sentinel">Loading more...</div>
-      ) : null}
+      ) : null} */}
     </div>
   );
 }
