@@ -340,31 +340,10 @@ function GenericTab({ prop, dkey }) {
   // const filteredCount = computed(() => visibleResults().length);
   const hasMoreResults = visibleLimit() < filteredCount();
 
+  const klass = computed(() => (search() ? "info" : null));
+
   let $searchListParent,
     $searchMsg = null;
-
-  const updateSearchMessage = () => {
-    // console.log(`filter len`, filteredCount());
-    currentSearch = search();
-    const searchCount = filteredCount();
-    const klass = "info";
-
-    if ($searchMsg) {
-      if (currentSearch) {
-        $searchMsg.classList.add(klass);
-        if (searchCount === 0) {
-          $searchMsg.textContent = `No results found for ${currentSearch}`;
-        } else {
-          $searchMsg.textContent = `Matching results ${searchCount}`;
-        }
-      } else {
-        $searchMsg.textContent = ``;
-        $searchMsg.classList.remove(klass);
-      }
-    }
-  };
-
-  const stopEff = effect(updateSearchMessage);
 
   // effect(() => {
   //   setVisibleLimit(INITIAL_RESULTS_LIMIT);
@@ -415,7 +394,7 @@ function GenericTab({ prop, dkey }) {
   return (
     <div
       onUnmount={() => {
-        stopEff();
+        // stopEff();
 
         $searchListParent = $searchMsg = null;
       }}
@@ -423,13 +402,20 @@ function GenericTab({ prop, dkey }) {
       <h2 className="title">{title}</h2>
       <p className="data-ver">Data ver.: {dictionaryData[`${dkey}`]?.hash}</p>
 
-      <p
-        ref={(el) => {
-          $searchMsg = el;
-          updateSearchMessage();
+      <ReactiveText
+        type="p"
+        elementProps={{
+          className: klass,
         }}
-        // className="info"
-      ></p>
+        value={filteredCount}
+        textContent={(val) =>
+          search()
+            ? val === 0
+              ? `No results found for "${search()}"`
+              : `Matching results: ${val}`
+            : ""
+        }
+      />
 
       {/* {asList ? (
         <ul className="list">{RR}</ul>
