@@ -191,7 +191,7 @@ const UIObj = {
 };
 
 const TOP = -1;
-const INITIAL_RESULTS_LIMIT = 15;
+const INITIAL_RESULTS_LIMIT = -1;
 const RESULTS_BATCH_SIZE = 15;
 const [search, setSearch] = signal("");
 
@@ -336,7 +336,7 @@ function GenericTab({ prop, dkey }) {
   );
   const filteredCount = computed(() => filtered().length);
   currentLazyResultCount = filteredCount();
-  const visibleResults = computed(() => filtered().slice(0, visibleLimit()));
+  // const visibleResults = computed(() => filtered().slice(0, visibleLimit()));
   // const filteredCount = computed(() => visibleResults().length);
   const hasMoreResults = visibleLimit() < filteredCount();
 
@@ -346,8 +346,8 @@ function GenericTab({ prop, dkey }) {
     $searchMsg = null;
 
   // effect(() => {
-  //   setVisibleLimit(INITIAL_RESULTS_LIMIT);
-  // }, [srch, dkey]);
+  //   console.log(filtered());
+  // });
 
   // const loadMore = () => {
   //   setVisibleLimit((prev) =>
@@ -387,7 +387,7 @@ function GenericTab({ prop, dkey }) {
   //   setTimeout(loadMoreIfNearBottom, 0);
   // }, [srch, dkey, filtered.length]);
 
-  const RR = visibleResults().map((d, idx) =>
+  const RR = filtered().map((d, idx) =>
     d?.ev || d?.ew ? <RowComponent row={d} key={"k" + idx} /> : null,
   );
 
@@ -426,8 +426,8 @@ function GenericTab({ prop, dkey }) {
         <ul className="list">
           <For
             parent={$searchListParent}
-            each={visibleResults}
-            keyBy={(item) => item.ew || "undef"}
+            each={filtered}
+            keyBy={(item) => item.ew?.replace(/[^a-zA-Z0-9]/g, "") || "undef"}
             render={(item) => (
               <RowComponent row={item} key={item.ew || "undef"} />
             )}
@@ -438,8 +438,8 @@ function GenericTab({ prop, dkey }) {
         <div className="search">
           <For
             parent={$searchListParent}
-            each={visibleResults}
-            keyBy={(item) => item.ev || "undef"}
+            each={filtered}
+            keyBy={(item) => item.ev?.replace(/[^a-zA-Z0-9]/g, "") || "undef"}
             render={(item) => (
               <RowComponent row={item} key={item.ev || "undef"} />
             )}
@@ -467,7 +467,7 @@ export function Sans() {
 
   const stopTabChange = effect(() => {
     const _currTab = currTab();
-    console.log("tab changed to", _currTab);
+    // console.log("tab changed to", _currTab);
 
     if ($main) {
       addPatches([
