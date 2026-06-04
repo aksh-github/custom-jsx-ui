@@ -195,6 +195,26 @@ const INITIAL_RESULTS_LIMIT = -1;
 const RESULTS_BATCH_SIZE = 15;
 const [search, setSearch] = signal("");
 
+const rowKeyIds = new WeakMap();
+let rowKeyCounter = 0;
+
+const getRowKey = (item, scope) => {
+  if (!item || typeof item !== "object") {
+    return `${scope}:${String(item)}`;
+  }
+
+  let key = rowKeyIds.get(item);
+  if (!key) {
+    key = `${scope}:${rowKeyCounter++}`;
+    rowKeyIds.set(item, key);
+  }
+
+  return key;
+};
+
+const getInitialResults = (items) =>
+  TOP < 0 ? (items ?? []) : (items?.slice(0, TOP) ?? []);
+
 const loadLocalData = () => {
   const { get } = localStore();
   let updateReqd = false;
@@ -332,7 +352,7 @@ function GenericTab({ prop, dkey }) {
   const filtered = computed(() =>
     search()
       ? dictionaryData[`${dkey}`].d.filter(filterFunc)
-      : dictionaryData[`${dkey}`].d?.slice(0, TOP),
+      : getInitialResults(dictionaryData[`${dkey}`].d),
   );
   const filteredCount = computed(() => filtered().length);
   currentLazyResultCount = filteredCount();
@@ -387,16 +407,16 @@ function GenericTab({ prop, dkey }) {
   //   setTimeout(loadMoreIfNearBottom, 0);
   // }, [srch, dkey, filtered.length]);
 
-  const RR = filtered().map((d, idx) =>
-    d?.ev || d?.ew ? <RowComponent row={d} key={"k" + idx} /> : null,
-  );
+  // const RR = filtered().map((d, idx) =>
+  //   d?.ev || d?.ew ? <RowComponent row={d} key={"k" + idx} /> : null,
+  // );
 
   return (
     <div
       onUnmount={() => {
         // stopEff();
 
-        $searchListParent = $searchMsg = null;
+        $searchListParent = null;
       }}
     >
       <h2 className="title">{title}</h2>
@@ -422,14 +442,15 @@ function GenericTab({ prop, dkey }) {
       ) : (
         <div className="search">{RR}</div>
       )} */}
+
       {asList ? (
         <ul className="list">
           <For
             parent={$searchListParent}
             each={filtered}
-            keyBy={(item) => item.ew?.replace(/[^a-zA-Z0-9]/g, "") || "undef"}
+            keyBy={(item) => getRowKey(item, "w")}
             render={(item) => (
-              <RowComponent row={item} key={item.ew || "undef"} />
+              <RowComponent row={item} key={getRowKey(item, "w")} />
             )}
             updateParentRef={(el) => ($searchListParent = el)}
           />
@@ -439,9 +460,9 @@ function GenericTab({ prop, dkey }) {
           <For
             parent={$searchListParent}
             each={filtered}
-            keyBy={(item) => item.ev?.replace(/[^a-zA-Z0-9]/g, "") || "undef"}
+            keyBy={(item) => getRowKey(item, "v")}
             render={(item) => (
-              <RowComponent row={item} key={item.ev || "undef"} />
+              <RowComponent row={item} key={getRowKey(item, "v")} />
             )}
             updateParentRef={(el) => ($searchListParent = el)}
           />
