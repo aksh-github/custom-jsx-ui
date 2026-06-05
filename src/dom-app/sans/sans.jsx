@@ -508,7 +508,7 @@ export function Sans() {
     }
   });
 
-  effect(() => {
+  const stopEffect = effect(() => {
     console.log("mount for Sans");
 
     // 1. check and load local data
@@ -551,6 +551,7 @@ export function Sans() {
       className="sans"
       onUnmount={() => {
         stopTabChange();
+        stopEffect();
         $main = null;
       }}
     >
