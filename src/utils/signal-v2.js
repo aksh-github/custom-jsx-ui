@@ -42,6 +42,8 @@ export const signal = (value) => {
     if (newValue === _value) return;
     _value = newValue;
 
+    // Snapshot subscribers before notifying — a subscriber's notify() may
+    // cause it to unsubscribe or add new subscribers mid-loop.
     for (const subscriber of [..._subscribers]) {
       if (isBatching) {
         pendingNotifications.add(subscriber);
@@ -68,12 +70,30 @@ export const batch = (fn) => {
     isBatching = wasBatching;
 
     if (!wasBatching && pendingNotifications.size > 0) {
-      // Notify all pending effects
-      for (const subscriber of pendingNotifications) {
-        subscriber.notify();
-      }
+      // FIX: Snapshot pendingNotifications before iterating.
+      //
+      // Without this, a notified effect that writes to a signal re-enters this
+      // loop by adding new entries to pendingNotifications mid-iteration,
+      // which can cause missed notifications or infinite loops depending on the
+      // JS engine's Set iteration order guarantees.
+      //
+      // Additionally, clear the shared set *before* notifying so that any
+      // signals written during notification queue into a clean set and are
+      // flushed by a subsequent scheduler tick rather than the current loop.
+      const toNotify = [...pendingNotifications];
       pendingNotifications.clear();
-      updateScheduler.schedule();
+
+      // FIX: Wrap notification loop in try/finally so that a throwing effect
+      // does not leave stale entries in pendingNotifications forever.
+      try {
+        for (const subscriber of toNotify) {
+          subscriber.notify();
+        }
+      } finally {
+        // Any entries that were re-added during notification (from nested
+        // signal writes) remain in pendingNotifications for the next flush.
+        updateScheduler.schedule();
+      }
     }
   }
 };
@@ -111,6 +131,8 @@ export const effect = (cb) => {
   function execute() {
     if (stopped) return;
 
+    // Run cleanup in untracked context so cleanup logic cannot accidentally
+    // subscribe this effect to new signals.
     observerStack.push(null);
     try {
       cleanup();
@@ -118,9 +140,28 @@ export const effect = (cb) => {
       observerStack.pop();
     }
 
+    // FIX: If cb() throws, the effect must still be removed from the observer
+    // stack and marked as stopped so it does not silently re-execute with a
+    // broken, partially-subscribed state on the next notification.
+    //
+    // Subscriptions gathered before the throw are cleaned up immediately via
+    // the dispose() path so the effect does not leak signal references.
     observerStack.push(effectInstance);
     try {
       _externalCleanup = cb();
+    } catch (err) {
+      // Effect threw — stop it to prevent repeated execution in a broken state
+      // and release all signal subscriptions to avoid memory leaks.
+      stopped = true;
+      pendingNotifications.delete(effectInstance);
+
+      // Unlink subscriptions collected during this failed run.
+      for (const unlink of _unlinkSubscriptions) {
+        unlink(effectInstance);
+      }
+      _unlinkSubscriptions.clear();
+
+      throw err; // Re-throw so callers can handle / log the error.
     } finally {
       observerStack.pop();
     }
@@ -138,20 +179,34 @@ export const effect = (cb) => {
   return dispose;
 };
 
+// memo() and computed() return the read function directly — consistent with
+// how signal() works, where the read fn is just called as sig(). This lets
+// computed values compose naturally: computed(() => otherComputed().length).
+//
+// dispose/stop are attached as non-enumerable properties on the function so
+// they are available for cleanup without appearing in for..in loops or
+// accidental spreads.
+
 export function memo(fn) {
-  const [sig, setSig] = signal();
+  const [read, setSig] = signal();
   const stop = effect(() => setSig(fn()));
-  sig.dispose = stop;
-  sig.stop = stop;
-  return sig;
+  Object.defineProperties(read, {
+    dispose: { value: stop, writable: true, configurable: true },
+    stop: { value: stop, writable: true, configurable: true },
+  });
+  return read;
 }
 
 export function computed(fn) {
   if (typeof fn !== "function") {
-    const [sig] = signal();
-    sig.dispose = () => {};
-    sig.stop = sig.dispose;
-    return sig;
+    // FIX: Previously this created a signal and returned it without warning,
+    // silently swallowing a likely programmer error. Now we throw early so the
+    // mistake surfaces immediately rather than producing a broken computed that
+    // always returns undefined.
+    throw new TypeError(
+      `computed() expects a function, got ${typeof fn}. ` +
+        `Use signal() directly if you want a writable reactive value.`,
+    );
   }
 
   return memo(fn);
