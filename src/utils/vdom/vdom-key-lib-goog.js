@@ -937,8 +937,30 @@ if (typeof window !== "undefined") {
       function diffChildren(parent, oldChildren, newChildren, idx) {
         //console.log(parent, oldChildren, newChildren)
 
-        // if both are 0 len
+        // simple optimi
+        // 1.
         if (oldChildren.length + newChildren.length === 0) return;
+
+        // 2. add all
+        if (oldChildren.length === 0) {
+          patches.push({
+            type: "ADD-ALL",
+            p: parent,
+            c: newChildren,
+          });
+          return;
+        }
+
+        // 3. remove all
+        if (newChildren.length === 0) {
+          patches.push({
+            type: "REMOVE-ALL",
+            p: parent,
+          });
+          return;
+        }
+
+        // end simple optimi
 
         // 1. Check if all new children can be mapped using unique keys
         const useKeys =
@@ -979,52 +1001,95 @@ if (typeof window !== "undefined") {
       }
 
       function diffWithKeys(parent, oldChildren, newChildren, idx) {
-        // Map old keys to their nodes and indices
         const oldKeyMap = new Map(
           oldChildren.map((node, index) => [node.key, { node, index }]),
         );
 
-        // Track the highest index seen in the old list to detect moves
-        let lastPlacedIndex = 0;
-
-        newChildren.forEach((newChild, newIndex) => {
+        // ── MARKER 1: replace the forEach + lastPlacedIndex block ────────────────
+        // Build newMapped: resolve each new child to its old index (or null if new)
+        const newMapped = newChildren.map((newChild) => {
           const oldMatch = oldKeyMap.get(newChild.key);
 
+          // old and new both has this
           if (oldMatch) {
-            // Node exists, diff its properties/children
-            diffNode(parent, oldMatch.node, newChild, newIndex);
+            diffNode(
+              parent,
+              oldMatch.node,
+              newChild,
+              newChildren.indexOf(newChild),
+            );
+            oldKeyMap.delete(newChild.key);
+            return { newChild, oldIndex: oldMatch.index };
+          }
 
-            // If its old position is less than lastPlacedIndex, it moved forward
-            if (oldMatch.index < lastPlacedIndex) {
+          // its all new
+          patches.push({
+            type: "CREATE",
+            p: parent,
+            c: newChild,
+            index: newChildren.indexOf(newChild),
+          });
+          return null;
+        });
+
+        // ── MARKER 2: compute LIS over oldIndex values of matched nodes ───────────
+        const matched = newMapped
+          .map((m, newIdx) => (m ? { ...m, newIdx } : null))
+          .filter(Boolean);
+
+        if (matched.length > 0) {
+          const stable = computeLIS(matched.map((m) => m.oldIndex));
+
+          // ── MARKER 3: emit MOVE only for nodes outside the LIS ───────────────────
+          for (let i = 0; i < matched.length; i++) {
+            if (!stable.has(i)) {
+              const { newChild, newIdx } = matched[i];
+              const refKey = newChildren[newIdx + 1]?.key ?? null;
               patches.push({
                 type: "MOVE",
                 p: parent,
-                // from: oldMatch.index,
-                // to: newIndex,
-                key: newChild?.key,
-                refKey: oldMatch?.node.key,
+                key: newChild.key,
+                refKey,
               });
-            } else {
-              lastPlacedIndex = oldMatch.index;
             }
-
-            // Delete from map to track remaining unpatched old nodes
-            oldKeyMap.delete(newChild.key);
-          } else {
-            // Node is completely new
-            patches.push({
-              type: "CREATE",
-              p: parent,
-              c: newChild,
-              index: newIndex,
-            });
           }
-        });
+          // ── END MARKER ────────────────────────────────────────────────────────────
+        }
 
-        // Any nodes left in oldKeyMap are no longer in the new list
         oldKeyMap.forEach((oldMatch) => {
           patches.push({ type: "REMOVE", p: parent, key: oldMatch.node.key });
         });
+      }
+
+      // patience-sort LIS — O(n log n), returns indices into `seq` that form the LIS
+      function computeLIS(seq) {
+        const tails = []; // tails[i] = smallest tail value of IS of length i+1
+        const tailIdx = []; // index in seq of each tail
+        const prev = new Array(seq.length).fill(-1);
+        const posMap = []; // posMap[i] = index in tails where seq[i] was placed
+
+        for (let i = 0; i < seq.length; i++) {
+          const val = seq[i];
+          let lo = 0,
+            hi = tails.length;
+          while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            tails[mid] < val ? (lo = mid + 1) : (hi = mid);
+          }
+          tails[lo] = val;
+          tailIdx[lo] = i;
+          posMap[i] = lo;
+          if (lo > 0) prev[i] = tailIdx[lo - 1];
+        }
+
+        // Backtrack to recover the actual indices
+        const result = new Set();
+        let idx = tailIdx[tails.length - 1];
+        while (idx !== -1) {
+          result.add(idx);
+          idx = prev[idx];
+        }
+        return result;
       }
 
       function diffNode(parent, oldNode, newNode, idx) {
@@ -1197,9 +1262,9 @@ if (typeof window !== "undefined") {
         const patch = _patches[i];
 
         switch (patch.type) {
-          case "APPENDDF":
-            patch.p.appendChild(patch.c);
-            break;
+          // case "APPENDDF":
+          //   patch.p.appendChild(patch.c);
+          //   break;
           case "CREATE":
           case "APPEND":
             // If the vnode being appended matches the dragged element's key,
@@ -1214,16 +1279,16 @@ if (typeof window !== "undefined") {
             patch.p.appendChild(appendEl);
             break;
 
-          // case "APPEND_CHILDREN": {
-          //   const df = $d.createDocumentFragment();
+          case "ADD-ALL": {
+            const df = $d.createDocumentFragment();
 
-          //   for (let i = 0, len = patch.c.length; i < len; ++i) {
-          //     df.appendChild(createElement(patch.c[i]));
-          //   }
+            for (let i = 0, len = patch.c.length; i < len; ++i) {
+              df.appendChild(createElement(patch.c[i]));
+            }
 
-          //   patch.p.appendChild(df);
-          //   break;
-          // }
+            patch.p.appendChild(df);
+            break;
+          }
 
           case "MOVE": {
             const parent = patch.p;
@@ -1267,7 +1332,7 @@ if (typeof window !== "undefined") {
           //   logte("REMOVEALL");
           //   break;
 
-          case "REMOVEALL":
+          case "REMOVE-ALL":
             // const childrenToDispose = Array.from(patch.p.childNodes);
             const oldParent = patch.p;
 
