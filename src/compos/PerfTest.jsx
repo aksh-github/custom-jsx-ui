@@ -2,7 +2,7 @@
 
 import { h, createContext } from "../utils/vdom/vdom-lib";
 
-const SIZE = 4;
+const SIZE = 10;
 
 const random = (max) => Math.round(Math.random() * SIZE) % max;
 
@@ -67,7 +67,7 @@ const unusedCtx = createContext("something");
 
 const generateAlphaID = () => {
   // Convert random number to base-36 string and extract 6 characters
-  return Math.random().toString(36).substring(2, 8);
+  return `t-${Math.random().toString(36).substring(2, 8)}`;
 };
 
 const buildData = (count) => {
@@ -126,11 +126,11 @@ const listReducer = (state, action) => {
       return { data: [], selected: 0 };
     case "SWAP_ROWS":
       const newdata = [...dataCtx.get()];
-      if (newdata.length > 998) {
+      if (newdata.length > 9) {
         const d1 = newdata[1];
-        const d998 = newdata[998];
+        const d998 = newdata[8];
         newdata[1] = d998;
-        newdata[998] = d1;
+        newdata[8] = d1;
         dataCtx.set(newdata);
       }
 
