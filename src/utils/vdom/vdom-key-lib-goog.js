@@ -41,6 +41,17 @@ function propsChanged(oldProps, newProps) {
   return false;
 }
 
+// function transformChild(child) {
+//   if (typeof child === "string" || typeof child === "number") {
+//     return { type: TextType, /*props: {},*/ value: String(child) };
+//   }
+
+//   if (child == null || typeof child === "boolean") {
+//     return { type: NoneType, /*props: {},*/ value: child };
+//   }
+//   return child;
+// }
+
 const microframe = (() => {
   let currComp = null;
 
@@ -59,16 +70,7 @@ const microframe = (() => {
     let updtFlag = undefined;
 
     if (Array.isArray(children)) {
-      children = children.flat().map((child) => {
-        if (typeof child === "string" || typeof child === "number") {
-          return { type: TextType, /*props: {},*/ value: String(child) };
-        }
-
-        if (child == null || typeof child === "boolean") {
-          return { type: NoneType, /*props: {},*/ value: child };
-        }
-        return child;
-      });
+      children = children.flat();
     }
 
     if (typeof type === "function") {
@@ -123,6 +125,20 @@ const microframe = (() => {
 
       // IMP: If we dont want Compo nodes (Switch compo will not work)
 
+      // return rv
+
+      // final $c = `functionname:key:parent`
+      if (rv && rv.children) {
+        if (rv.$c) {
+          if ((rv.$c.match(/target/g) || []).length < 2)
+            rv.$c += `:${type.name}`;
+        } else {
+          rv.$c = `${type.name}:${props?.key}`;
+        }
+
+        // rv.children = rv.children.map(transformChild);
+        return rv;
+      } // else return transformChild(rv);
       return rv;
 
       // Below is only required to see compo node, but logic may not work beyond 20th may 2026
@@ -593,7 +609,15 @@ if (typeof window !== "undefined") {
     };
 
     function createElement(node) {
-      if (!node?.children) {
+      if (typeof node === "string" || typeof node === "number") {
+        return $d.createTextNode(node);
+      }
+
+      if (node == null || typeof node === "boolean") {
+        return $d.createComment(node);
+      }
+
+      if (!node?.type) {
         if (node?.$c) {
           // const tnode = $d.createTextNode(
           //   node?.value == null || node?.value == undefined ? "" : node?.value
@@ -639,11 +663,12 @@ if (typeof window !== "undefined") {
         const $el2 = $d.createDocumentFragment();
 
         // node.children.map(createElement).forEach($el2.appendChild.bind($el2));
-        if (node.children.length > 100) {
+        if (node.children?.length > 100) {
           appendChildren(node.children, $el2);
         } else {
           for (let i = 0, len = node.children.length; i < len; ++i) {
-            $el2.appendChild(createElement(node.children[i]));
+            // node.children[i] = transformChild(node.children[i]);
+            $el.appendChild(createElement(node.children[i]));
           }
         }
 
@@ -670,10 +695,11 @@ if (typeof window !== "undefined") {
         }
       }
 
-      if (node.children.length > 100) {
+      if (node.children?.length > 100) {
         appendChildren(node.children, $el);
       } else {
         for (let i = 0, len = node.children.length; i < len; ++i) {
+          // node.children[i] = transformChild(node.children[i]);
           $el.appendChild(createElement(node.children[i]));
         }
       }
@@ -737,7 +763,7 @@ if (typeof window !== "undefined") {
       // log(performance.now());
       old = curr(); // create latest vdom
       // log(performance.now());
-      // log(old);
+      log(old);
       // log(funcCache);
       // 1. set dom
       // rootNode.appendChild(createElement(old));
@@ -911,13 +937,16 @@ if (typeof window !== "undefined") {
       function diffChildren(parent, oldChildren, newChildren, idx) {
         //console.log(parent, oldChildren, newChildren)
 
+        // if both are 0 len
+        if (oldChildren.length + newChildren.length === 0) return;
+
         // 1. Check if all new children can be mapped using unique keys
         const useKeys =
-          oldChildren.every((c) => c.key != null) &&
-          newChildren.every((c) => c.key != null);
+          oldChildren.every((c) => c?.key != null) &&
+          newChildren.every((c) => c?.key != null);
 
         if (useKeys) {
-          diffWithKeys(parent, oldChildren, newChildren);
+          diffWithKeys(parent, oldChildren, newChildren, idx);
         } else {
           diffWithIndices(parent, oldChildren, newChildren, idx);
         }
@@ -949,7 +978,7 @@ if (typeof window !== "undefined") {
         }
       }
 
-      function diffWithKeys(parent, oldChildren, newChildren) {
+      function diffWithKeys(parent, oldChildren, newChildren, idx) {
         // Map old keys to their nodes and indices
         const oldKeyMap = new Map(
           oldChildren.map((node, index) => [node.key, { node, index }]),
@@ -970,9 +999,10 @@ if (typeof window !== "undefined") {
               patches.push({
                 type: "MOVE",
                 p: parent,
-                from: oldMatch.index,
-                to: newIndex,
-                key: newChild.key,
+                // from: oldMatch.index,
+                // to: newIndex,
+                key: newChild?.key,
+                refKey: oldMatch?.node.key,
               });
             } else {
               lastPlacedIndex = oldMatch.index;
@@ -985,7 +1015,7 @@ if (typeof window !== "undefined") {
             patches.push({
               type: "CREATE",
               p: parent,
-              node: newChild,
+              c: newChild,
               index: newIndex,
             });
           }
@@ -998,23 +1028,87 @@ if (typeof window !== "undefined") {
       }
 
       function diffNode(parent, oldNode, newNode, idx) {
+        // if (oldNode == null || typeof oldNode === "boolean") {
+        //   oldNode = { type: NoneType, value: oldNode };
+        // }
+        // if (newNode == null || typeof oldNode === "boolean") {
+        //   newNode = { type: NoneType, value: newNode };
+        // }
+        // for all above
+        if (oldNode === newNode) return;
+
+        if (typeof oldNode == "string" || typeof oldNode == "number") {
+          oldNode = { type: TextType, value: oldNode };
+        }
+        if (typeof newNode == "string" || typeof newNode == "number") {
+          newNode = { type: TextType, value: newNode };
+        }
+
         if (!oldNode) {
-          patches.push({ type: "CREATE", p: parent, newNode });
+          if (oldNode == null) {
+            const old = parent.childNodes[idx];
+            let incrDone = false;
+
+            patches.push({
+              type: "REPLACE",
+              p: parent,
+              c: [newNode, old],
+            });
+
+            while (old.contains(stk[CTR + 1])) {
+              CTR++;
+              incrDone = true;
+            }
+          } else {
+            patches.push({ type: "CREATE", p: parent, c: newNode });
+          }
           return;
         }
 
         if (!newNode) {
-          patches.push({ type: "REMOVE", p: parent, oldNode });
+          if (newNode == null) {
+            const old = parent.childNodes[idx];
+            let incrDone = false;
+
+            patches.push({
+              type: "REPLACE",
+              p: parent,
+              c: [newNode, old],
+            });
+
+            while (old.contains(stk[CTR + 1])) {
+              CTR++;
+              incrDone = true;
+            }
+          } else {
+            patches.push({ type: "REMOVE", p: parent, c: oldNode });
+          }
           return;
         }
 
         // Type mismatch requires a full replace
-        if (oldNode.type !== newNode.type) {
+        if (oldNode?.$c !== newNode?.$c || oldNode?.type !== newNode?.type) {
+          const old = parent.childNodes[idx];
+          let incrDone = false;
+
+          // if its Text Node convert back
+          if (newNode?.type === TextType) {
+            newNode = newNode.value;
+          }
+
           patches.push({
             type: "REPLACE",
             p: parent,
-            c: [newNode, parent.childNodes[idx]],
+            c: [newNode, old],
           });
+
+          while (old.contains(stk[CTR + 1])) {
+            CTR++;
+            incrDone = true;
+          }
+
+          // if (incrDone) CTR--;
+
           return;
         } else {
           // Update text content
@@ -1028,11 +1122,13 @@ if (typeof window !== "undefined") {
             return;
           }
         }
-        let newParent = stk[++CTR];
 
         // Deeper diffing of props and children goes here
-        diffProps(newParent, oldNode.props, newNode.props);
-        diffChildren(newParent, oldNode.children, newNode.children);
+        if (newNode.props || oldNode.props) {
+          let newParent = stk[++CTR];
+          diffProps(newParent, oldNode.props, newNode.props);
+          diffChildren(newParent, oldNode.children, newNode.children, idx);
+        }
       }
 
       /**
@@ -1060,7 +1156,11 @@ if (typeof window !== "undefined") {
         }
 
         if (hasChanges) {
-          patches.push({ type: "PROPS", $target: target, props: propChanges });
+          propsPatches.push({
+            $target: target,
+            newProps: propChanges,
+            oldProps: {},
+          });
         }
       }
 
@@ -1100,7 +1200,8 @@ if (typeof window !== "undefined") {
           case "APPENDDF":
             patch.p.appendChild(patch.c);
             break;
-          case "APPEND": {
+          case "CREATE":
+          case "APPEND":
             // If the vnode being appended matches the dragged element's key,
             // reuse that exact DOM node instead of creating a new one.
             // A fresh element wouldn't carry the browser's drag context.
@@ -1112,19 +1213,36 @@ if (typeof window !== "undefined") {
                 : createElement(patch.c);
             patch.p.appendChild(appendEl);
             break;
-          }
-          case "APPEND_CHILDREN": {
-            const df = $d.createDocumentFragment();
 
-            for (let i = 0, len = patch.c.length; i < len; ++i) {
-              df.appendChild(createElement(patch.c[i]));
-            }
+          // case "APPEND_CHILDREN": {
+          //   const df = $d.createDocumentFragment();
 
-            patch.p.appendChild(df);
+          //   for (let i = 0, len = patch.c.length; i < len; ++i) {
+          //     df.appendChild(createElement(patch.c[i]));
+          //   }
+
+          //   patch.p.appendChild(df);
+          //   break;
+          // }
+
+          case "MOVE": {
+            const parent = patch.p;
+            const nodeToMove = parent.querySelector(
+              `:scope > [key="${patch.key}"]`,
+            );
+            const refNode = patch.refKey
+              ? parent.querySelector(`:scope > [key="${patch.refKey}"]`)
+              : null;
+            parent.insertBefore(nodeToMove, refNode);
+
             break;
           }
 
           case "REMOVE":
+            if (patch.key) {
+              patch.c = patch.p.querySelector(`[key=${patch.key}]`);
+            }
+
             // Skip disposal if this is the element being dragged — it is
             // moving to another list, not being destroyed. Calling .remove()
             // on it detaches it from the document and breaks the drag session.
