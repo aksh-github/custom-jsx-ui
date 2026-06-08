@@ -1101,12 +1101,59 @@ if (typeof window !== "undefined") {
         // for all above
         if (oldNode === newNode) return;
 
+        let strCheck = 0;
+
         if (typeof oldNode == "string" || typeof oldNode == "number") {
           oldNode = { type: TextType, value: oldNode };
+          strCheck++;
         }
         if (typeof newNode == "string" || typeof newNode == "number") {
           newNode = { type: TextType, value: newNode };
+          strCheck++;
         }
+
+        if (strCheck === 2) {
+          // both are strings
+          strCheck = 0;
+          if (newNode.type === TextType || newNode.type === NoneType) {
+            if (oldNode.value !== newNode.value)
+              patches.push({
+                type: "CONTENT",
+                p: parent.childNodes[idx],
+                c: newNode.value,
+              });
+            return;
+          }
+        }
+        // strCheck = 0; // VVV IMP done below
+
+        function goNext() {
+          if (newNode.props && oldNode.props) {
+            let newParent = stk[++CTR];
+
+            // if its Text Node convert back
+            if (newNode?.type === TextType) {
+              newNode = newNode.value;
+            }
+
+            // if its Text Node convert back
+            if (oldNode?.type === TextType) {
+              oldNode = oldNode.value;
+            }
+
+            if (newNode?.updtFlag)
+              diffProps(newParent, oldNode.props, newNode.props);
+
+            // if ()
+            diffChildren(newParent, oldNode.children, newNode.children, idx);
+          }
+        }
+
+        if (newNode && strCheck === 0 && !newNode.updtFlag) {
+          // go ahead because nothing to compare
+          return goNext();
+        }
+        strCheck = 0; // VVV IMP
 
         if (!oldNode) {
           if (oldNode == null) {
@@ -1181,30 +1228,12 @@ if (typeof window !== "undefined") {
           // if (incrDone) CTR--;
 
           return;
-        } else {
-          // Update text content
-          if (newNode.type === TextType || newNode.type === NoneType) {
-            if (oldNode.value !== newNode.value)
-              patches.push({
-                type: "CONTENT",
-                p: parent.childNodes[idx],
-                c: newNode.value,
-              });
-            return;
-          }
         }
 
         // Deeper diffing of props and children goes here
-        if (newNode.props || oldNode.props) {
-          let newParent = stk[++CTR];
-
-          if (newNode?.updtFlag)
-            diffProps(newParent, oldNode.props, newNode.props);
-
-          // if ()
-          diffChildren(newParent, oldNode.children, newNode.children, idx);
-        }
-      }
+        _C++;
+        goNext();
+      } //()
 
       /**
        * 4. Helper: Property/Attribute Comparison
