@@ -973,6 +973,8 @@ if (typeof window !== "undefined") {
         } else {
           diffWithIndices(parent, oldChildren, newChildren, idx);
         }
+
+        oldChildren.length = 0;
       }
 
       function diffWithIndices(parent, oldChildren, newChildren, idx) {
@@ -1055,11 +1057,16 @@ if (typeof window !== "undefined") {
             }
           }
           // ── END MARKER ────────────────────────────────────────────────────────────
+
+          stable.clear();
+          matched.length = 0;
         }
 
         oldKeyMap.forEach((oldMatch) => {
           patches.push({ type: "REMOVE", p: parent, key: oldMatch.node.key });
         });
+
+        oldKeyMap.clear();
       }
 
       // patience-sort LIS — O(n log n), returns indices into `seq` that form the LIS
@@ -1152,7 +1159,12 @@ if (typeof window !== "undefined") {
 
             diffChildren(newParent, oldNode.children, newNode.children, idx);
             oldNode.children.length = 0;
-            oldNode = oldNode.children = oldNode.props = null;
+            oldNode.type =
+              oldNode.key =
+              oldNode.$c =
+              oldNode.children =
+              oldNode.props =
+                null;
           }
         }
 
@@ -1226,6 +1238,17 @@ if (typeof window !== "undefined") {
             p: parent,
             c: [newNode, old],
           });
+
+          if (oldNode.props) {
+            oldNode.children.length = 0;
+            oldNode =
+              oldNode.type =
+              oldNode.key =
+              oldNode.$c =
+              oldNode.children =
+              oldNode.props =
+                null;
+          }
 
           while (old.contains(stk[CTR + 1])) {
             CTR++;
