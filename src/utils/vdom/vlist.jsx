@@ -1,5 +1,5 @@
 /** @jsx h */
-import { h, createState } from "./vdom-lib";
+import { h, createState } from "@vdom-lib";
 
 /**
  * A reusable virtual list component.
@@ -28,7 +28,7 @@ export const VirtualList = ({
   const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
   const endIndex = Math.min(
     items.length,
-    Math.ceil((scrollTop + windowHeight) / itemHeight) + overscan
+    Math.ceil((scrollTop + windowHeight) / itemHeight) + overscan,
   );
 
   const getRowToRender = () => {
@@ -36,7 +36,7 @@ export const VirtualList = ({
     for (let i = startIndex; i < endIndex; i++) {
       rows.push(
         <div
-          key={i}
+          key={`k-${i}`}
           style={{
             position: "absolute",
             transform: `translateY(${i * itemHeight}px)`,
@@ -45,7 +45,7 @@ export const VirtualList = ({
           }}
         >
           {renderItem(items[i], i)}
-        </div>
+        </div>,
       );
     }
     return rows;

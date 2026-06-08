@@ -1,5 +1,5 @@
 /** @jsx h */
-import { h, createEffect, createState } from "./vdom-lib";
+import { h, createEffect, createState } from "@vdom-lib";
 
 const suspenseCache = {};
 

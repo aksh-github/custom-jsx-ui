@@ -4,7 +4,7 @@ import {
   createState,
   setCurrComp,
   createEffect,
-} from "./vdom-lib";
+} from "@vdom-lib";
 
 const map = new Map();
 
