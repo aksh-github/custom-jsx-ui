@@ -956,6 +956,8 @@ if (typeof window !== "undefined") {
             type: "REMOVE-ALL",
             p: parent,
           });
+
+          oldChildren.length = 0;
           return;
         }
 
@@ -1099,7 +1101,10 @@ if (typeof window !== "undefined") {
         //   newNode = { type: NoneType, value: newNode };
         // }
         // for all above
-        if (oldNode === newNode) return;
+        if (oldNode === newNode) {
+          oldNode = null;
+          return;
+        }
 
         let strCheck = 0;
 
@@ -1122,6 +1127,7 @@ if (typeof window !== "undefined") {
                 p: parent.childNodes[idx],
                 c: newNode.value,
               });
+            oldNode = null;
             return;
           }
         }
@@ -1132,20 +1138,22 @@ if (typeof window !== "undefined") {
             let newParent = stk[++CTR];
 
             // if its Text Node convert back
-            if (newNode?.type === TextType) {
-              newNode = newNode.value;
-            }
+            // if (newNode?.type === TextType) {
+            //   newNode = newNode.value;
+            // }
 
             // if its Text Node convert back
-            if (oldNode?.type === TextType) {
-              oldNode = oldNode.value;
-            }
+            // if (oldNode?.type === TextType) {
+            //   oldNode = oldNode.value;
+            // }
 
             if (newNode?.updtFlag)
               diffProps(newParent, oldNode.props, newNode.props);
 
             // if ()
             diffChildren(newParent, oldNode.children, newNode.children, idx);
+            oldNode.children.length = 0;
+            oldNode = oldNode.children = oldNode.props = null;
           }
         }
 
