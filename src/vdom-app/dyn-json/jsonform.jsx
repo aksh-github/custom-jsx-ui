@@ -21,7 +21,7 @@ const ErrorMessage = ({ id, error }) => {
 const Field = (props) => {
   // console.log("field", field);
   let control;
-  const { field, state, formInstanceId, onBlur } = props;
+  const { field, state, formInstanceId, onBlur, key } = props;
   const fieldId = `${formInstanceId}-${field.id || field.name}`;
   const errorId = `${fieldId}-error`;
 
@@ -120,10 +120,11 @@ const Field = (props) => {
   }
 
   return control ? (
-    <div className="mb-3">
+    <div className="mb-3" key={key}>
       {control}
       <ErrorMessage
         id={errorId}
+        key={key}
         // error={formState()?.[field.name]?.error}
         error={state?.error}
       />
@@ -304,6 +305,7 @@ const JsonForm = ({
       {uiJson && formState && (
         <form
           id={`${formInstanceId}-${uiJson.form.id || "form"}`}
+          key={`${formInstanceId}-${uiJson.form.id || "form"}`}
           noValidate
           // ref={(el) => {
           //   formRef = el;
@@ -326,7 +328,9 @@ const JsonForm = ({
               handleChange={handleChange}
             />
           ))}
-          <button type="submit">Submit</button>
+          <button key={`${formInstanceId}-submit`} type="submit">
+            Submit
+          </button>
         </form>
       )}
       <pre>{JSON.stringify(formState, null, 2)}</pre>
