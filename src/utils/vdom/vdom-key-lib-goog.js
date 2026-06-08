@@ -127,11 +127,11 @@ const microframe = (() => {
 
       // return rv
 
+      // 8 jun 26
       // final $c = `functionname:key:parent`
       if (rv && rv.children) {
         if (rv.$c) {
-          if ((rv.$c.match(/target/g) || []).length < 2)
-            rv.$c += `:${type.name}`;
+          if ((rv.$c.match(/:/g) || []).length < 2) rv.$c += `:${type.name}`;
         } else {
           rv.$c = `${type.name}:${props?.key}`;
         }
@@ -140,6 +140,7 @@ const microframe = (() => {
         return rv;
       } // else return transformChild(rv);
       return rv;
+      // end 8 jun 26
 
       // Below is only required to see compo node, but logic may not work beyond 20th may 2026
 
@@ -681,16 +682,14 @@ if (typeof window !== "undefined") {
 
       const $el = $d.createElement(node.type);
 
-      if (!node?.$c) {
-        setProps($el, node.props);
-        addEventListeners($el, node.props);
-        // Ensure all bubbling event handlers are stored on element for global listener
-        for (const propName in node.props) {
-          if (isEventProp(propName)) {
-            const eventName = extractEventName(propName);
-            if (!isNonBubblingEvent(eventName)) {
-              $el[`__${propName}`] = node.props[propName];
-            }
+      setProps($el, node.props);
+      addEventListeners($el, node.props);
+      // Ensure all bubbling event handlers are stored on element for global listener
+      for (const propName in node.props) {
+        if (isEventProp(propName)) {
+          const eventName = extractEventName(propName);
+          if (!isNonBubblingEvent(eventName)) {
+            $el[`__${propName}`] = node.props[propName];
           }
         }
       }
@@ -709,24 +708,24 @@ if (typeof window !== "undefined") {
       return $el;
     }
 
-    function changed(node1, node2) {
-      // if both are compo nodes of type df
-      if (node1?.type === node2?.type && node1?.type === "df") {
-        return node1?.$c !== node2?.$c;
-      } // they are dom nodes
-      else
-        return (
-          // node1 != node2 ||
-          typeof node1 !== typeof node2 ||
-          // (typeof node1 === "string" && node1 !== node2) ||
-          (!node1?.type && node1 !== node2) ||
-          node1?.type !== node2?.type ||
-          node1?.value !== node2?.value ||
-          node1?.props?.name !== node2?.props?.name
+    // function changed(node1, node2) {
+    //   // if both are compo nodes of type df
+    //   if (node1?.type === node2?.type && node1?.type === "df") {
+    //     return node1?.$c !== node2?.$c;
+    //   } // they are dom nodes
+    //   else
+    //     return (
+    //       // node1 != node2 ||
+    //       typeof node1 !== typeof node2 ||
+    //       // (typeof node1 === "string" && node1 !== node2) ||
+    //       (!node1?.type && node1 !== node2) ||
+    //       node1?.type !== node2?.type ||
+    //       node1?.value !== node2?.value ||
+    //       node1?.props?.name !== node2?.props?.name
 
-          // || (node1?.props && node1.props.forceUpdate)
-        );
-    }
+    //       // || (node1?.props && node1.props.forceUpdate)
+    //     );
+    // }
 
     // only 1st type (complete rewrite etc)
 
@@ -1114,15 +1113,22 @@ if (typeof window !== "undefined") {
             const old = parent.childNodes[idx];
             let incrDone = false;
 
-            patches.push({
-              type: "REPLACE",
-              p: parent,
-              c: [newNode, old],
-            });
+            // if its Text Node convert back
+            if (newNode?.type === TextType) {
+              newNode = newNode.value;
+            }
 
-            while (old.contains(stk[CTR + 1])) {
-              CTR++;
-              incrDone = true;
+            if (old) {
+              patches.push({
+                type: "REPLACE",
+                p: parent,
+                c: [newNode, old],
+              });
+
+              while (old?.contains(stk[CTR + 1])) {
+                CTR++;
+                incrDone = true;
+              }
             }
           } else {
             patches.push({ type: "CREATE", p: parent, c: newNode });
@@ -1191,7 +1197,11 @@ if (typeof window !== "undefined") {
         // Deeper diffing of props and children goes here
         if (newNode.props || oldNode.props) {
           let newParent = stk[++CTR];
-          diffProps(newParent, oldNode.props, newNode.props);
+
+          if (newNode?.updtFlag)
+            diffProps(newParent, oldNode.props, newNode.props);
+
+          // if ()
           diffChildren(newParent, oldNode.children, newNode.children, idx);
         }
       }
@@ -1266,6 +1276,10 @@ if (typeof window !== "undefined") {
           //   patch.p.appendChild(patch.c);
           //   break;
           case "CREATE":
+            const parent = patch.p;
+            const refNode = parent.children[patch.index] || null;
+            patch.p.insertBefore(createElement(patch.c), refNode);
+            break;
           case "APPEND":
             // If the vnode being appended matches the dragged element's key,
             // reuse that exact DOM node instead of creating a new one.
