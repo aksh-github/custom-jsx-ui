@@ -1150,7 +1150,6 @@ if (typeof window !== "undefined") {
             if (newNode?.updtFlag)
               diffProps(newParent, oldNode.props, newNode.props);
 
-            // if ()
             diffChildren(newParent, oldNode.children, newNode.children, idx);
             oldNode.children.length = 0;
             oldNode = oldNode.children = oldNode.props = null;
@@ -1253,6 +1252,7 @@ if (typeof window !== "undefined") {
 
         // Find updated or added props
         for (const key in newProps) {
+          if (key === "ref") continue;
           if (newProps[key] !== oldProps[key]) {
             propChanges[key] = newProps[key];
             hasChanges = true;
