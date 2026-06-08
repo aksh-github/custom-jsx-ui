@@ -1,6 +1,6 @@
 // https://github.com/krausest/js-framework-benchmark
 
-import { h, createContext } from "../utils/vdom/vdom-lib";
+import { h, createContext } from "@vdom-lib";
 
 const SIZE = 10;
 
