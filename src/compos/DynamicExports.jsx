@@ -59,10 +59,10 @@ const SansCompoPromise = async () => {
 
 // 2. Util functions to use above promises
 
-export const DynTextArea = () => (
+export const DynTextArea = (props) => (
   <LazyV2
     fallback={<section>Loading TextArea...</section>}
-    key="TextArea"
+    key="TextArea" // have diff props.key thru props in case you need to reload across route etc.
     error={
       <section>
         Test error scenario for TextArea: Component can't be loaded at this time

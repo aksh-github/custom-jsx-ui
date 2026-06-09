@@ -3,6 +3,7 @@ import {
   h,
   createElement,
   Lazy,
+  LazyV2,
   memo,
   createState,
   batch,
@@ -84,6 +85,21 @@ const Topics = (props) => {
 
 // Ctr
 
+async function Version() {
+  // const res = (await fetch("/package.json")).json();
+  // console*.log(res);
+  try {
+    let res = await fetch("/package.json");
+    res = await res.json();
+    // console.log(res);
+    if (res) return res.version;
+    else return () => "NA";
+  } catch (ex) {
+    console.error(ex);
+    throw ex;
+  }
+}
+
 const Ctr = (props) => {
   const [st, setSt] = createState({ c: 100, version: "Loading..." });
 
@@ -116,6 +132,9 @@ const Ctr = (props) => {
       </p>
       <p>My ctr: {st.c}</p>
       <p>Json Value: {st.version}</p>
+      <LazyV2 key={props.key}>
+        <Version />
+      </LazyV2>
       <button
         onClick={(e) => {
           // setcc(cc() + 1);
@@ -439,7 +458,7 @@ export const SimpleRoute = () => {
 
       <p>before</p>
 
-      <DynTextArea />
+      <DynTextArea key={"Simple-DynTextArea"} />
 
       {/* <Lazy
         key="picurl"
