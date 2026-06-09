@@ -1097,6 +1097,9 @@ if (typeof window !== "undefined") {
           result.add(idx);
           idx = prev[idx];
         }
+
+        tails.length = tailIdx.length = prev.length = posMap.length = 0;
+
         return result;
       }
 
@@ -1220,6 +1223,17 @@ if (typeof window !== "undefined") {
           } else {
             patches.push({ type: "REMOVE", p: parent, c: oldNode });
           }
+
+          if (oldNode.props) {
+            oldNode.children.length = 0;
+            oldNode =
+              oldNode.type =
+              oldNode.key =
+              oldNode.$c =
+              oldNode.children =
+              oldNode.props =
+                null;
+          }
           return;
         }
 
@@ -1300,6 +1314,17 @@ if (typeof window !== "undefined") {
       }
 
       diffNode($parent, oldNode, newNode, 0);
+
+      if (oldNode.props) {
+        oldNode.children.length = 0;
+        oldNode =
+          oldNode.type =
+          oldNode.key =
+          oldNode.$c =
+          oldNode.children =
+          oldNode.props =
+            null;
+      }
 
       last = gdf = null;
       stk.length = 0;
