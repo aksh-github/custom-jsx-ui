@@ -73,7 +73,7 @@ export function Lazy(
   return <Comp {...p2} key={key} />;
 }
 
-export function LazyV2({ key, fallback }, children) {
+export function LazyV2({ key, fallback, error }, children) {
   const Child = children[0];
 
   const [Comp, setComp, setCompSpl] = createState(suspenseCache[key]);
@@ -104,7 +104,7 @@ export function LazyV2({ key, fallback }, children) {
         .catch((err) => {
           console.error(err);
           suspenseCache[key] = null;
-          setErr("Something wrong!!");
+          setErr(error);
           setComp(null);
           setLoading(false);
         });
