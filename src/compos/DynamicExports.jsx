@@ -1,6 +1,6 @@
 //1. promises
 
-import { h, Lazy } from "@vdom-lib";
+import { h, Lazy, LazyV2 } from "@vdom-lib";
 
 let _i = 0,
   _ArrayWithFragments = null;
@@ -39,6 +39,11 @@ const TextAreaComp = () => {
   return import("../compos/ComponentPatterns");
 };
 
+export const AsyncTextArea = async (props) => {
+  const Mod = await import("../compos/ComponentPatterns");
+  return () => <Mod.TextArea {...props} />;
+};
+
 // const SansCompoPromise = () => {
 //   // return new Promise((resolve, reject) => {
 //   //   setTimeout(() => resolve(10), 3000);
@@ -55,17 +60,17 @@ const SansCompoPromise = async () => {
 // 2. Util functions to use above promises
 
 export const DynTextArea = () => (
-  <Lazy
-    importFn={TextAreaComp}
-    resolve="TextArea"
+  <LazyV2
+    fallback={<section>Loading TextArea...</section>}
     key="TextArea"
     error={
       <section>
         Test error scenario for TextArea: Component can't be loaded at this time
       </section>
     }
-    fallback={<section>Loading TextArea...</section>}
-  />
+  >
+    <AsyncTextArea />
+  </LazyV2>
 );
 
 export const DynCompo = () => (

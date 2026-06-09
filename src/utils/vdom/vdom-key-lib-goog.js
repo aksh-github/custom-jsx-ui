@@ -1645,7 +1645,7 @@ export const createElement = dom.createElement || noop;
 // end dom
 
 // other helpful Components
-export { Lazy } from "./lazy";
+export { Lazy, LazyV2 } from "./lazy";
 export { memo } from "./memo";
 export { Switch, Case, Default } from "./switch";
 export { VirtualList } from "./vlist";

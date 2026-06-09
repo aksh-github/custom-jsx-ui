@@ -43,11 +43,12 @@ export function Lazy(
     }
 
     // Below doesn't work as expected
-    // return () => {
-    //   if (clearOnUnmount) {
-    //     delete suspenseCache[key];
-    //   }
-    // };
+    return () => {
+      // if (clearOnUnmount) {
+      //   delete suspenseCache[key];
+      // }
+      delete suspenseCache[key];
+    };
   }, []);
 
   if (err) {
@@ -70,4 +71,62 @@ export function Lazy(
   // pass only relevant props
   const { importFn: ifn, fallback: fb, error: er, resolve: re, ...p2 } = other;
   return <Comp {...p2} key={key} />;
+}
+
+export function LazyV2({ key, fallback }, children) {
+  const Child = children[0];
+
+  const [Comp, setComp, setCompSpl] = createState(suspenseCache[key]);
+  const [isFunc, setIsFunc] = createState(false);
+  const [err, setErr] = createState(null);
+  const [loading, setLoading] = createState(!suspenseCache[key]);
+
+  const effect = () => {
+    // Reset state when Child changes
+    setErr(null);
+    setLoading(true);
+
+    // Handle both async component functions and direct promises
+    const childPromise = typeof Child === "function" ? Child() : Child;
+
+    if (childPromise instanceof Promise) {
+      childPromise
+        .then((returnVal) => {
+          suspenseCache[key] = returnVal;
+          if (returnVal instanceof Function) {
+            if (returnVal.name !== "")
+              console.warn("You're supposed to return annonymous function!!");
+            setCompSpl(returnVal);
+            setIsFunc(true);
+          }
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          suspenseCache[key] = null;
+          setErr("Something wrong!!");
+          setComp(null);
+          setLoading(false);
+        });
+    } else {
+      // Child is not a promise, set it directly
+      suspenseCache[key] = childPromise;
+      setComp(childPromise);
+      setLoading(false);
+    }
+
+    return () => {
+      delete suspenseCache[key];
+    };
+  };
+
+  createEffect(effect, []);
+
+  // createEffect(effect, [Child2]); // Re-run when Child or key changes
+
+  if (err) {
+    return <div>{err}</div>;
+  }
+
+  return (isFunc ? <Comp /> : Comp) || (loading && fallback);
 }

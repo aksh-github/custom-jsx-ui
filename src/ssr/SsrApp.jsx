@@ -6,6 +6,7 @@ import {
   memo,
   forceUpdate,
   Switch,
+  LazyV2,
 } from "@vdom-lib";
 // import { Lazy } from "../utils/vdom/lazy";
 import { DynSans, DynTextArea } from "../compos/DynamicExports";
@@ -190,6 +191,12 @@ const CustomSwitch = ({ value, elements }) => {
   }
 };
 
+async function Comp(params) {
+  const lazyVal = "lazy val";
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  return lazyVal;
+}
+
 export const SsrApp = ({ currentUrl }) => {
   const [count, setCount] = createState(0);
   const [t, sett] = createState("");
@@ -231,12 +238,12 @@ export const SsrApp = ({ currentUrl }) => {
   };
 
   const Decide = ({ count }) => {
-    // return count % 2 === 0 ? <Even /> : <Odd />;
+    return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
     // return count % 2 === 0 ? <p>this is odd</p> : null;
-    return count % 2 === 0 ? null : <p>this is odd</p>;
+    // return count % 2 === 0 ? null : <p>this is odd</p>;
   };
 
   return (
@@ -283,6 +290,10 @@ export const SsrApp = ({ currentUrl }) => {
           <div>This is the default case</div>
         </Switch.Default>
       </Switch> */}
+      <LazyV2 key="async-comp">
+        <Comp />
+      </LazyV2>
+      <hr />
       <CustomSwitch
         value={455845}
         elements={[
@@ -298,7 +309,6 @@ export const SsrApp = ({ currentUrl }) => {
           { default: true, render: () => <div>This is the default case</div> },
         ]}
       />
-      <hr />
       <DynTextArea />
       <form onSubmit={submit}>
         <input value={t} onInput={onInput} onChange={onChange} />
