@@ -881,6 +881,8 @@ if (typeof window !== "undefined") {
 
       old = current;
 
+      // log(funcCache);
+
       altFuncCache = { ...funcCache };
       // altFuncCache = structuredClone(funcCache);
       funcCache = {};
