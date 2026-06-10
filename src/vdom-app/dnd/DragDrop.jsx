@@ -4,9 +4,9 @@ import "./dnd.css";
 
 export function DragDrop() {
   const [columns, setColumns] = createState({
-    ToDo: ["10001", "10002"],
+    ToDo: ["a-10001", "b-10002"],
 
-    InProgress: ["10003"],
+    InProgress: ["c-10003"],
   });
 
   createEffect(() => {
