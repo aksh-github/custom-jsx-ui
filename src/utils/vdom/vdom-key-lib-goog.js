@@ -1131,12 +1131,16 @@ if (typeof window !== "undefined") {
           // both are strings
           strCheck = 0;
           if (newNode.type === TextType || newNode.type === NoneType) {
-            if (oldNode.value !== newNode.value)
+            if (oldNode.value !== newNode.value) {
+              const createTextNode = !parent.childNodes[idx]; // true = there is no text node
               patches.push({
                 type: "CONTENT",
                 p: parent.childNodes[idx],
+                superp: createTextNode ? parent : null,
                 c: newNode.value,
+                createTextNode,
               });
+            }
             oldNode = null;
             return;
           }
@@ -1157,7 +1161,7 @@ if (typeof window !== "undefined") {
             //   oldNode = oldNode.value;
             // }
 
-            if (newNode?.updtFlag)
+            if (newNode?.updtFlag || !hydrated)
               diffProps(newParent, oldNode.props, newNode.props);
 
             diffChildren(newParent, oldNode.children, newNode.children, idx);
@@ -1289,7 +1293,10 @@ if (typeof window !== "undefined") {
 
         // Find updated or added props
         for (const key in newProps) {
-          if (key === "ref") continue;
+          if (key === "ref" && hydrated) {
+            // log("=== ", hydrated);
+            continue;
+          }
           if (newProps[key] !== oldProps[key]) {
             propChanges[key] = newProps[key];
             hasChanges = true;
@@ -1458,7 +1465,14 @@ if (typeof window !== "undefined") {
             break;
 
           case "CONTENT":
-            patch.p.textContent = patch.c;
+            if (patch.createTextNode) {
+              const txtNode = createElement(patch.c);
+              patch.superp.appendChild(txtNode);
+              patch.superp = null;
+            } else {
+              patch.p.textContent = patch.c;
+            }
+
             break;
         }
 
