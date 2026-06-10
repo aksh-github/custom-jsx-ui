@@ -14,7 +14,7 @@ function _createEffect() {
     // skip update effect for first run
     if (firstRun && dependencies?.length > 0) {
       firstRun = false;
-      return;
+      // return;
     }
 
     const dependenciesChanged = dependencies.some(
@@ -23,9 +23,9 @@ function _createEffect() {
 
     // if (!prevDeps?.length || dependenciesChanged) {
     if (dependenciesChanged) {
-      // if (cleanupFn) cleanupFn();
-      // cleanupFn = effectFn();
-      effectFn();
+      if (cleanupFn) cleanupFn();
+      cleanupFn = effectFn();
+      // effectFn();
       prevDeps = dependencies;
     } else if (
       prevDeps?.length === dependencies?.length &&
@@ -249,7 +249,7 @@ const SmartState = (() => {
       if (gs[key] === nv) return;
 
       lastComp = key.split("-")?.[0];
-      reset();
+      // reset();
       gs[key] = nv;
       throtUpdate();
       lastComp = null;
@@ -381,7 +381,7 @@ const SmartState = (() => {
           if (!mountMap.has(`${currComp}`)) {
             mountMap.set(`${currComp}`, cb);
           }
-          fnIdx = 0;
+          // fnIdx = 0;
           return;
         }
 
@@ -392,10 +392,11 @@ const SmartState = (() => {
           gs[key] = fn;
         }
         const unMountFn = gs[key](cb, deps);
-        if (deps?.length === 0) {
-          gs[key] = () => {};
-          if (unMountFn) unMountMap.set(key, unMountFn);
-        }
+        // if (deps?.length === 0) {
+        //   gs[key] = () => {};
+        //   if (unMountFn) unMountMap.set(key, unMountFn);
+        // }
+        if (unMountFn) unMountMap.set(key, unMountFn);
 
         if (fnLastComp != currComp) fnLastComp = currComp;
 
