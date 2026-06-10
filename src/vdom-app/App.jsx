@@ -96,7 +96,7 @@ async function Version() {
     else return () => "NA";
   } catch (ex) {
     console.error(ex);
-    throw ex;
+    // throw ex;
   }
 }
 
