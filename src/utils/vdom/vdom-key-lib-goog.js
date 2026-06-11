@@ -1206,7 +1206,13 @@ if (typeof window !== "undefined") {
               }
             }
           } else {
-            patches.push({ type: "CREATE", p: parent, c: newNode });
+            console.warn("Unexpected branch hit");
+            patches.push({
+              type: "CREATE",
+              p: parent,
+              c: newNode,
+              index: idx,
+            });
           }
           return;
         }
@@ -1214,7 +1220,7 @@ if (typeof window !== "undefined") {
         if (!newNode) {
           if (newNode == null) {
             const old = parent.childNodes[idx];
-            let incrDone = false;
+            // let incrDone = false;
 
             patches.push({
               type: "REPLACE",
@@ -1224,10 +1230,16 @@ if (typeof window !== "undefined") {
 
             while (old.contains(stk[CTR + 1])) {
               CTR++;
-              incrDone = true;
+              // incrDone = true;
             }
           } else {
-            patches.push({ type: "REMOVE", p: parent, c: oldNode });
+            console.warn("Unexpected branch hit");
+            const old = parent.childNodes[idx];
+            patches.push({ type: "REMOVE", p: parent, c: old });
+            while (old.contains(stk[CTR + 1])) {
+              CTR++;
+              // incrDone = true;
+            }
           }
 
           if (oldNode?.props) {
@@ -1246,7 +1258,7 @@ if (typeof window !== "undefined") {
         // Type mismatch requires a full replace
         if (oldNode?.$c !== newNode?.$c || oldNode?.type !== newNode?.type) {
           const old = parent.childNodes[idx];
-          let incrDone = false;
+          // let incrDone = false;
 
           // if its Text Node convert back
           if (newNode?.type === TextType) {
@@ -1272,7 +1284,7 @@ if (typeof window !== "undefined") {
 
           while (old.contains(stk[CTR + 1])) {
             CTR++;
-            incrDone = true;
+            // incrDone = true;
           }
 
           // if (incrDone) CTR--;
@@ -1420,6 +1432,7 @@ if (typeof window !== "undefined") {
             // moving to another list, not being destroyed. Calling .remove()
             // on it detaches it from the document and breaks the drag session.
             if (patch.c && patch.c === _draggingEl) break;
+            patch.p.removeChild(patch.c);
             disposalPromises.push(disposeNodes(patch.c));
             break;
 
