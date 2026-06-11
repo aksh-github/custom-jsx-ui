@@ -1230,7 +1230,7 @@ if (typeof window !== "undefined") {
             patches.push({ type: "REMOVE", p: parent, c: oldNode });
           }
 
-          if (oldNode.props) {
+          if (oldNode?.props) {
             oldNode.children.length = 0;
             oldNode =
               oldNode.type =
@@ -1259,7 +1259,7 @@ if (typeof window !== "undefined") {
             c: [newNode, old],
           });
 
-          if (oldNode.props) {
+          if (oldNode?.props) {
             oldNode.children.length = 0;
             oldNode =
               oldNode.type =
@@ -1324,7 +1324,7 @@ if (typeof window !== "undefined") {
 
       diffNode($parent, oldNode, newNode, 0);
 
-      if (oldNode.props) {
+      if (oldNode?.props) {
         oldNode.children.length = 0;
         oldNode =
           oldNode.type =
