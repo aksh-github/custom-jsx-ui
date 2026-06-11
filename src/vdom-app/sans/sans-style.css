@@ -1,6 +1,8 @@
 :root {
   --primary-text-color: brown;
   --primary-bg-color: burlywood;
+  --secondary-color: rgb(77, 77, 77);
+  --tertiary-color: lightgray;
 }
 
 body {
@@ -88,6 +90,7 @@ body {
       font-size: large;
       border: none;
       padding: 0.5em 1em;
+      color: var(--secondary-color);
 
       &:hover {
         cursor: pointer;
@@ -107,6 +110,7 @@ body {
     .data-ver {
       text-align: right;
       font-size: small;
+      color: var(--tertiary-color);
     }
 
     .info {
