@@ -668,8 +668,11 @@ if (typeof window !== "undefined") {
           appendChildren(node.children, $el2);
         } else {
           for (let i = 0, len = node.children.length; i < len; ++i) {
-            // node.children[i] = transformChild(node.children[i]);
-            $el.appendChild(createElement(node.children[i]));
+            const child =
+              typeof node.children[i] === "function"
+                ? node.children[i]()
+                : node.children[i];
+            $el.appendChild(createElement(child));
           }
         }
 
@@ -698,8 +701,11 @@ if (typeof window !== "undefined") {
         appendChildren(node.children, $el);
       } else {
         for (let i = 0, len = node.children.length; i < len; ++i) {
-          // node.children[i] = transformChild(node.children[i]);
-          $el.appendChild(createElement(node.children[i]));
+          const child =
+            typeof node.children[i] === "function"
+              ? node.children[i]()
+              : node.children[i];
+          $el.appendChild(createElement(child));
         }
       }
 
