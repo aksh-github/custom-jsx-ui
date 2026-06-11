@@ -1003,7 +1003,7 @@ if (typeof window !== "undefined") {
         // Append remaining new nodes
         if (newChildren.length > oldChildren.length) {
           for (let i = minLength; i < newChildren.length; i++) {
-            patches.push({ type: "CREATE", p: parent, c: newChildren[i] });
+            patches.push({ type: "APPEND", p: parent, c: newChildren[i] });
           }
         }
         // Remove excess old nodes
@@ -1438,7 +1438,7 @@ if (typeof window !== "undefined") {
 
           case "REMOVE":
             if (patch.key) {
-              patch.c = patch.p.querySelector(`[key=${patch.key}]`);
+              patch.c = patch.p.querySelector(`:scope > [key="${patch.key}"]`);
             }
 
             // Skip disposal if this is the element being dragged — it is
