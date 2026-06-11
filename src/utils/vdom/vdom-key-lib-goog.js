@@ -101,6 +101,11 @@ const microframe = (() => {
 
       let rv = type(props, children);
 
+      if (typeof rv === "function") {
+        // log("COT"); // this happens for LazyV2 if Async compo returns a func
+        return rv();
+      }
+
       funcCache[cacheKey] = {
         name: cacheKey,
         // parent: stack[stack.length - 2]?.comp, // this might be useful
@@ -668,11 +673,12 @@ if (typeof window !== "undefined") {
           appendChildren(node.children, $el2);
         } else {
           for (let i = 0, len = node.children.length; i < len; ++i) {
-            const child =
-              typeof node.children[i] === "function"
-                ? node.children[i]()
-                : node.children[i];
-            $el.appendChild(createElement(child));
+            // foll was required to handle LazyV2, but now taken care in h func
+            // const child =
+            //   typeof node.children[i] === "function"
+            //     ? node.children[i]()
+            //     : node.children[i];
+            $el.appendChild(createElement(node.children[i]));
           }
         }
 
@@ -701,11 +707,12 @@ if (typeof window !== "undefined") {
         appendChildren(node.children, $el);
       } else {
         for (let i = 0, len = node.children.length; i < len; ++i) {
-          const child =
-            typeof node.children[i] === "function"
-              ? node.children[i]()
-              : node.children[i];
-          $el.appendChild(createElement(child));
+          // foll was required to handle LazyV2, but now taken care in h func
+          // const child =
+          // typeof node.children[i] === "function"
+          //   ? node.children[i]()
+          //   : node.children[i];
+          $el.appendChild(createElement(node.children[i]));
         }
       }
 
