@@ -81,7 +81,7 @@ export function LazyV2({ key, fallback, error }, children) {
   const [err, setErr] = createState(null);
   const [loading, setLoading] = createState(!suspenseCache[key]);
 
-  const effect = () => {
+  createEffect(() => {
     // Reset state when Child changes
     setErr(null);
     setLoading(true);
@@ -118,11 +118,7 @@ export function LazyV2({ key, fallback, error }, children) {
     return () => {
       delete suspenseCache[key];
     };
-  };
-
-  createEffect(effect, []);
-
-  // createEffect(effect, [Child2]); // Re-run when Child or key changes
+  }, [key]); // Re-run when key changes
 
   if (err) {
     return <div>{err}</div>;
