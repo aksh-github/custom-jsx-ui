@@ -238,13 +238,13 @@ export const SsrApp = ({ currentUrl }) => {
   };
 
   const Decide = ({ count }) => {
-    // return count % 2 === 0 ? <Even /> : <Odd />;
+    return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
     // return count % 2 === 0 ? <p>this is odd</p> : null;
     // return count % 2 === 0 ? null : <p>this is odd</p>;
-    return count % 2 === 0 ? null : <Odd />;
+    // return count % 2 === 0 ? undefined : <Odd />;
   };
 
   return (
@@ -291,12 +291,21 @@ export const SsrApp = ({ currentUrl }) => {
           <div>This is the default case</div>
         </Switch.Default>
       </Switch> */}
-      <LazyV2 key="async-comp" fallback={<p>Loading value lazily...</p>}>
+      <LazyV2
+        key="async-comp"
+        fallback={
+          <p>
+            <span className="typing"></span>
+            <span className="typing"></span>
+            <span className="typing"></span>
+          </p>
+        }
+      >
         <LazyCompo />
       </LazyV2>
       <hr />
       <CustomSwitch
-        value={455845}
+        value={20}
         elements={[
           { when: 10, render: () => "this is 10" },
           {
@@ -310,7 +319,7 @@ export const SsrApp = ({ currentUrl }) => {
           { default: true, render: () => <div>This is the default case</div> },
         ]}
       />
-      <DynTextArea />
+      <DynTextArea key="oscs" />
       <form onSubmit={submit}>
         <input value={t} onInput={onInput} onChange={onChange} />
         <button type="submit">Submit</button>

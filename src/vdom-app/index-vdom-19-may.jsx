@@ -1,24 +1,21 @@
-import { App } from "./App";
-
 import {
   h,
   mount,
   createState,
   createEffect,
-  createContext,
-  memo,
+  // createContext,
+  // memo,
   forceUpdate,
-  Lazy,
 } from "@vdom-lib";
 
-// import { Sans } from "./sans/sans";
-import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
+// import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
 
+import { App } from "./App";
 import { PerfTest } from "../compos/PerfTest";
 import { SsrApp } from "../ssr/SsrApp";
-import { Sans } from "./sans/sans";
-import { DragDrop } from "./dnd/DragDrop";
-import { ArrayWithFragments } from "../compos/ComponentPatterns";
+// import { Sans } from "./sans/sans";
+// import { DragDrop } from "./dnd/DragDrop";
+// import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
 // =======================
 
@@ -30,7 +27,7 @@ import { ArrayWithFragments } from "../compos/ComponentPatterns";
 // smartRegisterCallback(forceUpdate, 50);
 
 const root = document.getElementById("root");
-// mount(root, () => <App type="dyn" />);
+mount(root, () => <App type="dyn" />);
 // mount(root, () => <Sans />);
 // mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 // mount(root, () => (
@@ -40,7 +37,7 @@ const root = document.getElementById("root");
 //     <p>after</p>
 //   </df>
 // ));
-mount(root, () => <PerfTest />);
-// mount(root, () => <DragDrop />);
+// mount(root, () => <PerfTest />);
+// mount(root, () => <Test />);
 
 // Usage

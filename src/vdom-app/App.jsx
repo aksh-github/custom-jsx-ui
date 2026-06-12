@@ -95,7 +95,7 @@ async function Version() {
   if (ver) return ver;
 
   try {
-    let res = await fetch("/package2.json");
+    let res = await fetch("/package.json");
 
     if (res?.ok) {
       res = await res.json();
@@ -206,7 +206,7 @@ const Input = () => {
       >
         <DynTextArea />
       </SuspenseV2> */}
-      <DynTextArea />
+      <DynTextArea key="Complex" />
     </div>
   );
 };
