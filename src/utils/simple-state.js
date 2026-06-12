@@ -194,7 +194,7 @@ const SmartState = (() => {
         // });
 
         // clear refs
-        refs[key]?.__clean?.();
+        // refs[key]?.__clean?.();  // no more reqd becos effect with deps now return cleanup funcs
         // delete refs[key]; //slower
         if (refs[key]) refs[key] = null; //faster
 

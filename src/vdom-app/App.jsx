@@ -452,7 +452,7 @@ export const SimpleRoute = () => {
 
   createEffect(() => {
     if (ref) {
-      ref.__clean = () => {
+      return () => {
         console.log("this node will be cleaned up");
       };
     }
