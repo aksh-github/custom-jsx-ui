@@ -88,15 +88,30 @@ const Topics = (props) => {
 async function Version() {
   // const res = (await fetch("/package.json")).json();
   // console*.log(res);
+
+  const [ver, setVer] = createState(null);
+  const unavailable = "NA";
+
+  if (ver) return ver;
+
   try {
-    let res = await fetch("/package.json");
-    res = await res.json();
-    // console.log(res);
-    if (res) return res.version;
-    else return () => "NA";
+    let res = await fetch("/package2.json");
+
+    if (res?.ok) {
+      res = await res.json();
+      // console.log(res);
+
+      setVer(res.version);
+      return res.version;
+    } else {
+      setVer(unavailable); // disable this if retry is reqd on every exec
+      return unavailable;
+    }
   } catch (ex) {
     console.error(ex);
     // throw ex;
+    setVer(unavailable); // disable this if retry is reqd on every exec
+    return unavailable;
   }
 }
 
