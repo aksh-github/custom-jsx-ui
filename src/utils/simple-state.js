@@ -70,9 +70,8 @@ let forceUpdate = isServer ? noop : () => {};
 // SmartState 27-jun-25
 
 const SmartState = (() => {
-  const gs = {};
-
   // for state
+  const gs = {};
   let lastComp = null;
   let idx = 0;
 
