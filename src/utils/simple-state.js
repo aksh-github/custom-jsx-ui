@@ -4,42 +4,42 @@ const log = () => {};
 const isServer = typeof window === "undefined";
 const noop = () => {};
 
-function _createEffect() {
-  let prevDeps = [];
-  let cleanupFn;
-  let once = false;
-  let firstRun = true;
+// function _createEffect() {
+//   let prevDeps = [];
+//   let cleanupFn;
+//   let once = false;
+//   let firstRun = true;
 
-  return (effectFn, dependencies) => {
-    // skip update effect for first run
-    if (firstRun && dependencies?.length > 0) {
-      firstRun = false;
-      // return;
-    }
+//   return (effectFn, dependencies) => {
+//     // skip update effect for first run
+//     if (firstRun && dependencies?.length > 0) {
+//       firstRun = false;
+//       // return;
+//     }
 
-    const dependenciesChanged = dependencies.some(
-      (dep, i) => dep !== prevDeps?.[i],
-    );
+//     const dependenciesChanged = dependencies.some(
+//       (dep, i) => dep !== prevDeps?.[i],
+//     );
 
-    // if (!prevDeps?.length || dependenciesChanged) {
-    if (dependenciesChanged) {
-      if (cleanupFn) cleanupFn();
-      cleanupFn = effectFn();
-      // effectFn();
-      prevDeps = dependencies;
-    } else if (
-      prevDeps?.length === dependencies?.length &&
-      dependencies.length === 0
-    ) {
-      if (!once) {
-        cleanupFn = effectFn(); // only for 0 deps
-        once = true;
-      }
-    }
+//     // if (!prevDeps?.length || dependenciesChanged) {
+//     if (dependenciesChanged) {
+//       if (cleanupFn) cleanupFn();
+//       cleanupFn = effectFn();
+//       // effectFn();
+//       prevDeps = dependencies;
+//     } else if (
+//       prevDeps?.length === dependencies?.length &&
+//       dependencies.length === 0
+//     ) {
+//       if (!once) {
+//         cleanupFn = effectFn(); // only for 0 deps
+//         once = true;
+//       }
+//     }
 
-    return cleanupFn;
-  };
-}
+//     return cleanupFn;
+//   };
+// }
 
 function debounce(func, duration) {
   let timeout;
@@ -81,6 +81,9 @@ const SmartState = (() => {
   let fnIdx = 0;
   const mountMap = new Map();
   const unMountMap = new Map();
+
+  // except mount and unmount
+  const effects = {}; // { "CompA": [ {prevDeps, cleanup}, ... ] }
 
   // for context
   const gCtx = {};
@@ -154,7 +157,7 @@ const SmartState = (() => {
     } else {
       if (!keysArr) return;
 
-      // mount unmount etc
+      // mount unmount only etc
       keysArr.forEach((key) => {
         // call unmount
         for (const [_key, fn] of mountMap) {
@@ -167,90 +170,110 @@ const SmartState = (() => {
             unMountMap.delete(_key);
           }
         }
-        // if (unMountMap.has(key)) {
-        // unMountMap.get(key)();
-        // unMountMap.delete(key);
-        // }
+
+        // for other effects
+        effects[key]?.forEach((slot) => {
+          slot.cleanup?.();
+          slot.prevDeps = null;
+          slot.cleanup = null;
+        });
+
+        if (effects[key]) effects[key] = null;
 
         // clear data
-        Object.keys(gs).forEach((_key) => {
-          if (_key.startsWith(key)) {
-            // if (Array.isArray(gs[_key])) gs[_key].length = 0;
-            // else gs[_key] = null;
+        // delete gs[key];  //slower
+        if (gs[key]) gs[key] = null; //faster
+        // old
+        // Object.keys(gs).forEach((_key) => {
+        //   if (_key.startsWith(key)) {
+        //     // if (Array.isArray(gs[_key])) gs[_key].length = 0;
+        //     // else gs[_key] = null;
 
-            delete gs[_key];
-          }
-          // console.log(gs);
-        });
+        //     delete gs[_key];
+        //   }
+        //   // console.log(gs);
+        // });
 
         // clear refs
-        Object.keys(refs).forEach((_key) => {
-          if (_key.startsWith(key)) {
-            // if (Array.isArray(gs[_key])) gs[_key].length = 0;
-            // else gs[_key] = null;
-            refs[_key]?.__clean?.();
-            delete refs[_key];
-          }
-          // console.log(gs);
-        });
+        refs[key]?.__clean?.();
+        // delete refs[key]; //slower
+        if (refs[key]) refs[key] = null; //faster
+
+        // old
+        // Object.keys(refs).forEach((_key) => {
+        //   if (_key.startsWith(key)) {
+        //     // if (Array.isArray(gs[_key])) gs[_key].length = 0;
+        //     // else gs[_key] = null;
+        //     refs[_key]?.__clean?.();
+        //     delete refs[_key];
+        //   }
+        //   // console.log(gs);
+        // });
       });
     }
   };
 
   const state = (iv) => {
-    log(gs);
     if (lastComp != currComp) {
       // lastComp = currComp;
       idx = 0;
     }
-    const key = `${currComp}-${idx}`;
-    // let st = gs[key] || iv;
-    // let firstRun = gs[key] == undefined;
+    // const key = `${currComp}-${idx}`;
+    const cc = currComp;
+    const lidx = idx;
 
-    // if (firstRun) gs[key] = st;
+    // Initialize component bucket if needed
+    if (!gs[cc]) gs[cc] = [];
 
-    if (gs[key] == undefined) gs[key] = iv;
+    if (gs[cc][idx] == undefined) gs[cc][lidx] = iv;
 
     const get = () => {
-      return gs[key];
+      // log(cc);
+      return gs[cc][lidx];
     };
 
-    const set = (nv) => {
-      let temp;
+    const set = isServer
+      ? () => {}
+      : (nv) => {
+          // log(cc, gs);
+          let temp;
 
-      if (typeof nv === "function") {
-        temp = nv(gs[key]);
-      } else {
-        temp = nv;
-      }
+          if (typeof nv === "function") {
+            temp = nv(gs[cc][lidx]);
+          } else {
+            temp = nv;
+          }
 
-      if (temp === gs[key]) return;
+          if (temp === gs[cc][lidx]) return;
 
-      gs[key] = temp;
+          gs[cc][lidx] = temp;
 
-      lastComp = key.split("-")?.[0];
+          lastComp = cc;
 
-      if (isSkipping) {
-      } else {
-        if (lastComp) updateComps.add(lastComp);
+          if (isSkipping) {
+          } else {
+            if (lastComp) updateComps.add(lastComp);
 
-        if (!batchOp) {
-          // reset();
+            if (!batchOp) {
+              // reset();
 
-          throtUpdate();
-        }
-      }
-      lastComp = null;
+              throtUpdate();
+            }
+          }
+          lastComp = null;
 
-      // console.log("gs", gs);
-    };
+          // console.log("gs", gs);
+        };
 
     const specialSet = (nv) => {
-      if (gs[key] === nv) return;
+      if (gs[cc][lidx] === nv) return;
 
-      lastComp = key.split("-")?.[0];
+      // lastComp = key.split("-")?.[0];
+      lastComp = cc;
+
       // reset();
-      gs[key] = nv;
+      gs[cc][lidx] = nv;
+
       throtUpdate();
       lastComp = null;
     };
@@ -261,35 +284,42 @@ const SmartState = (() => {
 
     idx++;
 
-    return [gs[key], set, specialSet];
+    return [/*gs[key]*/ get(), set, specialSet];
   };
 
   const ref = (iv) => {
-    log(refs);
+    // log(refs);
 
     if (lastComp != currComp) {
       // lastComp = currComp;
       refIdx = 0;
     }
 
-    const key = `${currComp}-${refIdx}`;
+    const cc = currComp;
+    const lidx = refIdx;
 
-    if (refs[key] == undefined) refs[key] = iv;
+    // Initialize component bucket if needed
+    if (!refs[cc]) refs[cc] = [];
+
+    if (refs[cc][refIdx] == undefined) refs[cc][lidx] = iv;
 
     const setRef = (nv) => {
       let temp;
 
-      if (typeof nv === "function") {
-        temp = nv(refs[key]);
-      } else {
-        temp = nv;
-      }
+      // for dom this is not reqd
+      // if (typeof nv === "function") {
+      //   temp = nv(refs[key]);
+      // } else {
+      //   temp = nv;
+      // }
 
-      if (temp === refs[key]) return;
+      temp = nv;
 
-      refs[key] = temp;
+      if (temp === refs[cc][lidx]) return;
 
-      lastComp = key.split("-")?.[0];
+      refs[cc][lidx] = temp;
+
+      lastComp = cc; //key.split("-")?.[0];
 
       if (isSkipping) {
       } else {
@@ -310,7 +340,7 @@ const SmartState = (() => {
 
     refIdx++;
 
-    return [refs[key], setRef];
+    return [refs[cc][lidx], setRef];
   };
 
   const context = (iv) => {
@@ -325,7 +355,7 @@ const SmartState = (() => {
     // ctxIdx++;
 
     const get = () => {
-      log("get in context", currComp);
+      // log("get in context", currComp);
 
       // changed on 20 Dec
       if (updated && currComp) {
@@ -371,36 +401,39 @@ const SmartState = (() => {
   const effect = isServer
     ? noop
     : (cb, deps) => {
-        if (fnLastComp != currComp) {
-          // lastComp = currComp;
+        if (fnLastComp !== currComp) {
+          fnLastComp = currComp;
           fnIdx = 0;
         }
 
-        // for mount only logic
+        // mount-only: no deps tracking needed, just store cb for init()
         if (deps?.length === 0) {
-          if (!mountMap.has(`${currComp}`)) {
-            mountMap.set(`${currComp}`, cb);
-          }
-          // fnIdx = 0;
+          if (!mountMap.has(currComp)) mountMap.set(currComp, cb);
           return;
         }
 
-        const key = `${currComp}-fn-${fnIdx}`;
+        if (!effects[currComp]) effects[currComp] = [];
 
-        if (!gs[key]) {
-          const fn = _createEffect();
-          gs[key] = fn;
-        }
-        const unMountFn = gs[key](cb, deps);
-        // if (deps?.length === 0) {
-        //   gs[key] = () => {};
-        //   if (unMountFn) unMountMap.set(key, unMountFn);
-        // }
-        if (unMountFn) unMountMap.set(key, unMountFn);
-
-        if (fnLastComp != currComp) fnLastComp = currComp;
-
+        const i = fnIdx;
         fnIdx++;
+
+        // first render — initialize slot, don't run yet
+        if (!effects[currComp][i]) {
+          effects[currComp][i] = { prevDeps: null, cleanup: null };
+          // fall through instead of returning
+        }
+
+        const slot = effects[currComp][i];
+        const depsChanged =
+          deps == null ||
+          slot.prevDeps === null || // ← null means first run, always execute
+          deps.some((d, j) => d !== slot.prevDeps[j]);
+
+        if (depsChanged) {
+          slot.cleanup?.();
+          slot.cleanup = cb() ?? null;
+          slot.prevDeps = deps;
+        }
       };
 
   return {
