@@ -12,6 +12,5 @@ import { Sans } from "../vdom-app/sans/sans";
 hydrate(document.getElementById("root"), () => (
   // IMP: NEED TO BE SAME AS entry-server.jsx except for url
   // <SsrApp currentUrl={window.location.pathname} />
-  // <App type="dyn" url={window.location.pathname} />
-  <Sans />
+  <App type="dyn" url={window.location.pathname} />
 ));

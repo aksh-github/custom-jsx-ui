@@ -11,9 +11,9 @@ import {
 // import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
 
 import { App } from "./App";
-import { PerfTest } from "../compos/PerfTest";
-import { SsrApp } from "../ssr/SsrApp";
-// import { Sans } from "./sans/sans";
+// import { PerfTest } from "../compos/PerfTest";
+// import { SsrApp } from "../ssr/SsrApp";
+import { Sans } from "./sans/sans";
 // import { DragDrop } from "./dnd/DragDrop";
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
