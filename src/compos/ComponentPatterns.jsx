@@ -313,14 +313,27 @@ const SseComp = () => {
     };
 
     // Cleanup function
-    zmdRef.__clean = () => {
+    // zmdRef.__clean = () => {
+    //   console.log("Cleaning up SSE connection");
+    //   if (source) {
+    //     source.close();
+    //     source = null;
+    //   }
+    //   scriptEl = null;
+    //   // zmdRef.remove();
+    // };
+    return () => {
       console.log("Cleaning up SSE connection");
-      if (source) {
-        source.close();
-        source = null;
-      }
+      // if (source) {
+      //   source.close();
+      //   source = null;
+      // }
+      // scriptEl = null;
+      scriptEl?.remove();
       scriptEl = null;
-      // zmdRef.remove();
+      zmdRef.remove();
+      // zmdRef = null;
+      // setZmdRef(null);
     };
   }, [zmdRef]);
 
