@@ -300,7 +300,7 @@ form#exampleForm22
         tabSize: 4,
         theme: "default",
         rulers: Array.from({ length: 20 }, (_, i) => ({
-          column: (i + 1) * 2,
+          column: (i + 1) * 4,
           color: "rgba(0,0,0,0.1)",
           width: 1,
         })),
@@ -391,10 +391,7 @@ form#exampleForm22
             if (k === "class")
               node.className +=
                 (node.className ? " " : "") +
-                String(v)
-                  .split(" ")
-                  .filter(Boolean)
-                  .join(" ");
+                String(v).split(" ").filter(Boolean).join(" ");
             else if (k === "id") node.id = v;
             else node.attrs[k] = v;
           } else if (m[3]) {
@@ -403,10 +400,7 @@ form#exampleForm22
             if (k === "class")
               node.className +=
                 (node.className ? " " : "") +
-                String(v)
-                  .split(" ")
-                  .filter(Boolean)
-                  .join(" ");
+                String(v).split(" ").filter(Boolean).join(" ");
             else if (k === "id") node.id = v;
             else node.attrs[k] = v;
           } else if (m[5]) {
@@ -415,10 +409,7 @@ form#exampleForm22
             if (k === "class")
               node.className +=
                 (node.className ? " " : "") +
-                String(v)
-                  .split(" ")
-                  .filter(Boolean)
-                  .join(" ");
+                String(v).split(" ").filter(Boolean).join(" ");
             else if (k === "id") node.id = v;
             else node.attrs[k] = v;
           } else if (m[7]) {
