@@ -35,13 +35,8 @@ const DynCompoPromise = () => {
   // .then((mod) => mod?.PropsDriven);
 };
 
-const TextAreaComp = () => {
-  return import("../compos/ComponentPatterns");
-};
-
-export const AsyncTextArea = async (props) => {
-  const Mod = await import("../compos/ComponentPatterns");
-  return () => <Mod.TextArea {...props} />;
+export const getTextAreaCompo = async (props) => {
+  return await import("../compos/ComponentPatterns");
 };
 
 // const SansCompoPromise = () => {
@@ -68,9 +63,12 @@ export const DynTextArea = (props) => (
         Test error scenario for TextArea: Component can't be loaded at this time
       </section>
     }
-  >
-    <AsyncTextArea />
-  </LazyV2>
+    promise={() => getTextAreaCompo()}
+    render={({ result }) => {
+      const Mod = result;
+      return <Mod.TextArea {...props} />;
+    }}
+  />
 );
 
 export const DynCompo = () => (

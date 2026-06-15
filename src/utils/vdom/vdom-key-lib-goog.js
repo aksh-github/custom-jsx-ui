@@ -101,10 +101,10 @@ const microframe = (() => {
 
       let rv = type(props, children);
 
-      if (typeof rv === "function") {
-        // log("COT"); // this happens for LazyV2 if Async compo returns a func
-        return rv();
-      }
+      // if (typeof rv === "function") {
+      //   // log("COT"); // this happens for LazyV2 if Async compo returns a func
+      //   return rv();
+      // }
 
       funcCache[cacheKey] = {
         name: cacheKey,
@@ -1190,7 +1190,8 @@ if (typeof window !== "undefined") {
           }
         }
 
-        if (newNode && strCheck === 0 && !newNode.updtFlag) {
+        // if (newNode && strCheck === 0 && !newNode.updtFlag) {
+        if (!newNode?.updtFlag && newNode?.children && oldNode?.children) {
           // go ahead because nothing to compare
           return goNext();
         }
