@@ -191,7 +191,7 @@ const CustomSwitch = ({ value, elements }) => {
   }
 };
 
-async function LazyCompo(params) {
+async function getLazyVal(params) {
   const lazyVal = "lazy val";
   await new Promise((resolve) => setTimeout(resolve, 2000));
   return lazyVal;
@@ -238,13 +238,13 @@ export const SsrApp = ({ currentUrl }) => {
   };
 
   const Decide = ({ count }) => {
-    return count % 2 === 0 ? <Even /> : <Odd />;
+    // return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
     // return count % 2 === 0 ? <p>this is odd</p> : null;
     // return count % 2 === 0 ? null : <p>this is odd</p>;
-    // return count % 2 === 0 ? undefined : <Odd />;
+    return count % 2 === 0 ? undefined : <Odd />;
   };
 
   return (
@@ -293,6 +293,7 @@ export const SsrApp = ({ currentUrl }) => {
       </Switch> */}
       <LazyV2
         key="async-comp"
+        promise={() => getLazyVal()}
         fallback={
           <p>
             <span className="typing"></span>
@@ -300,9 +301,8 @@ export const SsrApp = ({ currentUrl }) => {
             <span className="typing"></span>
           </p>
         }
-      >
-        <LazyCompo />
-      </LazyV2>
+        render={({ result }) => result}
+      />
       <hr />
       <CustomSwitch
         value={20}
