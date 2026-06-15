@@ -3,10 +3,6 @@ import { h, createEffect, createState } from "@vdom-lib";
 
 const suspenseCache = {};
 
-function Loader({ fallback }) {
-  return fallback;
-}
-
 export function Lazy(
   { key, importFn, resolve, fallback, error, ...other },
   child,
@@ -73,56 +69,71 @@ export function Lazy(
   return <Comp {...p2} key={key} />;
 }
 
-export function LazyV2({ key, fallback, error }, children) {
-  const Child = children[0];
+export function LazyV2({ key, fallback, error, render, promise }) {
+  const [Result, , setResultSpl] = createState(suspenseCache[key]);
 
-  const [Comp, setComp, setCompSpl] = createState(suspenseCache[key]);
-  const [isFunc, setIsFunc] = createState(false);
+  // call only if Result unavailable or it was never called
+  const callPromise = Result || suspenseCache[key] === null ? false : true;
+
+  const [promiseFn, , setPromiseFn] = createState(
+    callPromise ? promise() : null,
+  );
   const [err, setErr] = createState(null);
   const [loading, setLoading] = createState(!suspenseCache[key]);
 
+  if (Result) {
+    return render({ result: Result });
+  }
+
   createEffect(() => {
-    // Reset state when Child changes
+    // Reset state when PromiseFn / key changes
     setErr(null);
     setLoading(true);
 
-    // Handle both async component functions and direct promises
-    const childPromise = typeof Child === "function" ? Child() : Child;
-
-    if (childPromise instanceof Promise) {
-      childPromise
-        .then((returnVal) => {
-          suspenseCache[key] = returnVal;
-          if (returnVal instanceof Function) {
-            if (returnVal.name !== "")
-              console.warn("You're supposed to return annonymous function!!");
-            setCompSpl(returnVal);
-            setIsFunc(true);
-          }
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          suspenseCache[key] = null;
-          setErr(error);
-          setComp(null);
-          setLoading(false);
-        });
+    if (suspenseCache[key] === undefined) {
+      suspenseCache[key] = null;
     } else {
-      // Child is not a promise, set it directly
-      suspenseCache[key] = childPromise;
-      setComp(childPromise);
-      setLoading(false);
+      // this promise is already in flight
+      return;
     }
 
+    // if (promiseFn instanceof Promise)
+    promiseFn
+      .then((returnVal) => {
+        if (returnVal instanceof Error) {
+          throw returnVal;
+        }
+
+        suspenseCache[key] = returnVal;
+        setResultSpl(returnVal);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        suspenseCache[key] = null;
+        setErr(error);
+        setResultSpl(null);
+        setLoading(false);
+      });
+
     return () => {
-      delete suspenseCache[key];
+      // delete suspenseCache[key];
+      removeCacheForKey(key);
     };
-  }, [key]); // Re-run when key changes
+  }, [key, promiseFn]); // Re-run when key changes
 
   if (err) {
     return <div>{err}</div>;
   }
 
-  return (isFunc ? <Comp /> : Comp) || (loading && fallback);
+  if (loading) {
+    return <div>{fallback}</div>;
+  }
+
+  return render({ result: Result });
 }
+
+export const removeCacheForKey = (key) => {
+  // if used since delete is heavy op
+  if (suspenseCache[key]) delete suspenseCache[key];
+};

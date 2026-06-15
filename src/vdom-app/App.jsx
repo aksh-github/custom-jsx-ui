@@ -85,34 +85,38 @@ const Topics = (props) => {
 
 // Ctr
 
-async function Version() {
-  // const res = (await fetch("/package.json")).json();
-  // console*.log(res);
-
-  const [ver, setVer] = createState(null);
-  const unavailable = "NA";
-
-  if (ver) return ver;
-
+async function getPackageJson(jsonToRead) {
+  // return (await fetch(jsonToRead)).json();
+  let result;
   try {
-    let res = await fetch("/package.json");
+    result = await fetch(jsonToRead);
 
-    if (res?.ok) {
-      res = await res.json();
-      // console.log(res);
-
-      setVer(res.version);
-      return res.version;
-    } else {
-      setVer(unavailable); // disable this if retry is reqd on every exec
-      return unavailable;
+    // 1. Manually check if the HTTP request failed (e.g., 404 or 500)
+    if (!result.ok) {
+      throw new Error(`HTTP error! Status: ${result.status}`);
     }
+
+    // 2. If it succeeds, parse and return the JSON
+    return await result.json();
   } catch (ex) {
-    console.error(ex);
     // throw ex;
-    setVer(unavailable); // disable this if retry is reqd on every exec
-    return unavailable;
+    console.error(ex);
+    return ex; // you need to return this so that lazy compo will treat as error
   }
+}
+
+async function Api(params) {
+  let data = null;
+  let resp = await fetch("http://localhost:8080");
+  // data = (await data) ? data.ok && data.json() : "went wrong";
+
+  if (resp && resp.ok) {
+    data = await resp.json();
+
+    console.log(data);
+  }
+
+  return () => <section>{JSON.stringify(data)}</section>;
 }
 
 const Ctr = (props) => {
@@ -147,9 +151,12 @@ const Ctr = (props) => {
       </p>
       <p>My ctr: {st.c}</p>
       <p>Json Value: {st.version}</p>
-      <LazyV2 key={props.key}>
-        <Version />
-      </LazyV2>
+      <LazyV2
+        key={"package.version"}
+        promise={() => getPackageJson("/package.json")}
+        render={({ result }) => result?.version}
+        error={"Something went wrong"}
+      />
       <button
         onClick={(e) => {
           // setcc(cc() + 1);
@@ -504,6 +511,10 @@ export const SimpleRoute = () => {
       <DynCompo />
 
       <p>after</p>
+
+      {/* <LazyV2 key="api">
+        <Api />
+      </LazyV2> */}
     </div>
   );
 };
