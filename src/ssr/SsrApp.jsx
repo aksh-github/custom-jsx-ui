@@ -244,7 +244,21 @@ export const SsrApp = ({ currentUrl }) => {
     // return count % 2 === 0 ? "this is even" : <Odd />;
     // return count % 2 === 0 ? <p>this is odd</p> : null;
     // return count % 2 === 0 ? null : <p>this is odd</p>;
-    return count % 2 === 0 ? undefined : <Odd />;
+    // return count % 2 === 0 ? undefined : <Odd />;
+    return count % 2 === 0 ? undefined : (
+      <LazyV2
+        key="async-comp"
+        promise={() => getLazyVal()}
+        fallback={
+          <p>
+            <span className="typing"></span>
+            <span className="typing"></span>
+            <span className="typing"></span>
+          </p>
+        }
+        render={({ result }) => result}
+      />
+    );
   };
 
   return (
@@ -291,18 +305,7 @@ export const SsrApp = ({ currentUrl }) => {
           <div>This is the default case</div>
         </Switch.Default>
       </Switch> */}
-      <LazyV2
-        key="async-comp"
-        promise={() => getLazyVal()}
-        fallback={
-          <p>
-            <span className="typing"></span>
-            <span className="typing"></span>
-            <span className="typing"></span>
-          </p>
-        }
-        render={({ result }) => result}
-      />
+
       <hr />
       <CustomSwitch
         value={20}
