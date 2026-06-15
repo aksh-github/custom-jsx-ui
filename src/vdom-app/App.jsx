@@ -87,6 +87,7 @@ const Topics = (props) => {
 
 async function getPackageJson(jsonToRead) {
   // return (await fetch(jsonToRead)).json();
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
   let result;
   try {
     result = await fetch(jsonToRead);
@@ -153,7 +154,7 @@ const Ctr = (props) => {
       <p>Json Value: {st.version}</p>
       <LazyV2
         key={"package.version"}
-        promise={() => getPackageJson("/package.json")}
+        promise={() => getPackageJson("/package2.json")}
         render={({ result }) => result?.version}
         error={"Something went wrong"}
       />

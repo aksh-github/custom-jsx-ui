@@ -72,7 +72,6 @@ export function Lazy(
 export function LazyV2({ key, fallback, error, render, promise }) {
   const [Result, , setResultSpl] = createState(suspenseCache[key]);
 
-  // call only if Result unavailable or it was never called
   const callPromise = Result || suspenseCache[key] === null ? false : true;
 
   const [promiseFn, , setPromiseFn] = createState(
@@ -86,49 +85,61 @@ export function LazyV2({ key, fallback, error, render, promise }) {
   }
 
   createEffect(() => {
-    // Reset state when PromiseFn / key changes
+    let isCurrent = true; // 1. Local flag for this effect instance
+
     setErr(null);
     setLoading(true);
 
     if (suspenseCache[key] === undefined) {
-      suspenseCache[key] = null;
+      suspenseCache[key] = null; // Mark as in-flight
     } else {
-      // this promise is already in flight
-      return;
+      return; // Skip if already in flight or resolved
     }
 
-    // if (promiseFn instanceof Promise)
     promiseFn
-      .then((returnVal) => {
-        if (returnVal instanceof Error) {
-          throw returnVal;
+      .then((returnVals) => {
+        // const hasError = returnVals.some((val) => val instanceof Error);
+        // if (hasError) throw new Error();
+
+        if (returnVals instanceof Error) throw returnVals;
+
+        // 2. If unmounted, update cache so future mounts can retry, but skip component state
+        suspenseCache[key] = returnVals;
+
+        if (!isCurrent) {
+          return;
         }
 
-        suspenseCache[key] = returnVal;
-        setResultSpl(returnVal);
+        setResultSpl(returnVals);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        suspenseCache[key] = null;
+
+        // 3. Do not do this
+        // suspenseCache[key] = undefined;
+
+        if (!isCurrent) return;
+
         setErr(error);
         setResultSpl(null);
         setLoading(false);
       });
 
     return () => {
-      // delete suspenseCache[key];
-      removeCacheForKey(key);
+      isCurrent = false; // 4. Prevent setting state on unmounted components
+
+      // 5. CRITICAL: Only clear cache if the promise hasn't resolved yet
+      // If it resolved, we WANT to keep it in suspenseCache[key] for the next mount
+      if (suspenseCache[key] === null) {
+        suspenseCache[key] = undefined; // v imp step
+        removeCacheForKey(key);
+      }
     };
-  }, [key, promiseFn]); // Re-run when key changes
+  }, [key, promiseFn]);
 
-  if (err) {
-    return <div>{err}</div>;
-  }
-
-  if (loading) {
-    return <div>{fallback}</div>;
-  }
+  if (err) return <div>{err}</div>;
+  if (loading) return <div>{fallback}</div>;
 
   return render({ result: Result });
 }
