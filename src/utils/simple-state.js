@@ -344,6 +344,8 @@ const SmartState = (() => {
 
   const context = (iv) => {
     // if (!globalState[currComp]) globalState[currComp] = [];
+
+    // only once: for a given context this part will be exec only once
     if (currComp)
       throw new Error("Context cannot be created inside a component");
 
@@ -351,7 +353,7 @@ const SmartState = (() => {
     let st = iv;
     let updated = false;
 
-    // ctxIdx++;
+    // end only once
 
     const get = () => {
       // log("get in context", currComp);
@@ -394,7 +396,29 @@ const SmartState = (() => {
       }
     };
 
-    return { get, set };
+    const setFunction = (nv) => {
+      let temp = nv;
+
+      if (temp === st) return;
+
+      st = temp;
+
+      if (isSkipping) {
+      } else {
+        updated = true;
+        gCtx[ctxIdx++] = () => {
+          updated = false;
+        };
+
+        if (!batchOp) {
+          // reset();
+
+          throtUpdate();
+        }
+      }
+    };
+
+    return { get, set, setFunction };
   };
 
   const effect = isServer
