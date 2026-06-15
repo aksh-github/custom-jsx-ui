@@ -70,22 +70,28 @@ export function Lazy(
 }
 
 export function LazyV2({ key, fallback, error, render, promise }) {
-  const [Result, , setResultSpl] = createState(suspenseCache[key]);
+  // Normalize promise to always be an array of functions
+  const promiseFns = Array.isArray(promise) ? promise : [promise];
+  const isMultiple = promiseFns.length > 1;
 
-  const callPromise = Result || suspenseCache[key] === null ? false : true;
+  const Result = suspenseCache[key];
 
-  const [promiseFn, , setPromiseFn] = createState(
-    callPromise ? promise() : null,
+  // const [Result, , setResultSpl] = createState(suspenseCache[key]);
+
+  const callPromise = Result === null ? false : true;
+
+  const [promiseAll, , setPromiseAll] = createState(
+    callPromise ? Promise.all(promiseFns.map((fn) => fn())) : null,
   );
   const [err, setErr] = createState(null);
   const [loading, setLoading] = createState(!suspenseCache[key]);
 
   if (Result) {
-    return render({ result: Result });
+    return render({ result: isMultiple ? Result : Result[0] });
   }
 
   createEffect(() => {
-    let isCurrent = true; // 1. Local flag for this effect instance
+    let isCurrent = true;
 
     setErr(null);
     setLoading(true);
@@ -96,52 +102,43 @@ export function LazyV2({ key, fallback, error, render, promise }) {
       return; // Skip if already in flight or resolved
     }
 
-    promiseFn
+    promiseAll
       .then((returnVals) => {
-        // const hasError = returnVals.some((val) => val instanceof Error);
-        // if (hasError) throw new Error();
+        // returnVals is always an array from Promise.all
+        const hasError = returnVals.some((val) => val instanceof Error);
+        if (hasError) throw returnVals.find((val) => val instanceof Error);
 
-        if (returnVals instanceof Error) throw returnVals;
-
-        // 2. If unmounted, update cache so future mounts can retry, but skip component state
         suspenseCache[key] = returnVals;
 
-        if (!isCurrent) {
-          return;
-        }
+        if (!isCurrent) return;
 
-        setResultSpl(returnVals);
+        // setResultSpl(returnVals);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
 
-        // 3. Do not do this
-        // suspenseCache[key] = undefined;
-
         if (!isCurrent) return;
 
         setErr(error);
-        setResultSpl(null);
+        // setResultSpl(null);
         setLoading(false);
       });
 
     return () => {
-      isCurrent = false; // 4. Prevent setting state on unmounted components
+      isCurrent = false;
 
-      // 5. CRITICAL: Only clear cache if the promise hasn't resolved yet
-      // If it resolved, we WANT to keep it in suspenseCache[key] for the next mount
       if (suspenseCache[key] === null) {
         suspenseCache[key] = undefined; // v imp step
         removeCacheForKey(key);
       }
     };
-  }, [key, promiseFn]);
+  }, [key, promiseAll]);
 
   if (err) return <div>{err}</div>;
   if (loading) return <div>{fallback}</div>;
 
-  return render({ result: Result });
+  return render({ result: isMultiple ? Result : Result?.[0] });
 }
 
 export const removeCacheForKey = (key) => {
