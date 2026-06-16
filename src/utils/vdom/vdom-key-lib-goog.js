@@ -1712,6 +1712,17 @@ export const createElement = dom.createElement || noop;
 
 // end dom
 
+export {
+  createEffect,
+  createState,
+  createContext,
+  createRef,
+  skipUpdate,
+  batch,
+  reset,
+  setCurrComp, // only required for loader
+} from "../simple-state";
+
 // other helpful Components
 export { Lazy, LazyV2 } from "./lazy";
 export { memo } from "./memo";
@@ -1730,14 +1741,3 @@ import {
 } from "../simple-state";
 
 // export const createState = _createState;
-
-export {
-  createEffect,
-  createState,
-  createContext,
-  createRef,
-  skipUpdate,
-  batch,
-  reset,
-  setCurrComp, // only required for loader
-} from "../simple-state";
