@@ -442,6 +442,8 @@ const Odd = () => {
 
 // SimpleRoute
 // let ref = null;
+
+const imgStyle = { height: "200px" };
 export const SimpleRoute = () => {
   const [pst, setPst] = createState(0);
   const [data, setData] = createState(null);
@@ -507,7 +509,7 @@ export const SimpleRoute = () => {
           );
         }}
       </Lazy> */}
-      <img src="https://picsum.photos/200" alt="some pic" />
+      <img src="https://picsum.photos/200" alt="some pic" style={imgStyle} />
 
       <DynCompo />
 
