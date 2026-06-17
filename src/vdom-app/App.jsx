@@ -3,7 +3,6 @@ import {
   h,
   createElement,
   Lazy,
-  LazyV2,
   memo,
   createState,
   batch,
@@ -152,7 +151,7 @@ const Ctr = (props) => {
       </p>
       <p>My ctr: {st.c}</p>
       <p>Json Value: {st.version}</p>
-      <LazyV2
+      <Lazy
         key={"package.version"}
         promise={() => getPackageJson("/package2.json")}
         render={({ result }) => result?.version}
@@ -617,14 +616,7 @@ const routeObj = {
     },
   },
   "/sans": {
-    render: () => (
-      <Lazy
-        importFn={() => import("./sans/sans")}
-        resolve="Sans"
-        fallback={<p>Loading Sanskrit...</p>}
-        key="sans"
-      />
-    ),
+    render: () => <DynSans />,
   },
   "/heavy": Heavy,
   "/json-form": {
@@ -797,17 +789,7 @@ function BuiltInSwitch() {
 
       <RouterSwitch.Route path="/heavy" component={Heavy} />
       <RouterSwitch.Route path="/json-form" component={JsonFormConsumer} />
-      <RouterSwitch.Route
-        path="/sans"
-        render={() => (
-          <Lazy
-            importFn={() => import("./sans/sans")}
-            resolve="Sans"
-            fallback={<p>Loading Sanskrit...</p>}
-            key="sans"
-          />
-        )}
-      />
+      <RouterSwitch.Route path="/sans" render={() => <DynSans />} />
       <RouterSwitch.Route
         path="*"
         render={() => {

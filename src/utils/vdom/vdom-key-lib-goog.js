@@ -1724,7 +1724,7 @@ export {
 } from "../simple-state";
 
 // other helpful Components
-export { Lazy, LazyV2 } from "./lazy";
+export { Lazy } from "./lazy";
 export { memo } from "./memo";
 export { Switch, Case, Default } from "./switch";
 export { VirtualList } from "./vlist";

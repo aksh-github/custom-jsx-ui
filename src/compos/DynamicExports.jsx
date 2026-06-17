@@ -1,6 +1,6 @@
 //1. promises
 
-import { h, Lazy, LazyV2 } from "@vdom-lib";
+import { h, Lazy } from "@vdom-lib";
 
 let _i = 0,
   _ArrayWithFragments = null;
@@ -55,7 +55,7 @@ const SansCompoPromise = async () => {
 // 2. Util functions to use above promises
 
 export const DynTextArea = (props) => (
-  <LazyV2
+  <Lazy
     fallback={<section>Loading TextArea...</section>}
     key="TextArea" // have diff props.key thru props in case you need to reload across route etc.
     error={
@@ -73,34 +73,36 @@ export const DynTextArea = (props) => (
 
 export const DynCompo = () => (
   <Lazy
-    importFn={DynCompoPromise}
+    promise={() => DynCompoPromise}
     key="PropsDriven"
-    resolve="PropsDriven33"
     fallback={<div>Loading Props driven compo...</div>}
-    n="This is a props driven component"
+    // n="This is a props driven component"
     error={
       <section>
         Test error scenario for PropsDriven: Component can't be loaded at this
         time
       </section>
     }
+    render={({ result: Mod }) => (
+      <Mod.PropsDriven n="This is a props driven component" />
+    )}
   />
 );
 
 export const DynArrayWithFragments = ({ t }) => (
   <Lazy
-    importFn={ArrayWithFragmentsPromise}
-    resolve="ArrayWithFragments"
+    promise={() => ArrayWithFragmentsPromise()}
     fallback={<div>Loading Array with Fragments...</div>}
-    some={t}
+    // some={t}
     key="awf"
+    render={({ result: Mod }) => <Mod.ArrayWithFragments some={t} />}
   />
 );
 
 export const DynSans = () => (
   <Lazy
-    importFn={SansCompoPromise}
-    resolve="Sans"
+    promise={() => SansCompoPromise()}
+    // resolve="Sans"
     fallback={<p>Loading Sanskrit...</p>}
     key={"Sans"}
     test={123}
@@ -110,5 +112,6 @@ export const DynSans = () => (
         <p>Something went wrong !!</p>
       </div>
     }
+    render={({ result: Mod }) => <Mod.Sans />}
   />
 );
