@@ -213,8 +213,59 @@ const loadLocalData = () => {
   return updateReqd;
 };
 
+// const fetchData = (jsonFile) =>
+//   // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
+//   fetch(`${env.VITE_BASEPATH}${jsonFile}`)
+//     .then((res) => {
+//       if (!res.ok) return;
+//       return res.json();
+//     })
+//     .catch((e) => {
+//       console.error("Something went wrong in reading: " + jsonFile);
+//       console.error(e);
+//     });
+
+const fileCache = new Map();
+
+const fetchData = (jsonFile, timeoutMs = 5000) => {
+  const url = `${env.VITE_BASEPATH}${jsonFile}`;
+
+  if (!fileCache.has(url)) {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const fetchPromise = fetch(url, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .catch((e) => {
+        fileCache.delete(url); // Remove from cache so future attempts can retry
+
+        if (e.name === "AbortError") {
+          console.error(
+            `Fetch timed out after ${timeoutMs}ms for: ${jsonFile}`,
+          );
+        } else {
+          console.error(`Something went wrong in reading: ${jsonFile}`, e);
+        }
+
+        throw e; // Propagate error to the caller
+      })
+      .finally(() => {
+        clearTimeout(timerId); // Clear timeout on successful response
+      });
+
+    fileCache.set(url, fetchPromise);
+  }
+
+  return fileCache.get(url);
+};
+
+const currTime = Date.now();
+
 const loadRemoteHashData = () => {
-  return fetchData(`${env.VITE_TS}?ts=${Date.now()}`).then((hashData) => {
+  return fetchData(`${env.VITE_TS}?ts=${currTime}`).then((hashData) => {
     if (!hashData) return;
     // console.log(res, dictionaryData);
 
@@ -233,6 +284,8 @@ const loadRemoteHashData = () => {
     return Promise.resolve({}); // some non empty value
   });
 };
+
+loadRemoteHashData();
 
 const checkProcessUpdates = () => {
   const promises = [];
@@ -300,18 +353,6 @@ const checkProcessUpdates = () => {
     });
   }
 };
-
-const fetchData = (jsonFile) =>
-  // fetch(`/data/${jsonFile}.json`).then((res) => res.json());
-  fetch(`${env.VITE_BASEPATH}${jsonFile}`)
-    .then((res) => {
-      if (!res.ok) return;
-      return res.json();
-    })
-    .catch((e) => {
-      console.error("Something went wrong in reading: " + jsonFile);
-      console.error(e);
-    });
 
 function GenericTab({ prop, search: srch, dkey }) {
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
