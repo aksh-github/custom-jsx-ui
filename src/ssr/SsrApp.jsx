@@ -6,7 +6,7 @@ import {
   memo,
   forceUpdate,
   Switch,
-  LazyV2,
+  Lazy,
 } from "@vdom-lib";
 // import { Lazy } from "../utils/vdom/lazy";
 import { DynSans, DynTextArea } from "../compos/DynamicExports";
@@ -238,27 +238,27 @@ export const SsrApp = ({ currentUrl }) => {
   };
 
   const Decide = ({ count }) => {
-    // return count % 2 === 0 ? <Even /> : <Odd />;
+    return count % 2 === 0 ? <Even /> : <Odd />;
     // return count % 2 === 0 ? <Even /> : "this is odd";
     // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
     // return count % 2 === 0 ? "this is even" : <Odd />;
     // return count % 2 === 0 ? <p>this is odd</p> : null;
     // return count % 2 === 0 ? null : <p>this is odd</p>;
     // return count % 2 === 0 ? undefined : <Odd />;
-    return count % 2 === 0 ? undefined : (
-      <LazyV2
-        key="async-comp"
-        promise={() => getLazyVal()}
-        fallback={
-          <p>
-            <span className="typing"></span>
-            <span className="typing"></span>
-            <span className="typing"></span>
-          </p>
-        }
-        render={({ result }) => result}
-      />
-    );
+    // return count % 2 === 0 ? undefined : (
+    //   <Lazy
+    //     key="async-comp"
+    //     promise={() => getLazyVal()}
+    //     fallback={
+    //       <p>
+    //         <span className="typing"></span>
+    //         <span className="typing"></span>
+    //         <span className="typing"></span>
+    //       </p>
+    //     }
+    //     render={({ result }) => result}
+    //   />
+    // );
   };
 
   return (
