@@ -7,10 +7,10 @@ import {
   forceUpdate,
   Switch,
   Lazy,
+  createResource,
 } from "@vdom-lib";
 // import { Lazy } from "../utils/vdom/lazy";
 import { DynSans, DynTextArea } from "../compos/DynamicExports";
-import { Loader } from "../utils/vdom/loader";
 // import { Sans } from "../vdom-app/sans/sans";
 
 const ctx = createContext(0);
@@ -197,6 +197,47 @@ async function getLazyVal(params) {
   return lazyVal;
 }
 
+const SmallLazy = () => {
+  const response = createResource(() => getLazyVal());
+  console.log(response);
+
+  if (response?.loading)
+    return (
+      <p>
+        <span className="typing"></span>
+        <span className="typing"></span>
+        <span className="typing"></span>
+      </p>
+    );
+
+  return response?.result;
+};
+
+const Decide = ({ count }) => {
+  // return count % 2 === 0 ? <Even /> : <Odd />;
+  // return count % 2 === 0 ? <Even /> : "this is odd";
+  // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
+  // return count % 2 === 0 ? "this is even" : <Odd />;
+  // return count % 2 === 0 ? <p>this is odd</p> : null;
+  // return count % 2 === 0 ? null : <p>this is odd</p>;
+  // return count % 2 === 0 ? undefined : <Odd />;
+  return count % 2 === 0 ? undefined : (
+    // <Lazy
+    //   key="async-comp"
+    //   promise={() => getLazyVal()}
+    //   fallback={
+    //     <p>
+    //       <span className="typing"></span>
+    //       <span className="typing"></span>
+    //       <span className="typing"></span>
+    //     </p>
+    //   }
+    //   render={({ result }) => result}
+    // />
+    <SmallLazy />
+  );
+};
+
 export const SsrApp = ({ currentUrl }) => {
   const [count, setCount] = createState(0);
   const [t, sett] = createState("");
@@ -235,30 +276,6 @@ export const SsrApp = ({ currentUrl }) => {
     const value = e.target.value;
     console.log("change value", value);
     sett(value);
-  };
-
-  const Decide = ({ count }) => {
-    return count % 2 === 0 ? <Even /> : <Odd />;
-    // return count % 2 === 0 ? <Even /> : "this is odd";
-    // return count % 2 === 0 ? <Even /> : <p>this is odd</p>;
-    // return count % 2 === 0 ? "this is even" : <Odd />;
-    // return count % 2 === 0 ? <p>this is odd</p> : null;
-    // return count % 2 === 0 ? null : <p>this is odd</p>;
-    // return count % 2 === 0 ? undefined : <Odd />;
-    // return count % 2 === 0 ? undefined : (
-    //   <Lazy
-    //     key="async-comp"
-    //     promise={() => getLazyVal()}
-    //     fallback={
-    //       <p>
-    //         <span className="typing"></span>
-    //         <span className="typing"></span>
-    //         <span className="typing"></span>
-    //       </p>
-    //     }
-    //     render={({ result }) => result}
-    //   />
-    // );
   };
 
   return (
@@ -331,69 +348,38 @@ export const SsrApp = ({ currentUrl }) => {
 
       <div ignoreNode={true}>this should be ignored</div>
 
-      <Loader
-        promiseFn={someFetch}
-        loading="Loading..."
-        error="Error loading data"
-        key={"api/1"}
-        onLoad={(data) => <LoaderTest data={data} />}
-      />
-
-      <Loader
-        promiseFn={someFetch2}
-        loading="Loading..."
-        error="Error loading data"
-        key={"api/2"}
-        onLoad={(data) => <LoaderTest2 data={data} />}
-      />
       <Form />
+
+      <ResourceTest id={1} key={"k1"} />
+      <ResourceTest id={2} key={"k2"} />
     </div>
   );
 };
 
-function someFetch() {
-  return fetch("http://localhost:3000/api/1");
+function someFetch(id) {
+  return fetch(`http://localhost:3000/api/${id}`)
+    .then((res) => {
+      if (!res.ok) throw new Error("Something wrong");
+    })
+    .catch((err) => {
+      console.log("this catch block is necc for SSR");
+      return err?.message;
+    });
 }
 
-function someFetch2() {
-  return fetch("http://localhost:3000/api/2");
-}
+// someFetch();
 
-someFetch().catch(() => {
-  console.log("this catch block is necc for SSR");
-});
+export function ResourceTest({ id, key }) {
+  const resource = createResource(() => someFetch(id));
 
-export function LoaderTest(props) {
-  console.log("LoaderTest props", props);
+  console.log(resource);
+
   return (
-    // <h1>Home {props?.a}</h1>
     <section>
-      <h1>LoaderTest</h1>
-      <p>{JSON.stringify(props?.data)}</p>
-      <button
-        onClick={() => {
-          routerInstance.navigator.go("/route2", { a: 10 });
-        }}
-      >
-        Go to Route 2
-      </button>
-    </section>
-  );
-}
-
-export function LoaderTest2(props) {
-  return (
-    // <h1>Home {props?.a}</h1>
-    <section>
-      <h1>LoaderTest2 {props?.a}</h1>
-      <p>{JSON.stringify(props?.data)}</p>
-      <button
-        onClick={() => {
-          routerInstance.navigator.go("/route2", { a: 10 });
-        }}
-      >
-        Go to Route 2
-      </button>
+      <h1>ResourceTest {key}</h1>
+      <p>{resource?.loading}</p>
+      <p>{resource?.error}</p>
+      <p>{JSON.stringify(resource?.result)}</p>
     </section>
   );
 }

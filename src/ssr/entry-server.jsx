@@ -6,6 +6,7 @@ import { App } from "../vdom-app/App";
 import { setSSRUrl } from "@router-v2";
 import { renderToString } from "@vdom-ssr";
 import { Sans } from "../vdom-app/sans/sans";
+import { Albums } from "../compos/ResourceTest";
 
 const getData = async (url) => {
   let result, err;
@@ -42,8 +43,9 @@ export async function render(url) {
 
   const html = renderToString(
     // IMP: NEED TO BE SAME AS entry-server.jsx except for url
-    // <SsrApp currentUrl={url} />,
-    <App type="dyn" url={url} />,
+    <SsrApp currentUrl={url} />,
+    // <App type="dyn" url={url} />,
+    // <Albums />,
   );
   return { header, html };
 }

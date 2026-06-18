@@ -4,43 +4,6 @@ const log = () => {};
 const isServer = typeof window === "undefined";
 const noop = () => {};
 
-// function _createEffect() {
-//   let prevDeps = [];
-//   let cleanupFn;
-//   let once = false;
-//   let firstRun = true;
-
-//   return (effectFn, dependencies) => {
-//     // skip update effect for first run
-//     if (firstRun && dependencies?.length > 0) {
-//       firstRun = false;
-//       // return;
-//     }
-
-//     const dependenciesChanged = dependencies.some(
-//       (dep, i) => dep !== prevDeps?.[i],
-//     );
-
-//     // if (!prevDeps?.length || dependenciesChanged) {
-//     if (dependenciesChanged) {
-//       if (cleanupFn) cleanupFn();
-//       cleanupFn = effectFn();
-//       // effectFn();
-//       prevDeps = dependencies;
-//     } else if (
-//       prevDeps?.length === dependencies?.length &&
-//       dependencies.length === 0
-//     ) {
-//       if (!once) {
-//         cleanupFn = effectFn(); // only for 0 deps
-//         once = true;
-//       }
-//     }
-
-//     return cleanupFn;
-//   };
-// }
-
 function debounce(func, duration) {
   let timeout;
 
@@ -91,6 +54,11 @@ const SmartState = (() => {
   // for refs
   const refs = {};
   let refIdx = 0;
+
+  // for promiseCache
+  const promiseCache = {};
+  const promiseMeta = {}; // just to track if compo exists or unmounted
+  let promIdx = 0;
 
   let batchOp = false;
   let isSkipping = false;
@@ -143,6 +111,9 @@ const SmartState = (() => {
     // reset refs
     refIdx = 0;
 
+    // reset promise
+    promIdx = 0;
+
     if (isServer) {
       mountMap.clear();
       unMountMap.clear();
@@ -181,7 +152,14 @@ const SmartState = (() => {
 
         // clear data
         // delete gs[key];  //slower
-        if (gs[key]) gs[key] = null; //faster
+
+        //faster
+        // if (gs[key]) {
+        //   gs[key].forEach((slot) => slot?._cancel?.()); // cancel running promises if any
+        //   gs[key] = null;
+        // }
+        if (gs[key]) gs[key] = null;
+
         // old
         // Object.keys(gs).forEach((_key) => {
         //   if (_key.startsWith(key)) {
@@ -208,6 +186,9 @@ const SmartState = (() => {
         //   }
         //   // console.log(gs);
         // });
+
+        // for promises
+        promiseMeta[key] = false; // to signal compo nomore exists
       });
     }
   };
@@ -284,6 +265,102 @@ const SmartState = (() => {
     idx++;
 
     return [/*gs[key]*/ get(), set, specialSet];
+  };
+
+  const resource = (iv, deps = null) => {
+    if (lastComp != currComp) {
+      // lastComp = currComp;
+      promIdx = 0;
+    }
+
+    const resp = { loading: true, result: null, error: null };
+
+    if (isServer) {
+      return resp;
+    }
+
+    // const key = `${currComp}-${idx}`;
+    const cc = currComp;
+    const lidx = promIdx;
+
+    // Initialize component bucket if needed
+    if (!promiseCache[cc]) promiseCache[cc] = [];
+    promiseMeta[cc] = true;
+
+    const cached = promiseCache[cc][lidx];
+
+    const depsChanged =
+      deps !== null &&
+      (!cached ||
+        !cached._deps ||
+        deps.length !== cached._deps.length ||
+        deps.some((d, i) => d !== cached._deps[i]));
+
+    // log(depsChanged);
+
+    if (promiseCache[cc][lidx] == undefined || depsChanged) {
+      const resp = {
+        loading: true,
+        result: null,
+        error: null,
+        _deps: deps,
+        refreshing: depsChanged ? true : null,
+      };
+      promiseCache[cc][lidx] = resp;
+
+      const promise = iv();
+      if (promise instanceof Promise) {
+        promiseCache[cc][lidx] = resp;
+        promise
+          .then((res) => {
+            // log(res);
+            // promiseCache[cc][lidx] = res;
+
+            if (res instanceof Error) throw res;
+
+            promiseCache[cc][lidx] = {
+              ...resp,
+              loading: false,
+              refreshing: false,
+              result: res,
+              error: null,
+              _deps: deps,
+            };
+          })
+          .catch((err) => {
+            promiseCache[cc][lidx] = {
+              ...resp,
+              loading: false,
+              refreshing: false,
+              result: null,
+              error: err,
+              _deps: deps,
+            };
+          })
+          .finally(() => {
+            if (isSkipping) {
+            } else {
+              if (cc) updateComps.add(cc);
+
+              if (!batchOp) {
+                // reset();
+
+                if (promiseMeta[cc]) throtUpdate();
+              }
+            }
+            lastComp = null;
+          });
+      }
+    }
+
+    // console.log("gs", gs);
+
+    if (lastComp != currComp) lastComp = currComp;
+
+    promIdx++;
+
+    // return [/*gs[key]*/ get(), set, specialSet];
+    return promiseCache[cc][lidx];
   };
 
   const ref = (iv) => {
@@ -461,6 +538,7 @@ const SmartState = (() => {
 
   return {
     state,
+    resource,
     context,
     ref,
     init,
@@ -473,6 +551,7 @@ const SmartState = (() => {
 })();
 
 export const createState = SmartState.state;
+export const createResource = SmartState.resource;
 export const createContext = SmartState.context;
 export const createRef = SmartState.ref;
 export const init = SmartState.init;
