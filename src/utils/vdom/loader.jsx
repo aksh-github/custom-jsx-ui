@@ -51,7 +51,7 @@ const map = new Map();
 
 const dataCache = {};
 
-export function Loader({ promiseFn, loading, error, onLoad, key }) {
+export function LoaderDeprecated({ promiseFn, loading, error, onLoad, key }) {
   const [data, setData] = createState(dataCache[key]);
   const [err, setErr] = createState(null);
 
