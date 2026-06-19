@@ -5,7 +5,7 @@ import { SsrApp } from "./SsrApp";
 import { App } from "../vdom-app/App";
 import { setSSRUrl } from "@router-v2";
 import { renderToString } from "@vdom-ssr";
-import { Sans } from "../vdom-app/sans/sans";
+// import { Sans } from "../vdom-app/sans/sans";
 import { Albums } from "../compos/ResourceTest";
 
 const getData = async (url) => {

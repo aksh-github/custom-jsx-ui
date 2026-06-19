@@ -1,7 +1,7 @@
 import { h, forceUpdate, hydrate } from "@vdom-lib";
 import { SsrApp } from "./SsrApp";
 import { App } from "../vdom-app/App";
-import { Sans } from "../vdom-app/sans/sans";
+// import { Sans } from "../vdom-app/sans/sans";
 import { Albums } from "../compos/ResourceTest";
 
 // mount(document.getElementById("root"), () => <App />);

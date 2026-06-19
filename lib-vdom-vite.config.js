@@ -1,14 +1,7 @@
 import { defineConfig } from "vite";
-import { visualizer } from "rollup-plugin-visualizer";
 import { resolve } from "path";
 
 export default defineConfig({
-  // plugins: [
-  //   visualizer({
-  //     emitFile: true,
-  //     filename: "stats.html",
-  //   }),
-  // ],
   resolve: {
     alias: {
       // "@vdom-lib": "/src/utils/vdom/vdom-lib.js",
