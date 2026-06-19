@@ -24,3 +24,9 @@
 #### dom-30may26: 
 
 This is dom only based impl. Uses signal-v2 in src/utils. Attributes are auto updated because of signals. You can update dom using propsPatches or patches. Supports onMount and onUnmount on dom elems.
+
+==
+
+#### 12jun26-state-changes: A very Stale branch as of 19jun26 (branch off 25may26)
+
+This has old diffing + key based diffing. Lot of improvements in Simple state. Supports async resource creation using createResource. Lazy compo improvements. 
