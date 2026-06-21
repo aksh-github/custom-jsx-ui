@@ -72,7 +72,7 @@ async function createServer() {
     console.log("Handling request for:", url);
 
     try {
-      let template, appContent, headerContent;
+      let template, appContent, headerContent, initData;
 
       if (isProd) {
         // Read built template
@@ -86,7 +86,7 @@ async function createServer() {
 
         // pass data / err to render
 
-        const { header, html } = await renderModule.render(url);
+        const { header, html, initData } = await renderModule.render(url);
         headerContent = header;
         appContent = html;
 
@@ -109,9 +109,10 @@ async function createServer() {
         renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
 
         // pass data / err to render
-        const { header, html } = await renderModule.render(url);
+        const { header, html, initialData } = await renderModule.render(url);
         headerContent = header;
         appContent = html;
+        initData = initialData || null;
 
         // get dispose fn
         // console.log(renderModule.rese);
@@ -120,7 +121,15 @@ async function createServer() {
 
       const html = template
         .replace(`<!--ssr-outlet-->`, appContent)
-        .replace(`<!--ssr-header-->`, headerContent);
+        .replace(`<!--ssr-header-->`, headerContent)
+        .replace(
+          `<!--INITIAL_DATA-->`,
+          `window.__INITIAL_DATA__ = ${JSON.stringify(initData)
+            .replace(/</g, "\\u003c") // Prevents </script> injection
+            .replace(/>/g, "\\u003e")
+            .replace(/\u2028/g, "\\u2028") // Prevents JS parsing crashes
+            .replace(/\u2029/g, "\\u2029")}`,
+        );
 
       if (dispose) {
         console.log("Reset state available");

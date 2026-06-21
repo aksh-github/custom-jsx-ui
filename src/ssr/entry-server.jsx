@@ -7,13 +7,14 @@ import { setSSRUrl } from "@router-v2";
 import { renderToString } from "@vdom-ssr";
 // import { Sans } from "../vdom-app/sans/sans";
 import { Albums } from "../compos/ResourceTest";
+import { Page } from "./Page1";
 
 const getData = async (url) => {
   let result, err;
 
   try {
     result = await fetch(url);
-    if (result?.ok && result.json) result = await result.json();
+    if (result?.ok) result = await result.json();
   } catch (e) {
     // console.log(e);
     err = e;
@@ -39,15 +40,16 @@ export async function render(url) {
   `;
 
   const { result, err } = await getData("http://localhost:8080"); //"http://localhost:3000/api/1"
-  console.log("Data fetched for SSR:", { result, err });
+  // console.log("Data fetched for SSR:", { result, err });
 
   const html = renderToString(
     // IMP: NEED TO BE SAME AS entry-server.jsx except for url
-    <SsrApp currentUrl={url} />,
+    // <SsrApp currentUrl={url} />,
     // <App type="dyn" url={url} />,
-    // <Albums />,
+    <Page data={result} />,
   );
-  return { header, html };
+  // console.log(result);
+  return { header, html, initialData: result };
 }
 
 export const dispose = () => {

@@ -1176,6 +1176,16 @@ if (typeof window !== "undefined") {
             //   oldNode = oldNode.value;
             // }
 
+            if (newNode?.type !== newParent?.nodeName?.toLowerCase()) {
+              console.warn(
+                "Something not right: Type mismatch between vdom node and dom node!!!",
+              );
+              if (!hydrated)
+                console.warn(
+                  "Check if you are loading on Server and Client consistently",
+                );
+            }
+
             if (newNode?.updtFlag || !hydrated)
               diffProps(newParent, oldNode.props, newNode.props);
 
