@@ -2,22 +2,8 @@
 
 import { h, Lazy } from "@vdom-lib";
 
-let _i = 0,
-  _ArrayWithFragments = null;
-const ArrayWithFragmentsPromise = () => {
-  // if cond is not reqd strictly
-  if (_ArrayWithFragments) {
-    return Promise.resolve(_ArrayWithFragments);
-  }
-
-  return import("../compos/ComponentPatterns").then((mod) => {
-    _ArrayWithFragments = mod.ArrayWithFragments;
-    // return ArrayWithFragments;
-    return _ArrayWithFragments;
-  });
-  // .catch((e) => {
-  //   console.log(e);
-  // });
+const ArrayWithFragmentsPromise = async () => {
+  return import("../compos/ComponentPatterns");
 };
 
 const photoURL = "https://picsum.photos/200"; // Gives pic of size 200x200
