@@ -1,4 +1,4 @@
-import { h } from "../../utils/vdom/vdom-lib";
+import { h } from "@vdom-lib";
 import "./worddict.css";
 
 const buttons = [

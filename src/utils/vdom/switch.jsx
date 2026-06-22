@@ -1,5 +1,5 @@
 /** @jsx h */
-import { h } from "./vdom-lib";
+import { h } from "@vdom-lib";
 
 const CASE_TYPE = 0x2e3;
 const DEFAULT_TYPE = 0x2e4;
