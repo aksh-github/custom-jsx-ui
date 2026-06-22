@@ -16,6 +16,12 @@ export const Page = (props) => {
     <main>
       <h1>Page 1</h1>
       <hr />
+      <div>
+        {true}
+        {false}
+        {null}
+        {undefined}
+      </div>
       {data?.resp.map((item) => {
         return (
           <div key={"k" + item.id}>

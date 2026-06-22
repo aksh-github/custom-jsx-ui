@@ -822,7 +822,9 @@ if (typeof window !== "undefined") {
       registerDragListeners();
 
       curr = initCompo;
-      old = curr(); // create latest vdom
+      // old = curr(); //window.__INITIAL_VDOM__; // create latest vdom
+
+      // window.__INITIAL_VDOM__ = null;
 
       // Usage
       const removedCount = removeCommentsWithText("|", rootNode);
@@ -837,8 +839,6 @@ if (typeof window !== "undefined") {
 
     // all delta updates
     function forceUpdate() {
-      // counter = 0; // v imp
-
       // log(performance.now());
       if (!IS_PROD) logt("TETVD");
 
@@ -876,7 +876,11 @@ if (typeof window !== "undefined") {
       // let tout = setTimeout(() => {
       //   clearTimeout(tout);
 
-      wrapper(rootNode, current, old);
+      wrapper(
+        rootNode,
+        current,
+        !hydrated ? JSON.parse(JSON.stringify(current)) : old,
+      );
 
       callUnmountAll();
 
@@ -1176,16 +1180,6 @@ if (typeof window !== "undefined") {
             //   oldNode = oldNode.value;
             // }
 
-            if (newNode?.type !== newParent?.nodeName?.toLowerCase()) {
-              console.warn(
-                "Something not right: Type mismatch between vdom node and dom node!!!",
-              );
-              if (!hydrated)
-                console.warn(
-                  "Check if you are loading on Server and Client consistently",
-                );
-            }
-
             if (newNode?.updtFlag || !hydrated)
               diffProps(newParent, oldNode.props, newNode.props);
 
@@ -1218,6 +1212,10 @@ if (typeof window !== "undefined") {
             }
 
             if (old) {
+              if (oldNode == newNode) {
+                return;
+              }
+
               patches.push({
                 type: "REPLACE",
                 p: parent,
@@ -1268,13 +1266,7 @@ if (typeof window !== "undefined") {
 
           if (oldNode?.props) {
             oldNode.children.length = 0;
-            oldNode =
-              oldNode.type =
-              oldNode.key =
-              oldNode.$c =
-              oldNode.children =
-              oldNode.props =
-                null;
+            oldNode = null;
           }
           return;
         }
@@ -1297,13 +1289,7 @@ if (typeof window !== "undefined") {
 
           if (oldNode?.props) {
             oldNode.children.length = 0;
-            oldNode =
-              oldNode.type =
-              oldNode.key =
-              oldNode.$c =
-              oldNode.children =
-              oldNode.props =
-                null;
+            oldNode = null;
           }
 
           while (old.contains(stk[CTR + 1])) {
@@ -1349,7 +1335,7 @@ if (typeof window !== "undefined") {
           }
         }
 
-        if (hasChanges) {
+        if (hasChanges || !hydrated) {
           propsPatches.push({
             $target: target,
             newProps: propChanges,
@@ -1362,13 +1348,7 @@ if (typeof window !== "undefined") {
 
       if (oldNode?.props) {
         oldNode.children.length = 0;
-        oldNode =
-          oldNode.type =
-          oldNode.key =
-          oldNode.$c =
-          oldNode.children =
-          oldNode.props =
-            null;
+        oldNode = null;
       }
 
       last = gdf = null;
@@ -1396,6 +1376,10 @@ if (typeof window !== "undefined") {
     }
 
     function applyPatches(_patches) {
+      if (!hydrated && _patches.length) {
+        throw new Error("SSR Reconciliation failed!!");
+      }
+
       const disposalPromises = [];
 
       for (let i = 0; i < _patches.length; i++) {

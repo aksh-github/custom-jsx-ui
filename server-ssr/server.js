@@ -23,7 +23,7 @@ console.log(`Mode: ${isProd ? "PRODUCTION" : "DEVELOPMENT"}`);
 
 async function createServer() {
   const app = express();
-  let vite, renderModule, dispose;
+  let vite, renderModule, ssrRenderModule, dispose;
 
   if (isProd) {
     const compression = (await import("compression")).default;
@@ -55,6 +55,10 @@ async function createServer() {
     });
 
     app.use(vite.middlewares);
+
+    // renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
+    renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
+    ssrRenderModule = await vite.ssrLoadModule("/src/utils/vdom/vdom-ssr.js");
   }
 
   app.use("/", async (req, res, next) => {
@@ -72,7 +76,7 @@ async function createServer() {
     console.log("Handling request for:", url);
 
     try {
-      let template, appContent, headerContent, initData;
+      let template, appContent, headerContent, bodyHtml, initData, vdom;
 
       if (isProd) {
         // Read built template
@@ -86,9 +90,19 @@ async function createServer() {
 
         // pass data / err to render
 
-        const { header, html, initData } = await renderModule.render(url);
+        const { header, app, initialData } = await renderModule.render(url);
+
+        // console.log(`==== ${typeof app}`);
+
+        // 1. header as string
         headerContent = header;
-        appContent = html;
+
+        // 2. main body
+        vdom = app();
+        bodyHtml = ssrRenderModule.renderToString(vdom);
+
+        // 3. Data as json
+        initData = initialData || null;
 
         // get dispose fn
         dispose = renderModule.dispose;
@@ -106,12 +120,24 @@ async function createServer() {
         // );
         // routeModule.setSSRUrl(url);
 
-        renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
-
         // pass data / err to render
-        const { header, html, initialData } = await renderModule.render(url);
+        // renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
+        // ssrRenderModule = await vite.ssrLoadModule(
+        //   "/src/utils/vdom/vdom-ssr.js",
+        // );
+
+        const { header, app, initialData } = await renderModule.render(url);
+
+        // console.log(`==== ${typeof app}`);
+
+        // 1. header as string
         headerContent = header;
-        appContent = html;
+
+        // 2. main body
+        vdom = app();
+        bodyHtml = ssrRenderModule.renderToString(vdom);
+
+        // 3. Data as json
         initData = initialData || null;
 
         // get dispose fn
@@ -119,8 +145,12 @@ async function createServer() {
         dispose = renderModule.dispose;
       }
 
+      // const temp = ssrRenderModule.renderToString(app());
+
+      // console.log(`==== ${typeof temp}`);
+
       const html = template
-        .replace(`<!--ssr-outlet-->`, appContent)
+        .replace(`<!--ssr-outlet-->`, bodyHtml)
         .replace(`<!--ssr-header-->`, headerContent)
         .replace(
           `<!--INITIAL_DATA-->`,
@@ -130,6 +160,10 @@ async function createServer() {
             .replace(/\u2028/g, "\\u2028") // Prevents JS parsing crashes
             .replace(/\u2029/g, "\\u2029")}`,
         );
+      // .replace(
+      //   `<!--INITIAL_VDOM-->`,
+      //   `window.__INITIAL_VDOM__ = ${JSON.stringify(vdom)}`,
+      // );
 
       if (dispose) {
         console.log("Reset state available");
