@@ -678,7 +678,7 @@ if (typeof window !== "undefined") {
             //   typeof node.children[i] === "function"
             //     ? node.children[i]()
             //     : node.children[i];
-            $el.appendChild(createElement(node.children[i]));
+            $el2.appendChild(createElement(node.children[i]));
           }
         }
 
@@ -887,8 +887,8 @@ if (typeof window !== "undefined") {
       // 3. update dom
       // log(patches, propsPatches);
       // console.log(patches);
-      if (propsPatches) applyPropsPatches(propsPatches);
-      if (patches) applyPatches(patches);
+      if (propsPatches?.length) applyPropsPatches(propsPatches);
+      if (patches?.length) applyPatches(patches);
       patches = propsPatches = null;
       // 3. trigger lifecycle
       // callLifeCycleHooks(callStack, oldStack);
