@@ -1,8 +1,13 @@
-// import { memo } from "../../utils/vdom/memo";
-import { h, createEffect, createState, Lazy } from "@vdom-lib"; // or from "../../utils/vdom/vdom-lib";
+import {
+  h,
+  createEffect,
+  createState,
+  createRef,
+  createElement,
+} from "@vdom-lib";
 
 import "./sans-style.css";
-import "./worddict.css";
+// import "./worddict.css";
 
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -73,9 +78,17 @@ let lazyLoadFrame = null;
 
 // const searchCtx = context("");
 
-const VerbRow = ({ row: verb }) => {
+const VerbRow = ({ row: verb, key }) => {
   return (
-    <div className="divrow search-result-borders">
+    <div
+      className="divrow search-result-borders"
+      key={key}
+      // ref={(el) => {
+      //   setWrapper(el);
+      //   process(el);
+      // }}
+      // ignoreNode={true}
+    >
       <h3>
         {verb?.ev} {verb?.mv?.join(", ")}
       </h3>
@@ -116,9 +129,9 @@ const verbFilter = (w) => {
   return flag;
 };
 
-const WordRow = ({ row: word }) => {
+const WordRow = ({ row: word, key }) => {
   return (
-    <li className="search-result-borders">
+    <li className="search-result-borders" key={key}>
       <h3>{word?.ew}</h3>
       <p>{word?.sw?.join(", ")}</p>
       <p>{word?.mw?.join(", ")}</p>
@@ -267,7 +280,7 @@ const currTime = Date.now();
 const loadRemoteHashData = () => {
   return fetchData(`${env.VITE_TS}?ts=${currTime}`).then((hashData) => {
     if (!hashData) return;
-    // console.log(res, dictionaryData);
+    // console.log(hashData, dictionaryData);
 
     Object.keys(hashData).forEach((key) => {
       const dictData = dictionaryData[key];
@@ -277,7 +290,7 @@ const loadRemoteHashData = () => {
         dictData.updateReqd = true;
         dictData.hash = hashData[key];
       } else {
-        dictData.updateReqd = false;
+        // dictData.updateReqd = false; // this should only be done in checkProcessUpdates()
       }
     });
 
@@ -416,9 +429,9 @@ function GenericTab({ prop, search: srch, dkey }) {
     setTimeout(loadMoreIfNearBottom, 0);
   }, [srch, dkey, filtered.length]);
 
-  const RR = visibleResults.map((d, idx) =>
-    d?.ev || d?.ew ? <RowComponent row={d} key={"k" + idx} /> : null,
-  );
+  const RR = visibleResults.map((d, idx) => (
+    <RowComponent row={d} key={"k" + d.id} />
+  ));
 
   return (
     <div>
