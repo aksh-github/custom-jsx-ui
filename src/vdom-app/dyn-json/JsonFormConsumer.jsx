@@ -1,5 +1,5 @@
-import JsonForm from "./JsonForm";
-import { h, createEffect, createState } from "../../utils/vdom/vdom-lib";
+import JsonForm from "./jsonform";
+import { h, createEffect, createState } from "@vdom-lib";
 import { loadUI } from "./utils";
 import "./form.css";
 
