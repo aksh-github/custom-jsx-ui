@@ -366,7 +366,8 @@ if (typeof window !== "undefined") {
         () => {
           _draggingEl = null;
           _activeDrag = false;
-          forceUpdate();
+          // forceUpdate();
+          s.schedule();
         },
         true,
       );
@@ -1669,21 +1670,40 @@ if (typeof window !== "undefined") {
 
   class Scheduler {
     constructor() {
-      this.dirty = false;
-
+      this.pending = false;
+      this.running = false;
       this.channel = new MessageChannel();
       this.channel.port1.onmessage = () => this.flush();
     }
 
     schedule() {
-      if (this.dirty) return; // batches all calls until flush runs
-      this.dirty = true;
-      this.channel.port2.postMessage(null); // macrotask — yields to browser
+      if (this.running) {
+        this.pending = true;
+        return;
+      }
+
+      if (this.pending) return;
+
+      this.pending = true;
+      this.channel.port2.postMessage(null);
     }
 
     flush() {
-      this.dirty = false; // only resets when macrotask fires
-      forceUpdate();
+      if (this.running) return;
+
+      this.running = true;
+      this.pending = false;
+
+      try {
+        forceUpdate();
+      } finally {
+        this.running = false;
+
+        if (this.pending) {
+          this.pending = false;
+          this.channel.port2.postMessage(null);
+        }
+      }
     }
   }
 
@@ -1700,7 +1720,7 @@ if (typeof window !== "undefined") {
 }
 
 export const mount = dom.mount || noop;
-export const forceUpdate = dom.forceUpdate || noop;
+const forceUpdate = dom.forceUpdate || noop;
 export const hydrate = dom.hydrate || noop;
 export const createElement = dom.createElement || noop;
 
