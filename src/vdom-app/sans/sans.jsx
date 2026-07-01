@@ -426,7 +426,11 @@ function GenericTab({ prop, search: srch, dkey }) {
   }, []);
 
   createEffect(() => {
-    setTimeout(loadMoreIfNearBottom, 0);
+    const toutId = setTimeout(loadMoreIfNearBottom, 0);
+
+    return () => {
+      clearTimeout(toutId);
+    };
   }, [srch, dkey, filtered.length]);
 
   const RR = visibleResults.map((d, idx) => (
