@@ -1,4 +1,4 @@
-import { h, forceUpdate, hydrate } from "@vdom-lib";
+import { h, hydrate } from "@vdom-lib";
 import { SsrApp } from "./SsrApp";
 import { App } from "../vdom-app/App";
 // import { Sans } from "../vdom-app/sans/sans";

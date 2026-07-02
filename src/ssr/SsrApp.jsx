@@ -4,7 +4,6 @@ import {
   createEffect,
   createContext,
   memo,
-  forceUpdate,
   Switch,
   Lazy,
   createResource,
