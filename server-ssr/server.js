@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import express from "express";
+// const cors = require("cors");
 
 console.warn("Before running this ensure that you have already");
 console.log("*************");
@@ -14,6 +15,31 @@ console.log("*************");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const extraPath = "..";
+const serverPort = 5173;
+
+const paths = {
+  projectRoot: path.resolve(__dirname, extraPath),
+  prodClientAssets: path.resolve(
+    __dirname,
+    extraPath,
+    "dist-ssr/client/assets",
+  ),
+  prodTemplate: path.resolve(
+    __dirname,
+    extraPath,
+    "dist-ssr/client/index.html",
+  ),
+  prodServerEntry: path.resolve(
+    __dirname,
+    extraPath,
+    "dist-ssr/server/entry-server.js",
+  ),
+  prodSSRRender: path.resolve(
+    __dirname,
+    extraPath,
+    "dist-ssr/server/vdom-ssr.js",
+  ),
+};
 
 // Check for --prod or --production flag in command line arguments
 const isProd = process.argv.includes("--prod");
@@ -21,9 +47,74 @@ const isProd = process.argv.includes("--prod");
 console.log(`Mode: ${isProd ? "PRODUCTION" : "DEVELOPMENT"}`);
 // console.log(`Args:`, process.argv);
 
+function shouldIgnoreRequest(url) {
+  // Ignore browser diagnostic/static requests that don't need SSR.
+  return (
+    url.includes("/.well-known/") ||
+    url.includes("/favicon.ico") ||
+    url.includes("/vite.svg")
+  );
+}
+
+function toSafeJson(data) {
+  return (
+    JSON.stringify(data)
+      // Prevents closing-script injection in inline script tags.
+      .replace(/</g, "\\u003c")
+      .replace(/>/g, "\\u003e")
+      // Prevents JS parsing issues for line/paragraph separators.
+      .replace(/\u2028/g, "\\u2028")
+      .replace(/\u2029/g, "\\u2029")
+  );
+}
+
+function injectTemplate(template, { headerContent, bodyHtml, initData }) {
+  return template
+    .replace(`<!--ssr-outlet-->`, bodyHtml)
+    .replace(`<!--ssr-header-->`, headerContent)
+    .replace(
+      `<!--INITIAL_DATA-->`,
+      `window.__INITIAL_DATA__ = ${toSafeJson(initData)}`,
+    );
+}
+
+async function loadSsrModules(vite) {
+  if (isProd) {
+    const renderModule = await import(
+      pathToFileURL(paths.prodServerEntry).href
+    );
+    const ssrRenderModule = await import(
+      pathToFileURL(paths.prodSSRRender).href
+    );
+    return { renderModule, ssrRenderModule };
+  }
+
+  const [renderModule, ssrRenderModule] = await Promise.all([
+    vite.ssrLoadModule("/src/ssr/entry-server.jsx"),
+    vite.ssrLoadModule("/src/utils/vdom/vdom-ssr.js"),
+  ]);
+
+  return { renderModule, ssrRenderModule };
+}
+
+async function resolveTemplate({ url, vite }) {
+  if (isProd) {
+    // Production: use prebuilt template from SSR output.
+    return fs.readFileSync(paths.prodTemplate, "utf-8");
+  }
+
+  // Development: transform template through Vite for HMR and injected scripts.
+  const template = fs.readFileSync(
+    path.resolve(paths.projectRoot, "index.html"),
+    "utf-8",
+  );
+  return vite.transformIndexHtml(url, template);
+}
+
 async function createServer() {
   const app = express();
-  let vite, renderModule, ssrRenderModule, dispose;
+  // app.use(cors()); // Allow your app to connect
+  let vite;
 
   if (isProd) {
     const compression = (await import("compression")).default;
@@ -31,21 +122,7 @@ async function createServer() {
     console.log("compress used");
 
     app.use(compression());
-    // Production: serve pre-built assets
-    app.use(
-      "/assets",
-      express.static(
-        path.resolve(__dirname, extraPath, "dist-ssr/client/assets"),
-      ),
-    );
-
-    // Load the built server module - FIX: Use pathToFileURL
-    const serverPath = path.resolve(
-      __dirname,
-      extraPath,
-      "dist-ssr/server/entry-server.js",
-    );
-    renderModule = await import(pathToFileURL(serverPath).href);
+    app.use("/assets", express.static(paths.prodClientAssets));
   } else {
     // Development: use Vite middleware
     const { createServer: createViteServer } = await import("vite");
@@ -55,116 +132,35 @@ async function createServer() {
     });
 
     app.use(vite.middlewares);
-
-    // renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
-    renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
-    ssrRenderModule = await vite.ssrLoadModule("/src/utils/vdom/vdom-ssr.js");
   }
+
+  const { renderModule, ssrRenderModule } = await loadSsrModules(vite);
 
   app.use("/", async (req, res, next) => {
     const url = req.originalUrl;
 
-    // Ignore browser diagnostic requests
-    if (
-      url.includes("/.well-known/") ||
-      url.includes("/favicon.ico") ||
-      url.includes("/vite.svg")
-    ) {
+    if (shouldIgnoreRequest(url)) {
       return res.status(204).end();
     }
 
     console.log("Handling request for:", url);
 
     try {
-      let template, appContent, headerContent, bodyHtml, initData, vdom;
+      const template = await resolveTemplate({ url, vite });
+      const { header, app, initialData } = await renderModule.render(url);
 
-      if (isProd) {
-        // Read built template
-        template = fs.readFileSync(
-          path.resolve(__dirname, extraPath, "dist-ssr/client/index.html"),
-          "utf-8",
-        );
+      const headerContent = header;
+      const vdom = app();
+      const bodyHtml = ssrRenderModule.renderToString(vdom);
+      const initData = initialData || null;
 
-        // get seturl fn
-        // renderModule.setSSRUrl(url);
+      const html = injectTemplate(template, {
+        headerContent,
+        bodyHtml,
+        initData,
+      });
 
-        // pass data / err to render
-
-        const { header, app, initialData } = await renderModule.render(url);
-
-        // console.log(`==== ${typeof app}`);
-
-        // 1. header as string
-        headerContent = header;
-
-        // 2. main body
-        vdom = app();
-        bodyHtml = ssrRenderModule.renderToString(vdom);
-
-        // 3. Data as json
-        initData = initialData || null;
-
-        // get dispose fn
-        dispose = renderModule.dispose;
-      } else {
-        // Dev mode with HMR
-        template = fs.readFileSync(
-          path.resolve(__dirname, extraPath, "index.html"),
-          "utf-8",
-        );
-        template = await vite.transformIndexHtml(url, template);
-
-        // get seturl fn
-        // const routeModule = await vite.ssrLoadModule(
-        //   "/src/utils/router-v2.jsx",
-        // );
-        // routeModule.setSSRUrl(url);
-
-        // pass data / err to render
-        // renderModule = await vite.ssrLoadModule("/src/ssr/entry-server.jsx");
-        // ssrRenderModule = await vite.ssrLoadModule(
-        //   "/src/utils/vdom/vdom-ssr.js",
-        // );
-
-        const { header, app, initialData } = await renderModule.render(url);
-
-        // console.log(`==== ${typeof app}`);
-
-        // 1. header as string
-        headerContent = header;
-
-        // 2. main body
-        vdom = app();
-        bodyHtml = ssrRenderModule.renderToString(vdom);
-
-        // 3. Data as json
-        initData = initialData || null;
-
-        // get dispose fn
-        // console.log(renderModule.rese);
-        dispose = renderModule.dispose;
-      }
-
-      // const temp = ssrRenderModule.renderToString(app());
-
-      // console.log(`==== ${typeof temp}`);
-
-      const html = template
-        .replace(`<!--ssr-outlet-->`, bodyHtml)
-        .replace(`<!--ssr-header-->`, headerContent)
-        .replace(
-          `<!--INITIAL_DATA-->`,
-          `window.__INITIAL_DATA__ = ${JSON.stringify(initData)
-            .replace(/</g, "\\u003c") // Prevents </script> injection
-            .replace(/>/g, "\\u003e")
-            .replace(/\u2028/g, "\\u2028") // Prevents JS parsing crashes
-            .replace(/\u2029/g, "\\u2029")}`,
-        );
-      // .replace(
-      //   `<!--INITIAL_VDOM-->`,
-      //   `window.__INITIAL_VDOM__ = ${JSON.stringify(vdom)}`,
-      // );
-
+      const dispose = renderModule.dispose;
       if (dispose) {
         console.log("Reset state available");
         dispose();
@@ -178,9 +174,9 @@ async function createServer() {
     }
   });
 
-  app.listen(5173, () => {
+  app.listen(serverPort, () => {
     console.log(
-      `Server running at http://localhost:5173 (${
+      `Server running at http://localhost:${serverPort} (${
         isProd ? "production" : "development"
       })`,
     );
@@ -188,3 +184,39 @@ async function createServer() {
 }
 
 createServer();
+
+// app.get("/api/stream", async (req, res, next) => {
+//   // 1. Set required headers for SSE
+//   res.setHeader("Content-Type", "application/json");
+//   res.setHeader("Transfer-Encoding", "chunked");
+
+//   const text =
+//     "Hello! This is a real-time streaming response from your Express server.";
+//   const words = text.split(" ");
+
+//   let count = 0;
+
+//   const intervalId = setInterval(() => {
+//     if (count < words.length) {
+//       // Build a structured JSON chunk
+//       const chunk = {
+//         id: count,
+//         meta: `Token-${count}`,
+//         word: `${words[count]}`,
+//       };
+
+//       // Write JSON string followed by a clear delimiter (like newline)
+//       res.write(JSON.stringify(chunk) + "\n");
+//       count++;
+//     } else {
+//       clearInterval(intervalId);
+//       res.end(); // Terminate the stream pipeline cleanly
+//     }
+//   }, 400);
+
+//   // 3. Clean up if user closes the tab
+//   req.on("close", () => {
+//     clearInterval(intervalId);
+//     res.end();
+//   });
+// });
