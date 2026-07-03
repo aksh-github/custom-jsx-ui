@@ -32,7 +32,7 @@ export const Column = ({
             className="new-item-input"
           />
         </form> */}
-        <ul className="list-parent">
+        <ul className="list-parent" droppable={true}>
           {columns[column].map((item, index) => (
             <li
               onClick={() => console.log("item clicked", item)}
