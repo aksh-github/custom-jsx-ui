@@ -1,13 +1,13 @@
 // import { renderToString } from "react-dom/server";
 
 import { h, reset } from "@vdom-lib";
-import { SsrApp } from "./SsrApp";
+import { SsrApp } from "../compos/SsrApp";
 import { App } from "../vdom-app/App";
 import { setSSRUrl } from "@router-v2";
 // import { renderToString } from "@vdom-ssr";
 // import { Sans } from "../vdom-app/sans/sans";
 import { Albums } from "../compos/ResourceTest";
-import { Page } from "./Page1";
+import { Page } from "../compos/Page1";
 
 const getData = async (url) => {
   let result, err;

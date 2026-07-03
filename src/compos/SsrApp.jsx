@@ -9,7 +9,7 @@ import {
   createResource,
 } from "@vdom-lib";
 // import { Lazy } from "../utils/vdom/lazy";
-import { DynSans, DynTextArea } from "../compos/DynamicExports";
+import { DynSans, DynTextArea } from "./DynamicExports";
 // import { Sans } from "../vdom-app/sans/sans";
 
 const ctx = createContext(0);

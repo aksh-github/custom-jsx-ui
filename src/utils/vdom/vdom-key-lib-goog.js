@@ -334,6 +334,7 @@ if (typeof window !== "undefined") {
     // Set on pointerdown (earliest possible signal) so any forceUpdate
     // triggered by subsequent events already sees it.
     let _draggingEl = null;
+    let _dragDropTargetEl = null;
     let _activeDrag = false;
 
     function registerDragListeners() {
@@ -363,11 +364,25 @@ if (typeof window !== "undefined") {
       // dragend: clear and settle final DOM state.
       rootNode.addEventListener(
         "dragend",
-        () => {
-          _draggingEl = null;
+        (e) => {
+          log(e);
+          _draggingEl = _dragDropTargetEl = null;
           _activeDrag = false;
           // forceUpdate();
           s.schedule();
+        },
+        true,
+      );
+
+      rootNode.addEventListener(
+        "dragover",
+        (e) => {
+          // log(e.toElement);
+          _dragDropTargetEl = e.toElement;
+          // _draggingEl = null;
+          // _activeDrag = false;
+          // // forceUpdate();
+          // s.schedule();
         },
         true,
       );
@@ -786,6 +801,7 @@ if (typeof window !== "undefined") {
 
       // log(callStack);
       callMountAll();
+      flushEffects();
 
       altFuncCache = { ...funcCache };
       funcCache = {};
@@ -895,6 +911,7 @@ if (typeof window !== "undefined") {
       // callLifeCycleHooks(callStack, oldStack);
 
       callMountAll();
+      flushEffects();
       // log(callStack, oldStack);
 
       old = current;
@@ -1376,12 +1393,26 @@ if (typeof window !== "undefined") {
       _patches.length = 0;
     }
 
+    // function handleDraggingOp(patch) {
+    //   const newEl =
+    //     _draggingEl &&
+    //     patch.c?.key != null &&
+    //     patch.c.key === _draggingEl.getAttribute?.("key")
+    //       ? _draggingEl
+    //       : createElement(patch.c);
+    //   return {
+    //     newEl,
+    //     dragging: _draggingEl === newEl,
+    //   };
+    // }
+
     function applyPatches(_patches) {
       if (!hydrated && _patches.length) {
         throw new Error("SSR Reconciliation failed!!");
       }
 
       const disposalPromises = [];
+      let dragObj = null;
 
       for (let i = 0; i < _patches.length; i++) {
         const patch = _patches[i];
@@ -1735,6 +1766,7 @@ export {
   skipUpdate,
   batch,
   reset,
+  createStream,
   setCurrComp, // only required for loader
 } from "../simple-state";
 
@@ -1753,6 +1785,7 @@ import {
   setCurrComp,
   smartRegisterCallback,
   updateComps,
+  flushEffects,
 } from "../simple-state";
 
 // export const createState = _createState;

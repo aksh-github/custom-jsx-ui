@@ -1,9 +1,9 @@
 import { h, hydrate } from "@vdom-lib";
-import { SsrApp } from "./SsrApp";
+import { SsrApp } from "../compos/SsrApp";
 import { App } from "../vdom-app/App";
 // import { Sans } from "../vdom-app/sans/sans";
 import { Albums } from "../compos/ResourceTest";
-import { Page } from "./Page1";
+import { Page } from "../compos/Page1";
 
 // mount(document.getElementById("root"), () => <App />);
 
