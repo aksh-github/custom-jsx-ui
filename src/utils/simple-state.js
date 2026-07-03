@@ -1,21 +1,49 @@
-// const log = console.log;
-const log = () => {};
+const log = console.log;
+// const log = () => {};
 
 const isServer = typeof window === "undefined";
 const noop = () => {};
 
-function debounce(func, duration) {
-  let timeout;
+// function debounce(func, duration) {
+//   let timeout;
 
-  return function (...args) {
-    const effect = () => {
-      timeout = null;
-      return func.apply(this, args);
-    };
+//   return function (...args) {
+//     const effect = () => {
+//       timeout = null;
+//       return func.apply(this, args);
+//     };
 
-    clearTimeout(timeout);
-    timeout = setTimeout(effect, duration);
+//     clearTimeout(timeout);
+//     timeout = setTimeout(effect, duration);
+//   };
+// }
+
+let pendingEffects = [];
+let flushingEffects = false;
+
+export function flushEffects() {
+  if (flushingEffects) return;
+
+  flushingEffects = true;
+
+  const run = () => {
+    const queue = pendingEffects.splice(0);
+    flushingEffects = false;
+
+    for (const fn of queue) {
+      fn();
+    }
+
+    if (pendingEffects.length) {
+      run();
+    }
   };
+
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(run, { timeout: 50 });
+  } else {
+    setTimeout(run, 0);
+  }
 }
 
 export const updateComps = new Set();
@@ -59,6 +87,11 @@ const SmartState = (() => {
   const promiseCache = {};
   const promiseMeta = {}; // just to track if compo exists or unmounted
   let promIdx = 0;
+
+  // for streams
+  const streamState = {};
+  const streamMeta = {}; // just to track if compo exists or unmounted
+  let strmIdx = 0;
 
   let batchOp = false;
   let isSkipping = false;
@@ -189,6 +222,13 @@ const SmartState = (() => {
 
         // for promises
         promiseMeta[key] = false; // to signal compo nomore exists
+
+        // for streams
+        streamState[key].forEach((it) => {
+          it?.controller?.abort();
+        });
+
+        streamState[key] = null;
       });
     }
   };
@@ -523,17 +563,164 @@ const SmartState = (() => {
           // fall through instead of returning
         }
 
-        const slot = effects[currComp][i];
-        const depsChanged =
-          deps == null ||
-          slot.prevDeps === null || // ← null means first run, always execute
-          deps.some((d, j) => d !== slot.prevDeps[j]);
+        if (updateComps.has(currComp)) {
+          const slot = effects[currComp][i];
+          const depsChanged =
+            deps == null ||
+            slot.prevDeps === null || // ← null means first run, always execute
+            deps.some((d, j) => d !== slot.prevDeps[j]);
 
-        if (depsChanged) {
-          slot.cleanup?.();
-          slot.cleanup = cb() ?? null;
-          slot.prevDeps = deps;
+          if (depsChanged) {
+            slot.cleanup?.();
+            slot.cleanup = null;
+            slot.prevDeps = deps;
+
+            // log(currComp);
+            // if (updateComps.has(currComp)) {
+            pendingEffects.push(() => {
+              slot.cleanup = cb() ?? null;
+            });
+          }
         }
+      };
+
+  const stream = isServer
+    ? noop
+    : ({ topic, delimiter = "\n" }) => {
+        if (lastComp != currComp) {
+          // lastComp = currComp;
+          strmIdx = 0;
+        }
+
+        // log(streamState);
+
+        let resp = {
+          loading: false,
+          result: null,
+          error: null,
+          controller: null,
+        };
+
+        const cc = currComp;
+        const lidx = strmIdx;
+
+        // Initialize component bucket if needed
+        if (!streamState[cc]) streamState[cc] = [];
+
+        const start = async (tranformResponse, triggerUpdate) => {
+          if (streamState[cc][lidx]?.loading) {
+            return false;
+          }
+
+          streamState[cc][lidx] = {
+            ...resp,
+            loading: true,
+            controller: new AbortController(),
+          };
+
+          try {
+            const response = await fetch(`/api/stream?q=${topic}`, {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              signal: streamState[cc][lidx].controller.signal, // Attach the abort signal to fetch
+            });
+
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split(delimiter);
+              buffer = lines.pop();
+
+              for (const line of lines) {
+                if (line.trim()) {
+                  try {
+                    const jsonChunk = JSON.parse(line);
+                    // setData((prev) => [...prev, jsonChunk]);
+
+                    streamState[cc][lidx] = {
+                      ...streamState[cc][lidx],
+                      result: tranformResponse(
+                        streamState[cc][lidx].result || "",
+                        jsonChunk,
+                      ),
+                    };
+                    // log(streamState[cc][lidx]);
+
+                    if (triggerUpdate) {
+                      if (isSkipping) {
+                      } else {
+                        if (cc) updateComps.add(cc);
+
+                        if (!batchOp) {
+                          // reset();
+
+                          // if (promiseMeta[cc])
+                          throtUpdate();
+                        }
+                      }
+                    }
+                  } catch (jsonErr) {
+                    console.error("Failed parsing line to JSON:", line);
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            // 3. Ignore the error if it was manually triggered by the user
+            if (err.name === "AbortError") {
+              console.log("Stream successfully aborted by user.");
+            } else {
+              log(err);
+              streamState[cc][lidx] = {
+                ...streamState[cc][lidx],
+                error: err,
+              };
+              // setError(err.message || "Streaming request dropped.");
+            }
+          } finally {
+            streamState[cc][lidx].controller.abort();
+            streamState[cc][lidx] = {
+              ...streamState[cc][lidx],
+              loading: false,
+            };
+
+            if (isSkipping) {
+            } else {
+              if (cc) updateComps.add(cc);
+
+              if (!batchOp) {
+                // reset();
+
+                // if (promiseMeta[cc])
+                throtUpdate();
+              }
+            }
+            lastComp = null;
+          }
+        };
+
+        const stop = () => {
+          streamState[cc][lidx].controller.abort();
+          streamState[cc][lidx] = {
+            ...streamState[cc][lidx],
+            loading: false,
+          };
+        };
+
+        if (lastComp != currComp) lastComp = currComp;
+
+        strmIdx++;
+
+        return { ...streamState[cc][lidx], start, stop };
       };
 
   return {
@@ -547,6 +734,7 @@ const SmartState = (() => {
     batch,
     registerCallback,
     effect,
+    stream,
   };
 })();
 
@@ -561,5 +749,6 @@ export const skipUpdate = SmartState.skipUpdate;
 export const batch = SmartState.batch;
 export const smartRegisterCallback = SmartState.registerCallback;
 export const createEffect = SmartState.effect;
+export const createStream = SmartState.stream;
 
 // export const specialSet = SmartState.specialSet;
