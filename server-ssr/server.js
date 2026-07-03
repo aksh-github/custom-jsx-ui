@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import express from "express";
+import { createStreamRouteHandler } from "./streaming.js";
+import "./stream-topics.js";
 // const cors = require("cors");
 
 console.warn("Before running this ensure that you have already");
@@ -113,6 +115,7 @@ async function resolveTemplate({ url, vite }) {
 
 async function createServer() {
   const app = express();
+  const streamRouteHandler = createStreamRouteHandler();
   // app.use(cors()); // Allow your app to connect
   let vite;
 
@@ -121,7 +124,18 @@ async function createServer() {
 
     console.log("compress used");
 
-    app.use(compression());
+    app.use(
+      compression({
+        filter: (req, res) => {
+          if (req.path === "/api/stream") {
+            return false;
+          }
+
+          return compression.filter(req, res);
+        },
+      }),
+    );
+
     app.use("/assets", express.static(paths.prodClientAssets));
   } else {
     // Development: use Vite middleware
@@ -135,6 +149,8 @@ async function createServer() {
   }
 
   const { renderModule, ssrRenderModule } = await loadSsrModules(vite);
+
+  app.get("/api/stream", streamRouteHandler);
 
   app.use("/", async (req, res, next) => {
     const url = req.originalUrl;
