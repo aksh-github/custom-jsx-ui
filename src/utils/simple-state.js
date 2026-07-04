@@ -55,7 +55,11 @@ export const setCurrComp = (comp) => {
 };
 
 // let throtUpdate = isServer ? noop : null;
-let throtUpdate = noop;
+let throtUpdate = isServer
+  ? noop
+  : () => {
+      if (typeof forceUpdate === "function") forceUpdate();
+    };
 let forceUpdate = isServer ? noop : () => {};
 
 // SmartState 27-jun-25
@@ -95,21 +99,44 @@ const SmartState = (() => {
 
   let batchOp = false;
   let isSkipping = false;
+  let hasPendingUpdate = false;
+
+  const scheduleUpdate = (comp) => {
+    if (isServer || batchOp || isSkipping) return;
+
+    if (comp) updateComps.add(comp);
+
+    if (hasPendingUpdate) return;
+
+    hasPendingUpdate = true;
+
+    const run = () => {
+      hasPendingUpdate = false;
+      throtUpdate();
+    };
+
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(run);
+    } else {
+      Promise.resolve().then(run);
+    }
+  };
 
   const batch = (cb) => {
     console.warn("untested code");
     batchOp = true;
     cb();
     batchOp = false;
-    forceUpdate();
+    scheduleUpdate();
   };
 
   const registerCallback = isServer
     ? noop
     : (cb, duration = 100) => {
         forceUpdate = cb;
-        // throtUpdate = debounce(forceUpdate, duration);
-        throtUpdate = forceUpdate;
+        throtUpdate = () => {
+          if (typeof forceUpdate === "function") forceUpdate();
+        };
       };
 
   const skipUpdate = (cb) => {
@@ -224,11 +251,13 @@ const SmartState = (() => {
         promiseMeta[key] = false; // to signal compo nomore exists
 
         // for streams
-        streamState[key].forEach((it) => {
-          it?.controller?.abort();
-        });
+        if (streamState[key]) {
+          streamState[key].forEach((it) => {
+            it?.controller?.abort();
+          });
 
-        streamState[key] = null;
+          streamState[key] = null;
+        }
       });
     }
   };
@@ -270,15 +299,8 @@ const SmartState = (() => {
 
           lastComp = cc;
 
-          if (isSkipping) {
-          } else {
-            if (lastComp) updateComps.add(lastComp);
-
-            if (!batchOp) {
-              // reset();
-
-              throtUpdate();
-            }
+          if (!isSkipping) {
+            scheduleUpdate(lastComp);
           }
           lastComp = null;
 
@@ -294,7 +316,7 @@ const SmartState = (() => {
       // reset();
       gs[cc][lidx] = nv;
 
-      throtUpdate();
+      scheduleUpdate(cc);
       lastComp = null;
     };
 
@@ -378,15 +400,8 @@ const SmartState = (() => {
             };
           })
           .finally(() => {
-            if (isSkipping) {
-            } else {
-              if (cc) updateComps.add(cc);
-
-              if (!batchOp) {
-                // reset();
-
-                if (promiseMeta[cc]) throtUpdate();
-              }
+            if (!isSkipping && promiseMeta[cc]) {
+              scheduleUpdate(cc);
             }
             lastComp = null;
           });
@@ -437,15 +452,8 @@ const SmartState = (() => {
 
       lastComp = cc; //key.split("-")?.[0];
 
-      if (isSkipping) {
-      } else {
-        if (lastComp) updateComps.add(lastComp);
-
-        if (!batchOp) {
-          // reset();
-
-          throtUpdate();
-        }
+      if (!isSkipping) {
+        scheduleUpdate(lastComp);
       }
       lastComp = null;
 
@@ -498,18 +506,13 @@ const SmartState = (() => {
 
       st = temp;
 
-      if (isSkipping) {
-      } else {
+      if (!isSkipping) {
         updated = true;
         gCtx[ctxIdx++] = () => {
           updated = false;
         };
 
-        if (!batchOp) {
-          // reset();
-
-          throtUpdate();
-        }
+        scheduleUpdate();
       }
     };
 
@@ -520,18 +523,13 @@ const SmartState = (() => {
 
       st = temp;
 
-      if (isSkipping) {
-      } else {
+      if (!isSkipping) {
         updated = true;
         gCtx[ctxIdx++] = () => {
           updated = false;
         };
 
-        if (!batchOp) {
-          // reset();
-
-          throtUpdate();
-        }
+        scheduleUpdate();
       }
     };
 
@@ -649,24 +647,14 @@ const SmartState = (() => {
                     streamState[cc][lidx] = {
                       ...streamState[cc][lidx],
                       result: tranformResponse(
-                        streamState[cc][lidx].result || "",
+                        streamState[cc][lidx].result,
                         jsonChunk,
                       ),
                     };
                     // log(streamState[cc][lidx]);
 
                     if (triggerUpdate) {
-                      if (isSkipping) {
-                      } else {
-                        if (cc) updateComps.add(cc);
-
-                        if (!batchOp) {
-                          // reset();
-
-                          // if (promiseMeta[cc])
-                          throtUpdate();
-                        }
-                      }
+                      scheduleUpdate(cc);
                     }
                   } catch (jsonErr) {
                     console.error("Failed parsing line to JSON:", line);
@@ -693,17 +681,8 @@ const SmartState = (() => {
               loading: false,
             };
 
-            if (isSkipping) {
-            } else {
-              if (cc) updateComps.add(cc);
+            scheduleUpdate(cc);
 
-              if (!batchOp) {
-                // reset();
-
-                // if (promiseMeta[cc])
-                throtUpdate();
-              }
-            }
             lastComp = null;
           }
         };
@@ -712,8 +691,12 @@ const SmartState = (() => {
           streamState[cc][lidx].controller.abort();
           streamState[cc][lidx] = {
             ...streamState[cc][lidx],
+            // result: finalOutput,
             loading: false,
           };
+
+          // this is not required because finally block above will take care of it
+          // scheduleUpdate(cc);
         };
 
         if (lastComp != currComp) lastComp = currComp;
