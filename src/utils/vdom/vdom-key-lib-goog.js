@@ -1198,17 +1198,14 @@ if (typeof window !== "undefined") {
             //   oldNode = oldNode.value;
             // }
 
-            if (newNode?.updtFlag || !hydrated)
+            if (newNode?.updtFlag || !hydrated) {
               diffProps(newParent, oldNode.props, newNode.props);
+              newNode.updtFlag = undefined;
+            }
 
             diffChildren(newParent, oldNode.children, newNode.children, idx);
             oldNode.children.length = 0;
-            oldNode.type =
-              oldNode.key =
-              oldNode.$c =
-              oldNode.children =
-              oldNode.props =
-                null;
+            oldNode = null;
           }
         }
 
