@@ -5,16 +5,16 @@ import {
   createEffect,
   // createContext,
   // memo,
-  forceUpdate,
+  // forceUpdate,
 } from "@vdom-lib";
 
 // import { RouterAdv, LinkV2, routerInstance, routerContext } from "@router-v2";
 
 import { App } from "./App";
 // import { PerfTest } from "../compos/PerfTest";
-import { SsrApp } from "../ssr/SsrApp";
+import { SsrApp } from "../compos/SsrApp";
 // import { Sans } from "./sans/sans";
-import { Albums } from "../compos/ResourceTest";
+// import { Albums } from "../compos/ResourceTest";
 // import { DragDrop } from "./dnd/DragDrop";
 // import { ArrayWithFragments } from "../compos/ComponentPatterns";
 
@@ -30,7 +30,7 @@ import { Albums } from "../compos/ResourceTest";
 const root = document.getElementById("root");
 // mount(root, () => <App type="dyn" />);
 // mount(root, () => <Sans />);
-// mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
+mount(root, () => <SsrApp currentUrl={window.location.pathname} />);
 
 mount(root, () => <Albums />);
 // mount(root, () => <PerfTest />);
