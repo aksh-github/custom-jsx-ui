@@ -665,7 +665,7 @@ const SmartState = (() => {
           } catch (err) {
             // 3. Ignore the error if it was manually triggered by the user
             if (err.name === "AbortError") {
-              console.log("Stream successfully aborted by user.");
+              log("Stream successfully aborted by user.");
             } else {
               log(err);
               streamState[cc][lidx] = {
