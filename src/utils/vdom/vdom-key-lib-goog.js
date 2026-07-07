@@ -132,14 +132,18 @@ const microframe = (() => {
 
       // return rv
 
-      // 8 jun 26
-      // final $c = `functionname:key:parent`
+      // 7 jul 26 (reverted to prev)
+      // final $c = `functionname:parent:key`
       if (rv && rv.children) {
-        if (rv.$c) {
-          if ((rv.$c.match(/:/g) || []).length < 2) rv.$c += `:${type.name}`;
-        } else {
-          rv.$c = `${type.name}:${props?.key}`;
+        if (!rv.$c) {
+          rv.$c = cacheKey;
         }
+
+        // if (rv.$c) {
+        //   if ((rv.$c.match(/:/g) || []).length < 2) rv.$c += `:${type.name}`;
+        // } else {
+        //   rv.$c = `${type.name}:${props?.key}`;
+        // }
 
         // rv.children = rv.children.map(transformChild);
         return rv;
