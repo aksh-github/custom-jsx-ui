@@ -1,5 +1,5 @@
 import JsonForm from "./jsonform";
-import { h, createEffect, createState } from "@vdom-lib";
+import { h, createEffect, createState, createResource } from "@vdom-lib";
 import { loadUI } from "./utils";
 import "./form.css";
 
@@ -63,6 +63,7 @@ export const JsonFormConsumer = (props = {}) => {
   );
   const [uiJson, setUiJson] = createState(null);
   const [usecaseChanged, setUsecaseChanged] = createState(false);
+  const jsonResrc = createResource(() => loadUI("/form2.json?t=" + Date.now()));
 
   // vv imp func: this is all business logic
   const onFormChange = (formData, currrentValue) => {
@@ -92,20 +93,9 @@ export const JsonFormConsumer = (props = {}) => {
   };
 
   createEffect(() => {
-    console.log("onMount");
-    loadUI("/form2.json?t=" + Date.now())
-      .then((data) => {
-        console.log("UI JSON loaded successfully", data);
-        setUiJson(data);
-      })
-      .catch((error) => {
-        console.error("Error loading UI JSON:", error);
-      });
-
-    return () => {
-      console.log("onCleanup jsonform");
-    };
-  }, []);
+    console.log(jsonResrc);
+    setUiJson(jsonResrc.result);
+  }, [jsonResrc?.result]);
 
   return (
     <div>

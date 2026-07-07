@@ -1,14 +1,20 @@
-export const loadUI = async (url) => {
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
+let promise = null;
 
-    return data;
-  } catch (error) {
-    console.error("Error loading UI JSON:", error);
-    // return null;
-    throw error;
+export const loadUI = async (url) => {
+  // try {
+  //   const response = await fetch(url);
+  //   const data = await response.json();
+
+  //   return data;
+  // } catch (error) {
+  //   console.error("Error loading UI JSON:", error);
+  //   // return null;
+  //   throw error;
+  // }
+  if (!promise) {
+    promise = fetch(url).then((res) => res.json());
   }
+  return promise;
 };
 
 export const validate = (uiJson, name, value) => {
