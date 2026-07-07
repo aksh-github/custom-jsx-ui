@@ -1,46 +1,7 @@
 import { publishStreamTopic, registerStreamTopic } from "./streaming.js";
-import { startChatServer } from "./chat-server.js";
 
 // chat start
-class ChatTopic {
-  mem = {
-    messages: [],
-  };
-
-  normalizeText(value) {
-    if (typeof value !== "string") {
-      return "";
-    }
-
-    return value.trim();
-  }
-
-  addMessage({ from, message }) {
-    const safeFrom = this.normalizeText(from);
-    const safeMessage = this.normalizeText(message);
-
-    if (!safeFrom || !safeMessage) {
-      throw new Error(
-        "Both 'from' and 'message' are required non-empty strings",
-      );
-    }
-
-    const entry = {
-      from: safeFrom,
-      message: safeMessage,
-    };
-
-    this.mem.messages.push(entry);
-    return entry;
-  }
-
-  getMessages() {
-    return [...this.mem.messages];
-  }
-}
-
-const chatTopic = new ChatTopic();
-const topic = "/chat";
+import { startChatServer, chatTopic, topic } from "./chat-server.js";
 
 registerStreamTopic(topic, (ctx) => {
   ctx.send({ messages: chatTopic.getMessages() }, "chat-snapshot");
@@ -78,20 +39,60 @@ registerStreamTopic("time", (ctx) => {
   return () => clearInterval(timer);
 });
 
-registerStreamTopic("time", (ctx) => {
-  const timer = setInterval(() => {
-    ctx.send(
-      {
-        isoTime: new Date().toISOString(),
-        epochMs: Date.now(),
-      },
-      "time",
-    );
-  }, 10000);
+registerStreamTopic("file", (ctx) => {
+  const sentence =
+    "This is an example demonstrating chunked file streaming functionality";
 
-  return () => clearInterval(timer);
+  const chunks = sentence.split(" ");
+
+  let index = 0;
+
+  const intervalId = setInterval(() => {
+    if (index < chunks.length) {
+      const word = chunks[index];
+      // Stream the word with a specific type for clarity
+      ctx.send({ word: word }, "word");
+      index++;
+    } else {
+      clearInterval(intervalId);
+      // Signal that streaming is complete
+      ctx.send({ finished: true }, "end");
+    }
+  }, 400);
+
+  return () => clearInterval(intervalId);
 });
 
-const messages = [];
+registerStreamTopic("component", (ctx) => {
+  const tout = setTimeout(() => {
+    ctx.send(
+      {
+        all: [
+          {
+            type: "p",
+            updtFlag: true,
+            props: { style: { backgroundColor: "green", color: "white" } },
+            children: ["Streamed p"],
+          },
+          {
+            type: "p",
+            updtFlag: true,
+            props: { style: { backgroundColor: "red", color: "white" } },
+            children: ["Streamed p"],
+          },
+          {
+            type: "p",
+            updtFlag: true,
+            props: { style: { backgroundColor: "blue", color: "white" } },
+            children: ["Streamed p"],
+          },
+        ],
+      },
+      "part",
+    );
+    // Signal that streaming is complete
+    ctx.send({ finished: true }, "end");
+  }, 4000);
 
-registerStreamTopic("chat", (ctx) => {});
+  return () => clearTimeout(tout);
+});
