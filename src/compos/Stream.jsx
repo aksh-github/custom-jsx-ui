@@ -177,7 +177,7 @@ const ComponentStream = () => {
   const compStream = createStream({ topic: "component" });
   const [result, setResult] = createState(null);
 
-  createEffect(() => {
+  if (!result) {
     if (compStream)
       compStream.start((prevChunk, delta) => {
         if (delta?.type === "part") {
@@ -194,11 +194,26 @@ const ComponentStream = () => {
         }
         return prevChunk?.all ? structuredClone(prevChunk.all) : null;
       }, true);
-  }, []);
+  }
 
-  const getCopy = (ob) => {
-    return { ...ob };
-  };
+  // createEffect(() => {
+  //   if (compStream)
+  //     compStream.start((prevChunk, delta) => {
+  //       if (delta?.type === "part") {
+  //         console.log(prevChunk, delta);
+  //         return { ...delta?.data };
+  //       } else if (delta?.type === "end") {
+  //         console.log(prevChunk, delta);
+  //         // at this point prevChunk is the final output
+  //         // skipUpdate(() => {
+  //         //   compStream.stop(true);
+  //         // });
+  //         setResult(prevChunk.all);
+  //         compStream.stop();
+  //       }
+  //       return prevChunk?.all ? structuredClone(prevChunk.all) : null;
+  //     }, true);
+  // }, []);
 
   // console.log(result);
 
