@@ -24,6 +24,7 @@ const NoneType = "NONE",
 // all virtual dom
 let funcCache = {},
   altFuncCache = {};
+let veryFirstExec = true;
 
 function propsChanged(oldProps, newProps) {
   if (oldProps === newProps) return false;
@@ -40,17 +41,6 @@ function propsChanged(oldProps, newProps) {
   }
   return false;
 }
-
-// function transformChild(child) {
-//   if (typeof child === "string" || typeof child === "number") {
-//     return { type: TextType, /*props: {},*/ value: String(child) };
-//   }
-
-//   if (child == null || typeof child === "boolean") {
-//     return { type: NoneType, /*props: {},*/ value: child };
-//   }
-//   return child;
-// }
 
 const microframe = (() => {
   let currComp = null;
@@ -108,10 +98,13 @@ const microframe = (() => {
 
       funcCache[cacheKey] = {
         name: cacheKey,
+        // Fn: type,
+        // children,
         // parent: stack[stack.length - 2]?.comp, // this might be useful
         mount: true,
         unMount: null,
         props: props,
+        vdom: rv,
       };
 
       stack.pop();
@@ -145,10 +138,10 @@ const microframe = (() => {
         //   rv.$c = `${type.name}:${props?.key}`;
         // }
 
-        // rv.children = rv.children.map(transformChild);
+        return { $thunk: true, $c: rv.$c };
+      } else {
         return rv;
-      } // else return transformChild(rv);
-      return rv;
+      }
       // end 8 jun 26
 
       // Below is only required to see compo node, but logic may not work beyond 20th may 2026
@@ -277,6 +270,57 @@ export const df = microframe.df;
 let dom = {};
 
 if (typeof window !== "undefined") {
+  // function findMatchingObjects(json, key, value) {
+  //   const matches = [];
+
+  //   // Recursive function to traverse the JSON object
+  //   function traverse(obj, path) {
+  //     // Check if the object has the matching key-value pair
+  //     if (
+  //       Object.prototype.hasOwnProperty.call(obj, key) &&
+  //       isEqual(obj[key], value)
+  //     ) {
+  //       matches.push({ object: obj, path: path });
+  //     }
+
+  //     // Traverse child objects
+  //     Object.keys(obj).forEach((k) => {
+  //       if (typeof obj[k] === "object" && obj[k] !== null) {
+  //         traverse(obj[k], `${path}.${k}`);
+  //       } else if (Array.isArray(obj[k])) {
+  //         obj[k].forEach((item, index) => {
+  //           traverse(item, `${path}.${k}[${index}]`);
+  //         });
+  //       }
+  //     });
+  //   }
+
+  //   // Helper function for deep equality check
+  //   function isEqual(a, b) {
+  //     // Handle primitive types
+  //     if (a === b) return true;
+  //     if (a === null || b === null) return false;
+  //     if (typeof a !== "object" || typeof b !== "object") return false;
+
+  //     // Handle arrays
+  //     if (Array.isArray(a) && Array.isArray(b)) {
+  //       if (a.length !== b.length) return false;
+  //       return a.every((item, index) => isEqual(item, b[index]));
+  //     }
+
+  //     // Handle objects
+  //     const keysA = Object.keys(a);
+  //     const keysB = Object.keys(b);
+  //     if (keysA.length !== keysB.length) return false;
+  //     return keysA.every((key) => isEqual(a[key], b[key]));
+  //   }
+
+  //   // Start traversing from the root object
+  //   traverse(json, "$");
+
+  //   return matches;
+  // }
+
   const _dom = () => {
     const _bubblesCache = new Map();
     function isNonBubblingEvent(eventName) {
@@ -634,7 +678,15 @@ if (typeof window !== "undefined") {
       requestIdleCallback(processChunk);
     };
 
+    function resolveThunk(thunk, old) {
+      return (old ? altFuncCache[thunk.$c] : funcCache[thunk.$c]).vdom;
+    }
+
     function createElement(node) {
+      if (node?.$thunk) {
+        return createElement(resolveThunk(node));
+      }
+
       if (typeof node === "string" || typeof node === "number") {
         return $d.createTextNode(node);
       }
@@ -810,6 +862,8 @@ if (typeof window !== "undefined") {
       altFuncCache = { ...funcCache };
       funcCache = {};
       hydrated = true; // just to be sure
+
+      updateComps.clear();
     }
 
     let patches = [],
@@ -858,21 +912,70 @@ if (typeof window !== "undefined") {
       hydrated = true;
     }
 
+    // function updateVdom(obj, path, newVal) {
+    //   if (!path) {
+    //     // obj = newVal
+    //     return obj;
+    //   }
+
+    //   const keys = path.split(".");
+    //   // Get the last key to perform the final assignment
+    //   const lastKey = keys.pop();
+
+    //   // Navigate to the deeply nested parent object
+    //   const deepParent = keys.reduce((acc, key) => {
+    //     // Dynamically create missing objects if they don't exist
+    //     // if (!acc[key]) acc[key] = {};
+    //     return acc[key];
+    //   }, obj);
+
+    //   // Assign the new value to the final property
+    //   deepParent[lastKey] = newVal;
+    //   return obj;
+    // }
+
     // all delta updates
     function forceUpdate() {
       // log(performance.now());
       if (!IS_PROD) logt("TETVD");
 
+      // if (updateComps.size > 0) updateComps.clear();
+
+      // new
+      // let allNew = { ...old };
+      //  matches = [];
+      // console.log(allNew);
+      // updateComps.forEach((comp) => {
+      //   log(comp);
+
+      //   const fnObj = funcCache[comp];
+      //   setCurrComp(comp);
+      //   // const res = h(fnObj.Fn, fnObj.props, fnObj.children); //fnObj.Fn(fnObj.props, fnObj.children);
+      //   const res = fnObj.Fn(fnObj.props, fnObj.children);
+      //   funcCache[comp] = {
+      //     ...funcCache[comp],
+      //     vdom: res,
+      //     children: fnObj.children,
+      //   };
+      //   console.log(res);
+      //   res.$c = comp;
+      //   res.updtFlag = true;
+      // });
+
+      // console.log(allNew);
+
+      // end
+
       let current = curr(); // create latest vdom
       if (!IS_PROD) logte("TETVD");
-      log(old, current);
+      // log(old, current);
       // const oldStack = CompoIterator().iterate(old);
       // const currStack = CompoIterator().iterate(current);
 
       // log(CompoIterator().get(old, "TextArea"));
 
       // log(oldCallStack, callStack);
-      // log(funcCache);
+      // log(funcCache, altFuncCache);
 
       // log(performance.now());
 
@@ -1145,6 +1248,9 @@ if (typeof window !== "undefined") {
       }
 
       function diffNode(parent, oldNode, newNode, idx) {
+        if (oldNode?.$thunk) oldNode = resolveThunk(oldNode, true);
+        if (newNode?.$thunk) newNode = resolveThunk(newNode);
+
         // if (oldNode == null || typeof oldNode === "boolean") {
         //   oldNode = { type: NoneType, value: oldNode };
         // }
@@ -1152,7 +1258,7 @@ if (typeof window !== "undefined") {
         //   newNode = { type: NoneType, value: newNode };
         // }
         // for all above
-        if (oldNode === newNode) {
+        if (oldNode === newNode && newNode?.charAt) {
           oldNode = null;
           return;
         }
