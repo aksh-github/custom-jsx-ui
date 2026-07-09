@@ -367,6 +367,9 @@ const checkProcessUpdates = () => {
   }
 };
 
+const RR = ({ visibleResults, RowComponent }) =>
+  visibleResults.map((d, idx) => <RowComponent row={d} key={"k" + d.id} />);
+
 function GenericTab({ prop, search: srch, dkey }) {
   const { title, filterFunc, RowComponent, asList } = UIObj[prop];
   const [visibleLimit, setVisibleLimit] = createState(INITIAL_RESULTS_LIMIT);
@@ -433,10 +436,6 @@ function GenericTab({ prop, search: srch, dkey }) {
     };
   }, [srch, dkey, filtered.length]);
 
-  const RR = visibleResults.map((d, idx) => (
-    <RowComponent row={d} key={"k" + d.id} />
-  ));
-
   return (
     <div>
       <h2 className="title">{title}</h2>
@@ -449,9 +448,19 @@ function GenericTab({ prop, search: srch, dkey }) {
         <p className="info">Matching results: {filtered.length}</p>
       ) : null}
       {asList ? (
-        <ul className="list">{RR}</ul>
+        <ul className="list">
+          <RR
+            visibleResults={visibleResults || []}
+            RowComponent={RowComponent}
+          />
+        </ul>
       ) : (
-        <div className="search">{RR}</div>
+        <div className="search">
+          <RR
+            visibleResults={visibleResults || []}
+            RowComponent={RowComponent}
+          />
+        </div>
       )}
       {hasMoreResults ? (
         <div className="load-more-sentinel">Loading more...</div>
