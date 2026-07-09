@@ -354,7 +354,7 @@ function someFetch(id) {
 
 // someFetch();
 
-export function ResourceTest({ id, key }) {
+function ResourceTest({ id, key }) {
   const resource = createResource(() => someFetch(id));
 
   console.log(resource);
