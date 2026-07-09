@@ -2,8 +2,9 @@ import { h, hydrate } from "@vdom-lib";
 import { SsrApp } from "../compos/SsrApp";
 import { App } from "../vdom-app/App";
 // import { Sans } from "../vdom-app/sans/sans";
-import { Albums } from "../compos/ResourceTest";
-import { Page } from "../compos/Page1";
+import { ResourceTest } from "../compos/ResourceTest";
+import { Stream } from "../compos/Stream";
+import { ServerData } from "../compos/ServerData";
 
 // mount(document.getElementById("root"), () => <App />);
 
@@ -15,5 +16,7 @@ hydrate(document.getElementById("root"), () => (
   // IMP: NEED TO BE SAME AS entry-server.jsx except for url
   // <SsrApp currentUrl={window.location.pathname} />
   // <App type="dyn" url={window.location.pathname} />
-  <Page data={window.__INITIAL_DATA__} />
+  // <Stream />
+  // <ResourceTest />
+  <ServerData data={window.__INITIAL_DATA__} />
 ));

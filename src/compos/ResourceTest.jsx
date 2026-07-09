@@ -7,7 +7,7 @@ const fetchUserData = () =>
     .then((res) => res.json())
     .catch((err) => err);
 
-export function Albums(params) {
+export function ResourceTest(params) {
   const [c, setc] = createState(0);
   const data = createResource(() => fetchUserData(), [c < 2 ? c : 10]);
 

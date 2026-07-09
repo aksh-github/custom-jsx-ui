@@ -1,13 +1,15 @@
 // import { renderToString } from "react-dom/server";
 
-import { h, reset } from "@vdom-lib";
+import { h, reset, createState } from "@vdom-lib";
 import { SsrApp } from "../compos/SsrApp";
 import { App } from "../vdom-app/App";
 import { setSSRUrl } from "@router-v2";
 // import { renderToString } from "@vdom-ssr";
 // import { Sans } from "../vdom-app/sans/sans";
-import { Albums } from "../compos/ResourceTest";
-import { Page } from "../compos/Page1";
+import { ResourceTest } from "../compos/ResourceTest";
+import { Stream } from "../compos/Stream";
+import { createStreamRouteHandler } from "../../server-ssr/streaming";
+import { ServerData } from "../compos/ServerData";
 
 const getData = async (url) => {
   let result, err;
@@ -43,9 +45,11 @@ export async function render(url) {
   // console.log("Data fetched for SSR:", { result, err });
 
   // IMP: NEED TO BE SAME AS entry-server.jsx except for url
-  const app = () => <Page data={result} />;
+  // const app = () => <Stream />;
   // const app = () => <SsrApp currentUrl={url} />;
   // const app = () => <App type="dyn" url={url} />;
+  // const app = () => <ResourceTest />;
+  const app = () => <ServerData data={result} />;
 
   // console.log(result);
   return { header, app, initialData: result };
@@ -55,5 +59,3 @@ export const dispose = () => {
   console.log("dispose called");
   reset();
 };
-
-// this is very important
