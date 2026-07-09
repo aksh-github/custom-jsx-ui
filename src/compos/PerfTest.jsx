@@ -210,26 +210,31 @@ const Jumbotron = ({ dispatch }) => (
             cb={() => dispatch(null, { type: "RUN" })}
           />
           <Button
+            key="runlots"
             id="runlots"
             title="Create 10,000 rows"
             cb={() => dispatch(null, { type: "RUN_LOTS" })}
           />
           <Button
+            key="add"
             id="add"
             title="Append 1,000 rows"
             cb={() => dispatch(null, { type: "ADD" })}
           />
           <Button
+            key="update"
             id="update"
             title="Update every 10th row"
             cb={() => dispatch(null, { type: "UPDATE" })}
           />
           <Button
+            key="clear"
             id="clear"
             title="Clear"
             cb={() => dispatch(null, { type: "CLEAR" })}
           />
           <Button
+            key="swaprows"
             id="swaprows"
             title="Swap Rows"
             cb={() => dispatch(null, { type: "SWAP_ROWS" })}
