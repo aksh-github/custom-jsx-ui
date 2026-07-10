@@ -84,25 +84,38 @@ const Topics = (props) => {
 
 // Ctr
 
-async function getPackageJson(jsonToRead) {
-  // return (await fetch(jsonToRead)).json();
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
-  let result;
-  try {
-    result = await fetch(jsonToRead);
+// 1. Create a cache to store active promises keyed by the URL
+const pendingRequests = new Map();
 
-    // 1. Manually check if the HTTP request failed (e.g., 404 or 500)
-    if (!result.ok) {
-      throw new Error(`HTTP error! Status: ${result.status}`);
-    }
-
-    // 2. If it succeeds, parse and return the JSON
-    return await result.json();
-  } catch (ex) {
-    // throw ex;
-    console.error(ex);
-    return ex; // you need to return this so that lazy compo will treat as error
+function getPackageJson(jsonToRead) {
+  // 2. If a promise for this URL is already running, return it immediately
+  if (pendingRequests.has(jsonToRead)) {
+    return pendingRequests.get(jsonToRead);
   }
+
+  // 3. Create the promise execution block
+  const promise = (async () => {
+    try {
+      const result = await fetch(jsonToRead);
+
+      if (!result.ok) {
+        throw new Error(`HTTP error! Status: ${result.status}`);
+      }
+
+      return await result.json();
+    } catch (ex) {
+      console.error(ex);
+      return ex; // Kept as per your comment for your lazy component
+    } finally {
+      // 4. Clean up the cache when done so subsequent future calls can fetch fresh data
+      pendingRequests.delete(jsonToRead);
+    }
+  })();
+
+  // 5. Store the running promise in the cache
+  pendingRequests.set(jsonToRead, promise);
+
+  return promise;
 }
 
 async function Api(params) {
