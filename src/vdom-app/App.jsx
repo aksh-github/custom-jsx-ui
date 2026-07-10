@@ -538,7 +538,9 @@ const Header = () => {
     <ul className="nav">
       {links.map((link) => (
         <li key={link.to}>
-          <LinkV2 to={link.to}>{link.name}</LinkV2>
+          <LinkV2 key={link.to} to={link.to}>
+            {link.name}
+          </LinkV2>
         </li>
       ))}
     </ul>
@@ -657,15 +659,15 @@ export function App(props) {
   // console.log(routerContext.get());
   const curPath = routerContext.get()?.pathname || props.url;
 
-  let [footerRef, setfooterRef] = createRef(null);
+  let [ref, setfooterRef] = createRef(null);
   let timer = null;
 
   // console.log(routerContext.get());
 
   let ct = 0;
 
-  createEffect(() => {
-    if (footerRef) {
+  const updateFooter = (footerRef) => {
+    if (footerRef && !footerRef.childElementCount) {
       // const p = document.createElement("p");
       // p.textContent = footerRef();
 
@@ -695,7 +697,9 @@ export function App(props) {
         }
       }, 1000);
     }
-  }, [footerRef]);
+  };
+
+  createEffect(() => updateFooter(ref), [ref]);
 
   createEffect(() => {
     loadWC()
@@ -743,10 +747,11 @@ export function App(props) {
       <MySwitch type={props.type} cp={curPath} />
 
       <footer
-        // ref={(_ref) => {
-        //   setfooterRef(_ref);
-        // }}
         ref={setfooterRef}
+        // ref={(_el) => {
+        // (setfooterRef(_el), updateFooter(_el));
+
+        // }}
         ignoreNode
         // ignoreLater={true}
         style={{ backgroundColor: "bisque" }}
