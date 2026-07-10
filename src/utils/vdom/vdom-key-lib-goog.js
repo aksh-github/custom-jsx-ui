@@ -810,6 +810,8 @@ if (typeof window !== "undefined") {
       altFuncCache = { ...funcCache };
       funcCache = {};
       hydrated = true; // just to be sure
+
+      updateComps.clear();
     }
 
     let patches = [],
