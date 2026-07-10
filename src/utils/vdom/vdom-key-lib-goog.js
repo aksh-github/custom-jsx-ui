@@ -90,6 +90,7 @@ const microframe = (() => {
       }
 
       let rv = type(props, children);
+      // let rv = {};
 
       // if (typeof rv === "function") {
       //   // log("COT"); // this happens for LazyV2 if Async compo returns a func
@@ -132,84 +133,14 @@ const microframe = (() => {
           rv.$c = cacheKey;
         }
 
-        // if (rv.$c) {
-        //   if ((rv.$c.match(/:/g) || []).length < 2) rv.$c += `:${type.name}`;
-        // } else {
-        //   rv.$c = `${type.name}:${props?.key}`;
-        // }
-
         return { $thunk: true, $c: rv.$c };
       } else {
         return rv;
       }
-      // end 8 jun 26
 
-      // Below is only required to see compo node, but logic may not work beyond 20th may 2026
+      // if (!rv.c) rv.$c = cacheKey;
 
-      //complex node
-      // if (rv?.type) {
-      //   return {
-      //     ...rv,
-      //     // props: rv.props,
-      //     $c: cacheKey,
-      //     // children: rv.children,
-      //     children: [rv],
-      //     // dont think its reqd
-      //     // fragChildLen: rv?.children.length || undefined,
-      //     // $p: curParent,
-      //     key: props?.key,
-      //     props: props || {},
-      //     type: "df",
-      //   };
-      // }
-      // // str, null etc
-      // else if (Array.isArray(rv)) {
-      //   console.warn(
-      //     "Your component named `",
-      //     type.name,
-      //     "` is returning Array, manipulation to this Array is currently NOT supported and can lead to Unexpected behavior",
-      //   );
-
-      //   //special case return value Array and may be no type  (parent)
-      //   return {
-      //     $c: cacheKey,
-      //     type: "df", //assign doc fragment type
-      //     children: rv,
-      //     // $p: curParent,
-      //   };
-      // }
-      // // return {
-      // //   $c: type.name,
-      // //   value: rv,
-      // //   $p: curParent,
-      // // };
-      // else {
-      //   // there are 2 possiblities
-      //   // 1. complex node but with no type
-
-      //   if (rv?.$c) {
-      //     // if (!rv.type) {
-      //     //   rv.type = "df";
-      //     // }
-      //     return {
-      //       $c: cacheKey,
-      //       // value: rv,
-      //       // ...rv,
-      //       children: [rv],
-      //       // type: "df", // sure that type is unavailable hence using df
-      //       // $p: curParent,
-      //     };
-      //   } else {
-      //     // or 2. simple node
-      //     return {
-      //       $c: cacheKey,
-      //       // type: "df",
-      //       value: rv,
-      //       props: props || {},
-      //       // $p: curParent,
-      //     };
-      //   }
-      // }
+      // return { ...rv, $thunk: true };
     }
 
     // log(children);
@@ -930,11 +861,16 @@ if (typeof window !== "undefined") {
     //   }, obj);
 
     //   // Assign the new value to the final property
-    //   deepParent[lastKey] = newVal;
+    //   // deepParent[lastKey] = newVal;
+    //   deepParent = {
+    //     ...deepParent,
+    //     [lastKey]: newVal,
+    //   };
     //   return obj;
     // }
 
     // all delta updates
+
     function forceUpdate() {
       // log(performance.now());
       if (!IS_PROD) logt("TETVD");
@@ -943,7 +879,6 @@ if (typeof window !== "undefined") {
 
       // new
       // let allNew = { ...old };
-      //  matches = [];
       // console.log(allNew);
       // updateComps.forEach((comp) => {
       //   log(comp);
@@ -955,7 +890,7 @@ if (typeof window !== "undefined") {
       //   funcCache[comp] = {
       //     ...funcCache[comp],
       //     vdom: res,
-      //     children: fnObj.children,
+      //     // children: fnObj.children,
       //   };
       //   console.log(res);
       //   res.$c = comp;
@@ -1258,7 +1193,7 @@ if (typeof window !== "undefined") {
         //   newNode = { type: NoneType, value: newNode };
         // }
         // for all above
-        if (oldNode === newNode && newNode?.charAt) {
+        if (oldNode === newNode) {
           oldNode = null;
           return;
         }
