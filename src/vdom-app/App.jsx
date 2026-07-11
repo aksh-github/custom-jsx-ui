@@ -538,7 +538,9 @@ const Header = () => {
     <ul className="nav">
       {links.map((link) => (
         <li key={link.to}>
-          <LinkV2 to={link.to}>{link.name}</LinkV2>
+          <LinkV2 key={link.to} to={link.to}>
+            {link.name}
+          </LinkV2>
         </li>
       ))}
     </ul>
