@@ -135,7 +135,8 @@ const microframe = (() => {
 
         return { $thunk: true, $c: rv.$c };
       } else {
-        return { $thunk: true, $c: rv?.$c || cacheKey };
+        return rv;
+        // return { $thunk: true, $c: rv?.$c || cacheKey };
       }
 
       // if (!rv.c) rv.$c = cacheKey;
@@ -285,6 +286,7 @@ if (typeof window !== "undefined") {
         if (!funcCache[key]) {
           altFuncCache[key].unMount?.();
           altFuncCache[key].unMount = null;
+          altFuncCache.vdom = null;
 
           delete altFuncCache[key];
 
@@ -910,7 +912,7 @@ if (typeof window !== "undefined") {
       // log(CompoIterator().get(old, "TextArea"));
 
       // log(oldCallStack, callStack);
-      log(funcCache, altFuncCache);
+      // log(funcCache, altFuncCache);
 
       // log(performance.now());
 
@@ -1053,7 +1055,7 @@ if (typeof window !== "undefined") {
           diffWithIndices(parent, oldChildren, newChildren, idx);
         }
 
-        oldChildren.length = 0;
+        // oldChildren.length = 0;
       }
 
       function diffWithIndices(parent, oldChildren, newChildren, idx) {
@@ -1249,8 +1251,8 @@ if (typeof window !== "undefined") {
             }
 
             diffChildren(newParent, oldNode.children, newNode.children, idx);
-            oldNode.children.length = 0;
-            oldNode = null;
+            // oldNode.children.length = 0;
+            // oldNode = null;
           }
         }
 
@@ -1325,8 +1327,8 @@ if (typeof window !== "undefined") {
           }
 
           if (oldNode?.props) {
-            oldNode.children.length = 0;
-            oldNode = null;
+            // oldNode.children.length = 0;
+            // oldNode = null;
           }
           return;
         }
@@ -1348,8 +1350,8 @@ if (typeof window !== "undefined") {
           });
 
           if (oldNode?.props) {
-            oldNode.children.length = 0;
-            oldNode = null;
+            // oldNode.children.length = 0;
+            // oldNode = null;
           }
 
           while (old.contains(stk[CTR + 1])) {
