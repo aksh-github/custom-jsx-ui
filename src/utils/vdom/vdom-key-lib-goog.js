@@ -135,7 +135,7 @@ const microframe = (() => {
 
         return { $thunk: true, $c: rv.$c };
       } else {
-        return rv;
+        return { $thunk: true, $c: rv?.$c || cacheKey };
       }
 
       // if (!rv.c) rv.$c = cacheKey;
@@ -910,7 +910,7 @@ if (typeof window !== "undefined") {
       // log(CompoIterator().get(old, "TextArea"));
 
       // log(oldCallStack, callStack);
-      // log(funcCache, altFuncCache);
+      log(funcCache, altFuncCache);
 
       // log(performance.now());
 
