@@ -143,9 +143,7 @@ body {
         background: cornsilk;
         /* box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.25); */
         text-align: center;
-        animation: scrollanim linear;
-        animation-timeline: view();
-        /* animation-range: entry 0% cover 100%; */
+        animation: smoothDisplay 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
     }
     .list {
@@ -164,6 +162,7 @@ body {
         min-height: 140px;
         margin: 10px;
         text-align: center;
+        animation: smoothDisplay 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
     }
   }
@@ -189,15 +188,14 @@ body {
   }
 }
 
-@keyframes scrollanim2 {
+/* 1. Define the entry animation */
+@keyframes smoothDisplay {
   from {
-    opacity: 0.8;
-    /* transform: translateX(-10px); */
-    scale: 0.5;
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
   }
   to {
     opacity: 1;
-    /* transform: translateX(0px); */
-    scale: 1;
+    transform: translateY(0) scale(1);
   }
 }
