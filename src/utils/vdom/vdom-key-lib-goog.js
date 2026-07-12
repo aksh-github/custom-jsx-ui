@@ -811,7 +811,7 @@ if (typeof window !== "undefined") {
       funcCache = {};
       hydrated = true; // just to be sure
 
-      updateComps.clear();
+      // updateComps.clear();
     }
 
     let patches = [],
