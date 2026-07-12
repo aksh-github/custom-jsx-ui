@@ -473,6 +473,7 @@ export function Sans() {
   const [currTab, setCurrTab] = createState(0);
   const [isLoaded, setIsLoaded] = createState(false);
   const [showWordDict, setShowWordDict] = createState(false);
+  const [dataLoaded, setDataLoaded] = createState(false);
   // currentSearch = createState("");
   let chatIcon = null;
 
@@ -510,6 +511,9 @@ export function Sans() {
       checkProcessUpdates().then((res) => {
         if (!res) {
           console.log("** something wrong in checkProcessUpdates");
+        } else {
+          // console.log(res);
+          setDataLoaded(true);
         }
       });
     });
@@ -593,6 +597,7 @@ export function Sans() {
             dkey={UIObj[currTab].dkey}
             prop={currTab}
             search={search}
+            dataLoaded={dataLoaded}
           />
         </main>
       ) : (
