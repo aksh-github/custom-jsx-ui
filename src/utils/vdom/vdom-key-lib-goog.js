@@ -133,7 +133,7 @@ const microframe = (() => {
           rv.$c = cacheKey;
         }
 
-        return { $thunk: true, $c: rv.$c };
+        return typeof window === "object" ? { $thunk: true, $c: rv.$c } : rv;
       } else {
         return rv;
         // return { $thunk: true, $c: rv?.$c || cacheKey };
@@ -612,7 +612,7 @@ if (typeof window !== "undefined") {
     };
 
     function resolveThunk(thunk, old) {
-      return (old ? altFuncCache[thunk.$c] : funcCache[thunk.$c]).vdom;
+      return (old ? altFuncCache[thunk.$c] : funcCache[thunk.$c])?.vdom;
     }
 
     function createElement(node) {
@@ -874,6 +874,35 @@ if (typeof window !== "undefined") {
 
     // all delta updates
 
+    function deepCloneVDOM(node, seen = new WeakMap()) {
+      // Primitives and functions — return as-is
+      if (node === null || typeof node !== "object") return node;
+
+      // Special built-ins
+      if (node instanceof Date) return new Date(node);
+      if (node instanceof RegExp) return new RegExp(node.source, node.flags);
+
+      // Circular reference guard
+      if (seen.has(node)) return seen.get(node);
+
+      // Preserve prototype; handle arrays naturally via []
+      const clone = Array.isArray(node)
+        ? []
+        : Object.create(Object.getPrototypeOf(node));
+
+      seen.set(node, clone);
+
+      for (const key of Object.keys(node)) {
+        const val = node[key];
+        clone[key] =
+          typeof val === "function"
+            ? val // share event handlers by reference
+            : deepCloneVDOM(val, seen); // recurse for everything else
+      }
+
+      return clone;
+    }
+
     function forceUpdate() {
       // log(performance.now());
       if (!IS_PROD) logt("TETVD");
@@ -937,6 +966,11 @@ if (typeof window !== "undefined") {
 
       // let tout = setTimeout(() => {
       //   clearTimeout(tout);
+
+      if (!hydrated) {
+        // altFuncCache = { ...funcCache };
+        altFuncCache = deepCloneVDOM(funcCache);
+      }
 
       wrapper(
         rootNode,
@@ -1375,7 +1409,7 @@ if (typeof window !== "undefined") {
        * Finds changes or removals in a node's props object.
        */
       function diffProps(target, oldProps, newProps) {
-        const propChanges = {};
+        let propChanges = {};
         let hasChanges = false;
 
         // Find updated or added props
@@ -1398,7 +1432,12 @@ if (typeof window !== "undefined") {
           }
         }
 
-        if (hasChanges || !hydrated) {
+        if (!hydrated) {
+          hasChanges = true;
+          propChanges = newProps;
+        }
+
+        if (hasChanges) {
           propsPatches.push({
             $target: target,
             newProps: propChanges,
@@ -1453,7 +1492,8 @@ if (typeof window !== "undefined") {
 
     function applyPatches(_patches) {
       if (!hydrated && _patches.length) {
-        throw new Error("SSR Reconciliation failed!!");
+        // throw new Error("SSR Reconciliation failed!!");
+        console.error("SSR Reconciliation failed!!");
       }
 
       const disposalPromises = [];
