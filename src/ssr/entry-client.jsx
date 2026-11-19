@@ -5,6 +5,7 @@ import { App } from "../vdom-app/App";
 import { ResourceTest } from "../compos/ResourceTest";
 import { Stream } from "../compos/Stream";
 import { ServerData } from "../compos/ServerData";
+import { Parent } from "./entry-server";
 
 // mount(document.getElementById("root"), () => <App />);
 
@@ -16,7 +17,8 @@ hydrate(document.getElementById("root"), () => (
   // IMP: NEED TO BE SAME AS entry-server.jsx except for url
   // <SsrApp currentUrl={window.location.pathname} />
   // <App type="dyn" url={window.location.pathname} />
-  // <Stream />
+  <Stream />
   // <ResourceTest />
-  <ServerData data={window.__INITIAL_DATA__} />
+  // <ServerData data={window.__INITIAL_DATA__} />
+  // <Parent />
 ));

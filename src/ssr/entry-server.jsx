@@ -45,11 +45,12 @@ export async function render(url) {
   // console.log("Data fetched for SSR:", { result, err });
 
   // IMP: NEED TO BE SAME AS entry-server.jsx except for url
-  // const app = () => <Stream />;
+  const app = () => <Stream />;
   // const app = () => <SsrApp currentUrl={url} />;
   // const app = () => <App type="dyn" url={url} />;
   // const app = () => <ResourceTest />;
-  const app = () => <ServerData data={result} />;
+  // const app = () => <ServerData data={result} />;
+  // const app = () => <Parent />;
 
   // console.log(result);
   return { header, app, initialData: result };
@@ -59,3 +60,23 @@ export const dispose = () => {
   console.log("dispose called");
   reset();
 };
+
+function Child() {
+  const [c, setc] = createState(0);
+  return (
+    <div>
+      <button onClick={() => setc((c) => c + 1)}>clicked {c}</button>
+    </div>
+  );
+}
+
+export function Parent() {
+  console.log("===parent");
+
+  return (
+    <section>
+      <h1>Parent</h1>
+      <Child />
+    </section>
+  );
+}

@@ -17,7 +17,7 @@ export default defineConfig({
       entry: "./src/utils/vdom/vdom-key-lib-goog.js",
       name: "Microframe",
       fileName: (format) => `microframe.${format}.goog.[hash:8].js`,
-      formats: ["es", "umd"],
+      formats: ["es"],
     },
     outDir: "dist-lib",
     minify: true,
